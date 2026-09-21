@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tablero de control Mantenimiento</title>
+<style>
+:root{
+  --bg:#08111e; --panel:#0f1b2d; --line:#28405f; --text:#edf4ff; --muted:#8ea4c1;
+  --green:#35d07f; --yellow:#f2c94c; --red:#ff5d6c; --gray:#7d8fa7; --cyan:#4fd1ff; --blue:#1961a9;
+  --shadow:0 16px 42px rgba(0,0,0,.28); --r:18px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at top left,#112746 0,#08111e 38%,#050c15 100%);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}
+.app{max-width:1580px;margin:auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.brand{display:flex;gap:12px;align-items:center}
+.ypfLogo{
+  width:68px;height:44px;border-radius:10px;background:linear-gradient(180deg,#2277c8,#0c4c92);
+  display:flex;align-items:center;justify-content:center;position:relative;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)
+}
+.ypfLogo span{font-weight:900;letter-spacing:1px;color:#fff;font-size:21px}
+.ypfLogo:after{content:"";position:absolute;right:8px;top:9px;width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 10px 0 #fff,0 20px 0 #fff;opacity:.9}
+h1{font-size:22px;margin:0}
+.sub{font-size:11px;color:var(--muted);margin-top:4px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+button,input,select,textarea,.fileBtn{
+  background:#13243b;color:var(--text);border:1px solid var(--line);border-radius:11px;padding:9px 12px;font-weight:650
+}
+button,.fileBtn{cursor:pointer}
+button:hover,.fileBtn:hover{background:#19304d}
+.primary{background:#183d55;border-color:#2b6e91}
+.danger{background:#3b2027;border-color:#6b3540}
+input[type=file]{display:none}
+
+.grid{display:grid;grid-template-columns:1.55fr .95fr;gap:14px}
+.panel{background:linear-gradient(180deg,rgba(17,33,55,.97),rgba(9,20,34,.97));border:1px solid rgba(105,140,187,.18);border-radius:var(--r);box-shadow:var(--shadow)}
+.ph{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ph h2{margin:0;font-size:14px}
+.ph small{font-size:10px;color:var(--muted)}
+.plantWrap{padding:16px}
+.plant{
+  min-height:600px;border:1px solid var(--line);border-radius:14px;overflow:auto;
+  background:
+    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:28px 28px
+}
+svg{display:block;min-width:1560px}
+.pipe{stroke:#355472;stroke-width:4;fill:none}
+.stage{font-size:11px;font-weight:800;fill:#b8c6d8;letter-spacing:.4px}
+.node{fill:#10263c;stroke:#2c4969;stroke-width:1.5;rx:14;ry:14;cursor:pointer}
+.node.sel{stroke:var(--cyan);stroke-width:2.2;filter:drop-shadow(0 0 8px rgba(79,209,255,.25))}
+.label{font-size:12px;font-weight:800;fill:#edf4ff}
+.sublabel{font-size:10px;fill:#90a5c0}
+
+.legendRow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.legendRow span{font-size:11px;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.ok{background:var(--green)} .warn{background:var(--yellow)} .bad{background:var(--red)} .nodata{background:var(--gray)}
+
+.side{padding:14px}
+.titleRow{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.score{font-size:31px;font-weight:850}
+.score small{font-size:11px;color:var(--muted);font-weight:500}
+.badge{border-radius:999px;padding:6px 9px;font-size:10px;font-weight:800}
+.badge.green{color:#91efbc;background:rgba(53,208,127,.12);border:1px solid rgba(53,208,127,.3)}
+.badge.yellow{color:#ffe39a;background:rgba(242,201,76,.12);border:1px solid rgba(242,201,76,.3)}
+.badge.red{color:#ffabb3;background:rgba(255,93,108,.12);border:1px solid rgba(255,93,108,.3)}
+.badge.gray{color:#c2cfdf;background:rgba(125,143,167,.12);border:1px solid rgba(125,143,167,.3)}
+.infoGrid,.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.card{background:#0d1b2d;border:1px solid var(--line);padding:9px;border-radius:11px}
+.card b{display:block;font-size:10px;color:var(--muted);font-weight:600}
+.card span{display:block;margin-top:4px;font-size:13px;font-weight:800}
+.kpi .v{font-size:17px;font-weight:800;margin-top:4px}
+.kpi .t{font-size:9px;color:var(--muted);margin-top:4px}
+.sectionLabel{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.55px;margin:15px 0 7px}
+.componentList{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.comp{background:#0d1b2d;border:1px solid var(--line);padding:9px;border-radius:11px;cursor:pointer;font-size:11px}
+.comp:hover,.comp.sel{border-color:#4f99c4;background:#102840}
+.comp small{display:block;color:var(--muted);margin-top:3px;font-size:9px}
+.metricBtns{display:flex;gap:6px;flex-wrap:wrap}
+.metric{font-size:10px;padding:7px 9px}
+.metric.sel{border-color:#4faedc;background:#15344e}
+.rec{margin-top:12px;padding:11px;border-radius:12px;font-size:11px;line-height:1.45;background:#211d13;border:1px solid #665323;color:#ffe7a6}
+.rec.good{background:#0d211a;border-color:#24513f;color:#bff3d8}
+.rec.neutral{background:#111c2a;border-color:#32465f;color:#b9c7d9}
+
+.charts{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:14px;margin-top:14px}
+.cp{padding:12px}
+.ct{font-size:12px;font-weight:750;margin:0 0 8px}
+.legend{font-size:9px;color:var(--muted);margin-top:6px}
+canvas{width:100%;height:230px;background:#071522;border:1px solid var(--line);border-radius:11px}
+
+.bottom{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:14px}
+.tableWrap{overflow:auto;padding:0 14px 12px;max-height:320px}
+table{width:100%;border-collapse:collapse;font-size:10px}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-size:9px;color:var(--muted);text-transform:uppercase}
+.info{padding:13px 16px;font-size:10px;color:var(--muted);line-height:1.55}
+.info b{color:var(--text)}
+.sourceCards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.src{border:1px solid var(--line);border-radius:11px;padding:10px;background:#0b1828}
+.src b{display:block;color:var(--text);font-size:11px;margin-bottom:3px}
+
+.modalBack{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:20;align-items:center;justify-content:center;padding:20px}
+.modal{width:min(720px,95vw);max-height:90vh;overflow:auto;background:#0e1b2e;border:1px solid #314c70;border-radius:16px;box-shadow:var(--shadow)}
+.mh{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.mb{padding:16px}
+.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field label{display:block;font-size:10px;color:var(--muted);margin-bottom:6px}
+.field.full{grid-column:1 / -1}
+.mono{background:#0a1727;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:ui-monospace,Consolas,monospace;font-size:10px;white-space:pre-wrap}
+.toast{position:fixed;right:18px;bottom:18px;display:none;background:#16304a;border:1px solid #3d648c;color:white;padding:11px 13px;border-radius:11px;z-index:40}
+
+@media(max-width:1100px){
+  .grid,.charts,.bottom{grid-template-columns:1fr}
+  .kpis,.infoGrid,.formGrid,.sourceCards,.componentList{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand">
+    <div class="ypfLogo"><span>YPF</span></div>
+    <div>
+      <h1>Tablero de control Mantenimiento</h1>
+      <div class="sub">YPF Midstream Gas · Monitoreo de condición de activos críticos</div>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="primary" id="openImport">📥 Importar mediciones</button>
+    <button id="addMachineBtn">➕ Agregar máquina</button>
+    <button id="deleteMachineBtn" class="danger">🗑 Eliminar máquina</button>
+    <button id="interBtn">🛠 Generar intervención</button>
+    <button id="resetBtn">Restaurar demo</button>
+  </div>
+</header>
+
+<div class="grid">
+<section class="panel">
+  <div class="ph">
+    <div><h2>Mapa general de planta</h2><small>Torres, aeroenfriadores, tanques y bombas</small></div>
+    <div class="legendRow">
+      <span><i class="dot ok"></i>Normal</span>
+      <span><i class="dot warn"></i>Atención</span>
+      <span><i class="dot bad"></i>Crítico</span>
+      <span><i class="dot nodata"></i>Sin datos</span>
+    </div>
+  </div>
+  <div class="plantWrap"><div class="plant"><svg id="plantSvg" width="1560" height="600" viewBox="0 0 1560 600"></svg></div></div>
+</section>
+
+<aside class="panel">
+  <div class="ph"><div><h2 id="eqTitle">Bomba cargadero propano islas 1/2 P-80A</h2><small id="eqType">Bomba de cargadero · Criticidad Alta</small></div></div>
+  <div class="side">
+    <div class="titleRow">
+      <div><div class="sub">Índice global de salud</div><div class="score" id="health">61 <small>/100</small></div></div>
+      <div id="badge" class="badge red">CRÍTICO</div>
+    </div>
+
+    <div class="infoGrid">
+      <div class="card"><b>Familia</b><span id="metaFamily">Bomba</span></div>
+      <div class="card"><b>Sector</b><span id="metaSector">Despacho</span></div>
+      <div class="card"><b>Historial SAP</b><span id="metaSap">Sí</span></div>
+      <div class="card"><b>Órdenes relevadas</b><span id="metaOrders">16</span></div>
+      <div class="card"><b>Tag</b><span id="metaTag">P-80A</span></div>
+      <div class="card"><b>Estado</b><span id="metaState">Crítico</span></div>
+    </div>
+
+    <div class="kpis">
+      <div class="card kpi"><b>Última medición</b><div class="v" id="lastVal">7.9 mm/s</div><div class="t" id="lastMetric">Vibración RMS</div></div>
+      <div class="card kpi"><b>Tendencia</b><div class="v" id="trendVal">↑ +34%</div><div class="t">vs. media histórica</div></div>
+      <div class="card kpi"><b>Eventos</b><div class="v" id="eventCount">4</div><div class="t">desvíos detectados</div></div>
+    </div>
+
+    <div class="sectionLabel">Componentes / puntos de medición</div>
+    <div class="componentList" id="componentList"></div>
+
+    <div class="sectionLabel">Técnica / variable</div>
+    <div class="metricBtns" id="metricBtns"></div>
+
+    <div id="recommendation" class="rec"></div>
+  </div>
+</aside>
+</div>
+
+<div class="charts">
+  <section class="panel cp"><h3 class="ct">Tendencia temporal</h3><canvas id="trendChart"></canvas><div class="legend" id="trendLegend"></div></section>
+  <section class="panel cp"><h3 class="ct">Histograma</h3><canvas id="histChart"></canvas><div class="legend">Distribución de mediciones del punto seleccionado.</div></section>
+  <section class="panel cp"><h3 class="ct">Carta de control</h3><canvas id="controlChart"></canvas><div class="legend">Media ± 2σ para visualizar desvíos.</div></section>
+</div>
+
+<div class="bottom">
+  <section class="panel">
+    <div class="ph"><div><h2>Historial de condición</h2><small>Equipo → componente → técnica → parámetro</small></div></div>
+    <div class="tableWrap">
+      <table>
+        <thead><tr><th>Fecha</th><th>Equipo</th><th>Componente</th><th>Técnica</th><th>Parámetro</th><th>Valor</th><th>Estado</th></tr></thead>
+        <tbody id="history"></tbody>
+      </table>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="ph"><div><h2>Visión general</h2><small>Equipos críticos y su información de condición</small></div></div>
+    <div class="info">
+      <b>Este tablero reúne los equipos críticos del proceso.</b> La visualización permite identificar rápidamente el comportamiento de cada activo, sus componentes inspeccionados y la información asociada al mantenimiento.
+      <div class="sourceCards">
+        <div class="src"><b>T-1200 / T-1300</b>Torres de fraccionamiento (propano / butano) · Fraccionamiento</div>
+        <div class="src"><b>V-270 / V-280</b>Acumuladores de propano / butano · Fraccionamiento</div>
+        <div class="src"><b>E-505 / E-515</b>Intercambiadores de calor · Fraccionamiento</div>
+        <div class="src"><b>AC-725</b>Aeroventilador de propano · Fraccionamiento · 25 órdenes</div>
+        <div class="src"><b>AC-720 / AC-745</b>Aeroenfriadores de proceso · Fraccionamiento</div>
+        <div class="src"><b>P-80A / P-80B / P-80C</b>Bombas de cargadero de propano · Despacho</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="modalBack" id="machineModal"><div class="modal">
+  <div class="mh"><b>Agregar máquina al mapa general</b><button data-close="machineModal">✕</button></div>
+  <div class="mb">
+    <div class="formGrid">
+      <div class="field"><label>TAG *</label><input id="newEqId" placeholder="Ej.: P-701"></div>
+      <div class="field"><label>Nombre *</label><input id="newEqName" placeholder="Ej.: Bomba de recirculación"></div>
+      <div class="field"><label>Familia</label><input id="newEqFamily" placeholder="Ej.: Bomba"></div>
+      <div class="field"><label>Sector</label><select id="newEqSector"><option>Fraccionamiento</option><option>Despacho</option></select></div>
+      <div class="field"><label>Tipo / función</label><input id="newEqType" placeholder="Ej.: Equipo rotativo"></div>
+      <div class="field"><label>Órdenes relevadas</label><input id="newEqOrders" value="0"></div>
+      <div class="field full"><label>Componentes / puntos de medición</label><input id="newEqComponents" value="Motor eléctrico, Rodamiento LA, Rodamiento LOA"></div>
+    </div>
+    <div class="info">La máquina nueva se agrega en una fila inferior de <b>equipos añadidos</b> para no romper el diagrama principal.</div>
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="primary" id="saveMachine">Agregar al mapa</button><button data-close="machineModal">Cancelar</button></div>
+  </div>
+</div></div>
+
+<div class="modalBack" id="importModal"><div class="modal">
+  <div class="mh"><b>Importar mediciones</b><button data-close="importModal">✕</button></div>
+  <div class="mb">
+    <div class="formGrid">
+      <div class="field full"><label>Archivo</label><label class="fileBtn" for="csvInput">Seleccionar CSV</label><input id="csvInput" type="file" accept=".csv"></div>
+      <div class="field full"><label>Esquema esperado</label><div class="mono">timestamp,equipment,component,technique,parameter,value,unit,source
+2026-09-03 08:00,P-80A,Rodamiento LA,Vibración,Vibración RMS,7.8,mm/s,Colector portátil
+2026-09-03 08:15,AC-725,Motor eléctrico,Termografía,Temperatura máxima,76.4,°C,Cámara IR</div></div>
+    </div>
+  </div>
+</div></div>
+
+<div class="modalBack" id="interModal"><div class="modal">
+  <div class="mh"><b>Intervención sugerida</b><button data-close="interModal">✕</button></div>
+  <div class="mb">
+    <div class="formGrid">
+      <div class="field"><label>Equipo</label><input id="intEq"></div>
+      <div class="field"><label>Sistema destino</label><select id="intTarget"><option>SAP PM</option><option>IBM Maximo</option><option>Consuman</option><option>Exportar CSV</option></select></div>
+      <div class="field"><label>Prioridad</label><select id="intPriority"><option>Alta</option><option>Media</option><option>Baja</option></select></div>
+      <div class="field"><label>Componente</label><input id="intComp"></div>
+      <div class="field full"><label>Descripción</label><textarea id="intDesc" rows="3"></textarea></div>
+      <div class="field full"><label>Acción recomendada</label><textarea id="intAction" rows="3"></textarea></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="primary" id="downloadInt">Descargar CSV</button><button data-close="interModal">Cerrar</button></div>
+  </div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const BASE_META = {
+  // ── Fraccionamiento ──
+  "T-1200": {name:"Torre de fraccionamiento de propano T-1200", displayName:"T-1200", family:"Columna de fraccionamiento", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, type:"Columna de fraccionamiento · Criticidad Alta", components:["Cuerpo / bandejas","Rehervidor","Condensador","Sistema de reflujo","Instrumentación"]},
+  "T-1300": {name:"Torre de fraccionamiento de butano T-1300", displayName:"T-1300", family:"Columna de fraccionamiento", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, type:"Columna de fraccionamiento · Criticidad Alta", components:["Cuerpo / bandejas","Rehervidor","Condensador","Sistema de reflujo","Instrumentación"]},
+  "V-270": {name:"Acumulador de propano V-270", displayName:"V-270", family:"Recipiente a presión", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, type:"Recipiente a presión · Criticidad Alta", components:["Cuerpo","Boquillas","Válvula de seguridad","Indicador de nivel"]},
+  "V-280": {name:"Acumulador de butano V-280", displayName:"V-280", family:"Recipiente a presión", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, type:"Recipiente a presión · Criticidad Alta", components:["Cuerpo","Boquillas","Válvula de seguridad","Indicador de nivel"]},
+  "E-505": {name:"Intercambiador fondo debutanizadora E-505", displayName:"E-505", family:"Intercambiador de calor", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:0, type:"Intercambiador de calor · Criticidad Media", components:["Haz de tubos","Carcasa","Cabezal","Instrumentación"]},
+  "E-515": {name:"Intercambiador fondo deetanizadora E-515", displayName:"E-515", family:"Intercambiador de calor", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:0, type:"Intercambiador de calor · Criticidad Media", components:["Haz de tubos","Carcasa","Cabezal","Instrumentación"]},
+  "AC-725": {name:"Aeroventilador de propano AC-725", displayName:"AC-725", family:"Aeroenfriador", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:25, type:"Aeroenfriador · Criticidad Media", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
+  "AC-720": {name:"Aeroenfriador de proceso AC-720", displayName:"AC-720", family:"Aeroenfriador", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:15, type:"Aeroenfriador · Criticidad Media", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
+  "AC-745": {name:"Aeroenfriador de proceso AC-745", displayName:"AC-745", family:"Aeroenfriador", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:9, type:"Aeroenfriador · Criticidad Media", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
+  // ── Despacho ──
+  "P-80A": {name:"Bomba de cargadero de propano P-80A", displayName:"P-80A", family:"Bomba centrífuga vertical", sector:"Despacho", crit:"Alta", sap:"Sí", orders:16, type:"Bomba de cargadero · Criticidad Alta", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]},
+  "P-80B": {name:"Bomba de cargadero de propano P-80B", displayName:"P-80B", family:"Bomba centrífuga vertical", sector:"Despacho", crit:"Baja", sap:"Sí", orders:6, type:"Bomba de cargadero · Criticidad Baja", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]},
+  "P-80C": {name:"Bomba de cargadero de propano P-80C", displayName:"P-80C", family:"Bomba centrífuga vertical", sector:"Despacho", crit:"Baja", sap:"Sí", orders:0, type:"Bomba de cargadero · Criticidad Baja", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]}
+};
+let META = {};
+let CUSTOM = [];
+let data = [];
+let IMPORTED = [];
+let selectedEq = "P-80A";
+let selectedComp = "Rodamiento LA";
+let selectedSeriesKey = "Vibración|Vibración RMS";
+
+const LAYOUT = {
+  "T-1200":[200,160], "T-1300":[200,340],
+  "V-270":[430,160],  "V-280":[430,340],
+  "E-505":[660,160],  "E-515":[660,340],
+  "AC-725":[900,120], "AC-720":[900,300], "AC-745":[900,480],
+  "P-80A":[1210,120], "P-80B":[1210,300], "P-80C":[1210,480]
+};
+
+function cloneMeta(){ META = JSON.parse(JSON.stringify(BASE_META)); }
+function loadCustom(){
+  try{
+    CUSTOM = JSON.parse(localStorage.getItem("cv12custom") || "[]");
+    if(!Array.isArray(CUSTOM)) CUSTOM = [];
+    CUSTOM.forEach(m => { if(m && m.id && m.meta) META[m.id] = m.meta; });
+  }catch(e){ CUSTOM = []; }
+}
+function saveCustom(){
+  const payload = CUSTOM.map(m => ({id:m.id, meta:META[m.id]})).filter(x => x.id && x.meta);
+  localStorage.setItem("cv12custom", JSON.stringify(payload));
+}
+function loadImported(){
+  try{
+    const raw = JSON.parse(localStorage.getItem("cv12imported") || "[]");
+    IMPORTED = (Array.isArray(raw)?raw:[]).map(r => ({...r, timestamp:new Date(r.timestamp)}));
+  }catch(e){ IMPORTED = []; }
+}
+function saveImported(){
+  try{ localStorage.setItem("cv12imported", JSON.stringify(IMPORTED)); }catch(e){}
+}
+function rand(seed){ const x = Math.sin(seed) * 10000; return x - Math.floor(x); }
+function addSeries(arr, eq, comp, tech, param, unit, base, slope, noise, source, n=24, stepH=72){
+  const start = new Date("2026-07-15T08:00:00");
+  for(let i=0;i<n;i++){
+    const t = new Date(start.getTime() + i * stepH * 3600000);
+    const v = base + slope*i + (rand(i*17 + eq.length*7 + comp.length*5 + param.length)*2 - 1) * noise;
+    arr.push({timestamp:t, equipment:eq, component:comp, technique:tech, parameter:param, value:v, unit, source});
+  }
+}
+function demoData(){
+  const arr = [];
+  // Bomba de cargadero P-80A (equipo crítico - sistema de sello)
+  addSeries(arr,"P-80A","Rodamiento LA","Vibración","Vibración RMS","mm/s",3.4,0.19,0.34,"Colector portátil");
+  addSeries(arr,"P-80A","Rodamiento LOA","Vibración","Vibración RMS","mm/s",3.0,0.08,0.28,"Colector portátil");
+  addSeries(arr,"P-80A","Sello mecánico","Termografía","Temperatura máxima","°C",57,0.72,1.8,"Cámara IR");
+  addSeries(arr,"P-80A","Motor eléctrico","Análisis eléctrico","Corriente RMS","A",42,0.12,1.1,"Analizador eléctrico");
+  addSeries(arr,"P-80A","Rodamiento LA","Ultrasonido","Nivel ultrasónico","dB",24,0.75,2.0,"Ultrasonido");
+  addSeries(arr,"P-80A","Rodamiento LA","Análisis de aceite","Hierro","ppm",18,1.0,3.0,"Laboratorio");
+  addSeries(arr,"P-80B","Rodamiento LA","Vibración","Vibración RMS","mm/s",2.9,0.06,0.22,"Colector portátil");
+  addSeries(arr,"P-80B","Sello mecánico","Termografía","Temperatura máxima","°C",54,0.12,1.2,"Cámara IR");
+  addSeries(arr,"P-80C","Rodamiento LA","Vibración","Vibración RMS","mm/s",2.7,0.05,0.20,"Colector portátil");
+
+  // Aeroventilador AC-725 (equipo crítico - correas de transmisión)
+  addSeries(arr,"AC-725","Correas","Vibración","Vibración RMS","mm/s",3.6,0.22,0.30,"Colector portátil");
+  addSeries(arr,"AC-725","Rodamiento LA","Vibración","Vibración RMS","mm/s",3.3,0.15,0.28,"Colector portátil");
+  addSeries(arr,"AC-725","Motor eléctrico","Termografía","Temperatura máxima","°C",60,0.34,1.5,"Cámara IR");
+  addSeries(arr,"AC-725","Rodamiento LA","Ultrasonido","Nivel ultrasónico","dB",26,0.42,1.8,"Ultrasonido");
+  addSeries(arr,"AC-720","Rodamiento LA","Vibración","Vibración RMS","mm/s",2.9,0.10,0.24,"Colector portátil");
+  addSeries(arr,"AC-720","Motor eléctrico","Termografía","Temperatura máxima","°C",57,0.26,1.3,"Cámara IR");
+  addSeries(arr,"AC-745","Rodamiento LA","Vibración","Vibración RMS","mm/s",2.5,0.04,0.20,"Colector portátil");
+  addSeries(arr,"AC-745","Motor eléctrico","Termografía","Temperatura máxima","°C",55,0.10,1.0,"Cámara IR");
+
+  // Estáticos (gestión por integridad: termografía / proceso)
+  addSeries(arr,"T-1200","Rehervidor","Termografía","Temperatura máxima","°C",72,0.16,1.2,"Cámara IR");
+  addSeries(arr,"T-1200","Instrumentación","Proceso","Presión","bar",11.8,0.02,0.20,"SCADA",30,48);
+  addSeries(arr,"T-1300","Rehervidor","Termografía","Temperatura máxima","°C",69,0.18,1.1,"Cámara IR");
+  addSeries(arr,"T-1300","Instrumentación","Proceso","Presión","bar",10.5,0.01,0.18,"SCADA",30,48);
+  addSeries(arr,"V-270","Cuerpo","Proceso","Nivel","%",68,0.04,0.8,"SCADA",20,72);
+  addSeries(arr,"V-280","Cuerpo","Proceso","Nivel","%",61,0.03,0.7,"SCADA",20,72);
+  addSeries(arr,"E-505","Haz de tubos","Termografía","Temperatura máxima","°C",66,0.14,1.0,"Cámara IR");
+  addSeries(arr,"E-515","Haz de tubos","Termografía","Temperatura máxima","°C",63,0.10,0.9,"Cámara IR");
+  return arr;
+}
+function resetApp(){
+  cloneMeta(); loadCustom(); loadImported();
+  data = demoData().concat(IMPORTED);
+  selectedEq = "P-80A"; selectedComp = "Rodamiento LA"; selectedSeriesKey = "Vibración|Vibración RMS";
+}
+
+function allEq(eq){ return data.filter(r => r.equipment === eq); }
+function rowsFor(eq=selectedEq, comp=selectedComp, key=selectedSeriesKey){
+  if(!key) return [];
+  const [tech, param] = key.split("|");
+  return data.filter(r => r.equipment===eq && r.component===comp && r.technique===tech && r.parameter===param).sort((a,b)=>a.timestamp-b.timestamp);
+}
+function mean(a){ return a.reduce((s,x)=>s+x,0)/(a.length||1); }
+function sd(a){ const m = mean(a); return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/Math.max(1,a.length-1)); }
+function last(a){ return a[a.length-1]; }
+function thresholds(tech, param){
+  if(tech==="Vibración") return {warn:4.5, bad:7.1};
+  if(tech==="Termografía") return {warn:70, bad:85};
+  if(tech==="Ultrasonido") return {warn:38, bad:48};
+  if(param==="Hierro") return {warn:35, bad:55};
+  return {warn:9999, bad:99999};
+}
+function rowStatus(r){
+  const t = thresholds(r.technique, r.parameter);
+  return r.value >= t.bad ? "bad" : r.value >= t.warn ? "warn" : "ok";
+}
+function health(eq){
+  const rows = allEq(eq);
+  if(!rows.length) return null;
+  let score = 98;
+  rows.forEach(r => { const s = rowStatus(r); if(s==="bad") score -= 1.25; else if(s==="warn") score -= .45; });
+  return Math.max(28, Math.round(score));
+}
+function eqStatus(eq){
+  const h = health(eq);
+  if(h===null) return "nodata";
+  return h < 70 ? "bad" : h < 86 ? "warn" : "ok";
+}
+function prettyStatus(s){ return s==="bad" ? "Crítico" : s==="warn" ? "Atención" : s==="nodata" ? "Sin datos" : "Normal"; }
+function fmt(r){ return `${r.value.toFixed(r.unit==="bar"||r.unit==="A" ? 2 : 1)} ${r.unit}`; }
+function availableSeries(){
+  const rows = data.filter(r => r.equipment===selectedEq && r.component===selectedComp);
+  const seen = new Set(), out = [];
+  rows.forEach(r => { const k = r.technique + "|" + r.parameter; if(!seen.has(k)){ seen.add(k); out.push(k);} });
+  return out;
+}
+function ensureSelection(){
+  const comps = META[selectedEq]?.components || [];
+  if(!comps.includes(selectedComp)) selectedComp = comps[0] || "";
+  const ser = availableSeries();
+  if(!ser.includes(selectedSeriesKey)) selectedSeriesKey = ser[0] || "";
+}
+function recText(rows){
+  if(!rows.length) return "Todavía no hay mediciones cargadas para este equipo / componente / técnica.";
+  const tech = selectedSeriesKey.split("|")[0];
+  const base = rowStatus(last(rows))==="bad" ? "Condición crítica" : "Se observa una tendencia que requiere seguimiento";
+  let act = "correlacionar el desvío con otras variables del proceso.";
+  if(tech==="Vibración") act = "verificar rodamientos, alineación, holguras, acople, lubricación y condición de base.";
+  else if(tech==="Termografía") act = "inspeccionar el punto caliente y revisar carga, sellos, rodamientos o conexiones asociadas.";
+  else if(tech==="Ultrasonido") act = "confirmar lubricación o rodamiento y descartar fugas o descargas eléctricas.";
+  else if(tech==="Análisis eléctrico") act = "comparar fases, carga del motor y conexiones.";
+  else if(tech==="Análisis de aceite") act = "confirmar contaminación o desgaste con la tendencia.";
+  return `<b>${base}:</b> ${tech} en <b>${selectedComp}</b>. Se recomienda ${act}`;
+}
+
+function renderPlant(){
+  const svg = document.getElementById("plantSvg");
+  svg.innerHTML = "";
+  const NS = "http://www.w3.org/2000/svg";
+  const mk = n => document.createElementNS(NS, n);
+  const line = (x1,y1,x2,y2) => { const p = mk("path"); p.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2}`); p.setAttribute("class","pipe"); svg.appendChild(p); };
+  const label = (x,y,t) => { const e = mk("text"); e.setAttribute("x",x); e.setAttribute("y",y); e.setAttribute("class","stage"); e.textContent=t; svg.appendChild(e); };
+  const node = (id,x,y) => {
+    const g = mk("g");
+    g.setAttribute("transform",`translate(${x},${y})`);
+    g.style.cursor = "pointer";
+    g.addEventListener("click",()=>{ selectedEq=id; selectedComp=(META[id].components||[])[0]||""; selectedSeriesKey=""; ensureSelection(); render(); });
+    const r = mk("rect");
+    r.setAttribute("x",-58); r.setAttribute("y",-34); r.setAttribute("width",116); r.setAttribute("height",68); r.setAttribute("rx",14);
+    r.setAttribute("class","node"+(selectedEq===id?" sel":"")); g.appendChild(r);
+    const t1 = mk("text"); t1.setAttribute("x",0); t1.setAttribute("y",-8); t1.setAttribute("text-anchor","middle"); t1.setAttribute("class","label"); t1.textContent=META[id].displayName||id; g.appendChild(t1);
+    const t2 = mk("text"); t2.setAttribute("x",0); t2.setAttribute("y",12); t2.setAttribute("text-anchor","middle"); t2.setAttribute("class","sublabel"); t2.textContent=id; g.appendChild(t2);
+    const s = eqStatus(id);
+    const c = s==="ok"?"#35d07f":s==="warn"?"#f2c94c":s==="bad"?"#ff5d6c":"#7d8fa7";
+    const b = mk("rect"); b.setAttribute("x",27); b.setAttribute("y",-29); b.setAttribute("width",23); b.setAttribute("height",14); b.setAttribute("rx",7); b.setAttribute("fill",c); g.appendChild(b);
+    svg.appendChild(g);
+  };
+
+  label(430,45,"FRACCIONAMIENTO");
+  label(1210,45,"DESPACHO");
+
+  // Torres -> Acumuladores -> Intercambiadores (dos filas)
+  line(258,160,372,160); line(488,160,602,160);
+  line(258,340,372,340); line(488,340,602,340);
+
+  // Intercambiadores -> colector -> Aeroenfriadores
+  line(718,160,790,160); line(718,340,790,340);
+  line(790,160,790,480);
+  line(790,120,842,120); line(790,300,842,300); line(790,480,842,480);
+
+  // Aeroenfriadores -> colector de despacho -> Bombas
+  line(958,120,1090,120); line(958,300,1090,300); line(958,480,1090,480);
+  line(1090,120,1090,480);
+  line(1090,120,1152,120); line(1090,300,1152,300); line(1090,480,1152,480);
+
+  Object.keys(LAYOUT).forEach(id => node(id, LAYOUT[id][0], LAYOUT[id][1]));
+  if(CUSTOM.length){
+    label(200,545,"EQUIPOS AÑADIDOS");
+    CUSTOM.forEach((m,i) => { if(META[m.id]) node(m.id, 200+i*150, 565); });
+  }
+}
+function renderComponents(){
+  const box = document.getElementById("componentList");
+  box.innerHTML = "";
+  (META[selectedEq]?.components || []).forEach(c => {
+    const n = data.filter(r => r.equipment===selectedEq && r.component===c).length;
+    const div = document.createElement("div");
+    div.className = "comp" + (c===selectedComp ? " sel" : "");
+    div.innerHTML = `<b>${c}</b><small>${n ? n+" registros" : "sin datos"}</small>`;
+    div.onclick = () => { selectedComp=c; ensureSelection(); render(); };
+    box.appendChild(div);
+  });
+}
+function renderMetricBtns(){
+  const box = document.getElementById("metricBtns");
+  box.innerHTML = "";
+  availableSeries().forEach(k => {
+    const [t,p] = k.split("|");
+    const b = document.createElement("button");
+    b.className = "metric" + (k===selectedSeriesKey ? " sel" : "");
+    b.textContent = t + " · " + p;
+    b.onclick = () => { selectedSeriesKey = k; render(); };
+    box.appendChild(b);
+  });
+  if(!box.children.length) box.innerHTML = '<span class="sub">Este componente todavía no tiene mediciones.</span>';
+}
+function renderSide(){
+  ensureSelection();
+  const meta = META[selectedEq] || {name:selectedEq, family:"Equipo", sector:"-", sap:"-", orders:0, type:"Equipo importado"};
+  const h = health(selectedEq), s = eqStatus(selectedEq);
+  document.getElementById("eqTitle").textContent = meta.name;
+  document.getElementById("eqType").textContent = meta.type;
+  document.getElementById("health").innerHTML = h===null ? '— <small>sin datos</small>' : `${h} <small>/100</small>`;
+  const badge = document.getElementById("badge");
+  badge.textContent = prettyStatus(s).toUpperCase();
+  badge.className = "badge " + (s==="ok" ? "green" : s==="warn" ? "yellow" : s==="bad" ? "red" : "gray");
+  document.getElementById("metaFamily").textContent = meta.family || "-";
+  document.getElementById("metaSector").textContent = meta.sector || "-";
+  document.getElementById("metaSap").textContent = meta.sap || "-";
+  document.getElementById("metaOrders").textContent = meta.orders ?? "-";
+  document.getElementById("metaTag").textContent = selectedEq;
+  document.getElementById("metaState").textContent = prettyStatus(s);
+  renderComponents();
+  renderMetricBtns();
+
+  const rows = rowsFor();
+  if(rows.length){
+    const r = last(rows), vals = rows.map(x=>x.value), m = mean(vals), delta = (r.value - m) / Math.max(.0001, Math.abs(m)) * 100;
+    document.getElementById("lastVal").textContent = fmt(r);
+    document.getElementById("lastMetric").textContent = r.technique + " · " + r.parameter;
+    document.getElementById("trendVal").textContent = (delta>=0 ? "↑ +" : "↓ ") + Math.abs(delta).toFixed(0) + "%";
+  }else{
+    document.getElementById("lastVal").textContent = "—";
+    document.getElementById("lastMetric").textContent = "Sin mediciones";
+    document.getElementById("trendVal").textContent = "—";
+  }
+  document.getElementById("eventCount").textContent = allEq(selectedEq).filter(r=>rowStatus(r)!=="ok").length;
+  const rec = document.getElementById("recommendation");
+  rec.innerHTML = recText(rows);
+  rec.className = "rec" + (s==="ok" ? " good" : s==="nodata" ? " neutral" : "");
+}
+function setupCanvas(id){
+  const c = document.getElementById(id), rect = c.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+  c.width = rect.width * d; c.height = 230 * d;
+  const ctx = c.getContext("2d"); ctx.scale(d,d);
+  return {ctx, w:rect.width, h:230};
+}
+function axes(ctx,w,h,min,max,label){
+  const ml=42,mr=10,mt=18,mb=26,pw=w-ml-mr,ph=h-mt-mb;
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle="#29425e"; ctx.beginPath(); ctx.moveTo(ml,mt); ctx.lineTo(ml,h-mb); ctx.lineTo(w-mr,h-mb); ctx.stroke();
+  ctx.font="9px Segoe UI"; ctx.fillStyle="#8298b4";
+  for(let i=0;i<=4;i++){
+    const v=min+(max-min)*(1-i/4), y=mt+ph*i;
+    ctx.fillText(v.toFixed(1),3,y+3);
+    ctx.strokeStyle="rgba(100,130,165,.18)";
+    ctx.beginPath(); ctx.moveTo(ml,y); ctx.lineTo(w-mr,y); ctx.stroke();
+  }
+  ctx.fillText(label,ml,10);
+  return {ml,mr,mt,mb,pw,ph};
+}
+function draw(){
+  const rows = rowsFor(), vals = rows.map(r=>r.value), legend = document.getElementById("trendLegend");
+  ["trendChart","histChart","controlChart"].forEach(id=>{
+    const {ctx} = setupCanvas(id);
+    if(!vals.length){ ctx.fillStyle="#8298b4"; ctx.font="12px Segoe UI"; ctx.fillText("Sin datos para esta selección",20,35); }
+  });
+  if(!vals.length){ legend.textContent = "Sin serie seleccionada."; return; }
+  let min=Math.min(...vals), max=Math.max(...vals), pad=(max-min||1)*.15; min-=pad; max+=pad;
+
+  const a=setupCanvas("trendChart"), ax=axes(a.ctx,a.w,a.h,min,max,last(rows).parameter+" ["+last(rows).unit+"]");
+  a.ctx.strokeStyle="#52d6ff"; a.ctx.lineWidth=2; a.ctx.beginPath();
+  vals.forEach((v,i)=>{ const x=ax.ml+ax.pw*i/Math.max(1,vals.length-1), y=ax.mt+ax.ph*(1-(v-min)/(max-min)); i?a.ctx.lineTo(x,y):a.ctx.moveTo(x,y); });
+  a.ctx.stroke();
+  a.ctx.fillStyle="#52d6ff";
+  vals.forEach((v,i)=>{ const x=ax.ml+ax.pw*i/Math.max(1,vals.length-1), y=ax.mt+ax.ph*(1-(v-min)/(max-min)); a.ctx.beginPath(); a.ctx.arc(x,y,2.4,0,Math.PI*2); a.ctx.fill(); });
+  legend.textContent = `${selectedEq} · ${selectedComp} · ${last(rows).technique} · ${vals.length} mediciones`;
+
+  const b=setupCanvas("histChart"), bins=8, lo=Math.min(...vals), hi=Math.max(...vals), step=(hi-lo||1)/bins, cnt=Array(bins).fill(0);
+  vals.forEach(v => cnt[Math.min(bins-1, Math.floor((v-lo)/step))]++);
+  const mx=Math.max(...cnt), bx=axes(b.ctx,b.w,b.h,0,mx,"Frecuencia"), bw=bx.pw/bins;
+  b.ctx.fillStyle="#6f8dff";
+  cnt.forEach((c,i)=>{ const bh=bx.ph*c/mx; b.ctx.fillRect(bx.ml+i*bw+3,bx.mt+bx.ph-bh,bw-6,bh); });
+
+  const c=setupCanvas("controlChart"), m=mean(vals), s=sd(vals), u=m+2*s, l=m-2*s;
+  let cmin=Math.min(...vals,l), cmax=Math.max(...vals,u), cp=(cmax-cmin||1)*.12; cmin-=cp; cmax+=cp;
+  const cx=axes(c.ctx,c.w,c.h,cmin,cmax,"Control estadístico"), yy=v=>cx.mt+cx.ph*(1-(v-cmin)/(cmax-cmin));
+  [["#35d07f",m],["#f2c94c",u],["#f2c94c",l]].forEach(z=>{ c.ctx.strokeStyle=z[0]; c.ctx.setLineDash([5,5]); c.ctx.beginPath(); c.ctx.moveTo(cx.ml,yy(z[1])); c.ctx.lineTo(c.w-cx.mr,yy(z[1])); c.ctx.stroke(); c.ctx.setLineDash([]); });
+  vals.forEach((v,i)=>{ const x=cx.ml+cx.pw*i/Math.max(1,vals.length-1), y=yy(v); c.ctx.fillStyle=(v>u||v<l)?"#ff5d6c":"#52d6ff"; c.ctx.beginPath(); c.ctx.arc(x,y,3,0,Math.PI*2); c.ctx.fill(); });
+}
+function renderHistory(){
+  const tb = document.getElementById("history");
+  tb.innerHTML = "";
+  allEq(selectedEq).sort((a,b)=>b.timestamp-a.timestamp).slice(0,45).forEach(r=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${r.timestamp.toLocaleString("es-AR",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"})}</td>
+                    <td>${r.equipment}</td><td>${r.component}</td><td>${r.technique}</td><td>${r.parameter}</td><td>${fmt(r)}</td><td>${prettyStatus(rowStatus(r))}</td>`;
+    tb.appendChild(tr);
+  });
+}
+function render(){ ensureSelection(); renderPlant(); renderSide(); draw(); renderHistory(); }
+
+function openModal(id){ document.getElementById(id).style.display="flex"; }
+function closeModal(id){ document.getElementById(id).style.display="none"; }
+document.querySelectorAll("[data-close]").forEach(b => b.onclick = ()=>closeModal(b.dataset.close));
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.style.display="block"; setTimeout(()=>t.style.display="none",2600); }
+
+document.getElementById("openImport").onclick = ()=>openModal("importModal");
+document.getElementById("addMachineBtn").onclick = ()=>openModal("machineModal");
+document.getElementById("saveMachine").onclick = ()=>{
+  const id = document.getElementById("newEqId").value.trim().toUpperCase();
+  const name = document.getElementById("newEqName").value.trim();
+  if(!id || !name){ toast("Completá TAG y nombre"); return; }
+  if(META[id]){ toast("Ya existe un equipo con ese TAG"); return; }
+  META[id] = {
+    name:`${name} ${id}`,
+    displayName:id,
+    family:document.getElementById("newEqFamily").value.trim() || "Equipo",
+    sector:document.getElementById("newEqSector").value,
+    sap:"No",
+    orders:Number(document.getElementById("newEqOrders").value || 0),
+    type:(document.getElementById("newEqSector").value + " · " + (document.getElementById("newEqType").value.trim() || "Equipo industrial")),
+    components:document.getElementById("newEqComponents").value.split(",").map(x=>x.trim()).filter(Boolean)
+  };
+  CUSTOM.push({id});
+  saveCustom();
+  selectedEq=id; selectedComp=META[id].components[0]||""; selectedSeriesKey="";
+  closeModal("machineModal"); render(); toast(`${id} agregado al mapa`);
+};
+document.getElementById("deleteMachineBtn").onclick = ()=>{
+  const idx = CUSTOM.findIndex(x=>x.id===selectedEq);
+  if(idx<0){ toast("Solo se pueden eliminar máquinas agregadas por el usuario"); return; }
+  if(!confirm(`¿Eliminar ${selectedEq} del mapa? También se quitarán sus mediciones importadas.`)) return;
+  CUSTOM.splice(idx,1); delete META[selectedEq];
+  data = data.filter(r=>r.equipment!==selectedEq);
+  saveCustom();
+  selectedEq="P-80A"; selectedComp="Rodamiento LA"; selectedSeriesKey="Vibración|Vibración RMS";
+  render(); toast("Máquina eliminada");
+};
+function parseCsvLine(line){
+  const out=[]; let cur="", q=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(q){ if(ch==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=ch; }
+    else { if(ch==='"') q=true; else if(ch===',') { out.push(cur); cur=""; } else cur+=ch; }
+  }
+  out.push(cur);
+  return out.map(s=>s.trim());
+}
+document.getElementById("csvInput").onchange = async e=>{
+  const file = e.target.files[0]; if(!file) return;
+  const txt = await file.text();
+  const lines = txt.trim().split(/\r?\n/);
+  const head = parseCsvLine(lines.shift()).map(x=>x.toLowerCase());
+  const req = ["timestamp","equipment","component","technique","parameter","value","unit","source"];
+  const ix = {}; req.forEach(k=>ix[k]=head.indexOf(k));
+  if(req.some(k=>ix[k]<0)){ toast("CSV inválido: faltan columnas"); return; }
+  const parsed=[];
+  lines.forEach(line=>{
+    const c=parseCsvLine(line);
+    const v=+c[ix.value];
+    if(!Number.isFinite(v)) return;
+    parsed.push({timestamp:new Date(c[ix.timestamp].trim().replace(" ","T")),equipment:c[ix.equipment].trim(),component:c[ix.component].trim(),technique:c[ix.technique].trim(),parameter:c[ix.parameter].trim(),value:v,unit:c[ix.unit].trim(),source:c[ix.source].trim()});
+  });
+  if(!parsed.length){ toast("No se encontraron filas válidas"); return; }
+  [...new Set(parsed.map(r=>r.equipment))].forEach(id=>{
+    const comps=[...new Set(parsed.filter(r=>r.equipment===id).map(r=>r.component))];
+    if(!META[id]){
+      META[id]={name:id,displayName:id,family:"Equipo",sector:"Añadido",sap:"No",orders:0,type:"Equipo importado",components:comps};
+      CUSTOM.push({id});
+    }else{
+      META[id].components=[...new Set([...(META[id].components||[]),...comps])];
+    }
+  });
+  CUSTOM = CUSTOM.filter((v,i,a)=>a.findIndex(x=>x.id===v.id)===i);
+  saveCustom();
+  IMPORTED = [...IMPORTED, ...parsed];
+  saveImported();
+  data = [...data, ...parsed];
+  selectedEq=parsed[0].equipment; selectedComp=parsed[0].component; selectedSeriesKey=parsed[0].technique+"|"+parsed[0].parameter;
+  closeModal("importModal"); render(); toast(`Agregados ${parsed.length} registros`);
+};
+document.getElementById("interBtn").onclick = ()=>{
+  const rows = rowsFor(), r = rows.length ? last(rows) : null;
+  document.getElementById("intEq").value = selectedEq;
+  document.getElementById("intComp").value = selectedComp;
+  document.getElementById("intPriority").value = eqStatus(selectedEq)==="bad" ? "Alta" : eqStatus(selectedEq)==="warn" ? "Media" : "Baja";
+  document.getElementById("intDesc").value = r ? `Desvío detectado en ${r.technique} - ${r.parameter}. Último valor: ${fmt(r)}. Componente: ${selectedComp}.` : `Seguimiento de condición del componente ${selectedComp}.`;
+  document.getElementById("intAction").value = recText(rows).replace(/<[^>]*>/g,"");
+  openModal("interModal");
+};
+document.getElementById("downloadInt").onclick = ()=>{
+  const fields=["equipo","sistema_destino","prioridad","componente","descripcion","accion"];
+  const vals=[document.getElementById("intEq").value,document.getElementById("intTarget").value,document.getElementById("intPriority").value,document.getElementById("intComp").value,document.getElementById("intDesc").value,document.getElementById("intAction").value];
+  const esc=s=>`"${String(s).replaceAll('"','""')}"`;
+  const csv=fields.join(",")+"\n"+vals.map(esc).join(",");
+  const blob=new Blob([csv],{type:"text/csv"}), a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=`intervencion_${selectedEq}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  toast("Intervención CSV generada");
+};
+document.getElementById("resetBtn").onclick = ()=>{
+  localStorage.removeItem("cv12custom");
+  localStorage.removeItem("cv12imported");
+  resetApp(); render(); toast("Demo restaurada");
+};
+window.addEventListener("resize", draw);
+
+resetApp();
+render();
+</script>
+</body>
+</html>
