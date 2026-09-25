@@ -166,6 +166,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
   <button class="tabBtn" data-tab="confiabilidad">🔧 Confiabilidad</button>
   <button class="tabBtn" data-tab="amfe">⚠️ AMFE</button>
   <button class="tabBtn" data-tab="historial">📋 Historial</button>
+  <button class="tabBtn" data-tab="diagnostico">🔍 Diagnóstico</button>
 </div>
 
 <div class="tabPanel active" data-tab-panel="mapa">
@@ -300,6 +301,21 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 </div>
 </div>
 
+<div class="tabPanel" data-tab-panel="diagnostico">
+<div class="panel" id="diagPanel">
+  <div class="ph">
+    <div><h2>Diagnóstico</h2><small>Herramientas de análisis de fallas por equipo</small></div>
+  </div>
+  <div class="side" id="diagBody">
+    <section class="panel cp">
+      <h3 class="ct">Pareto de fallas por equipo</h3>
+      <canvas id="paretoChart"></canvas>
+      <div class="legend" id="paretoLegend"></div>
+    </section>
+  </div>
+</div>
+</div>
+
 <div class="modalBack" id="machineModal"><div class="modal">
   <div class="mh"><b>Agregar máquina al mapa general</b><button data-close="machineModal">✕</button></div>
   <div class="mb">
@@ -349,19 +365,19 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 <script>
 const BASE_META = {
   // ── Fraccionamiento ──
-  "T-1200": {name:"Torre de fraccionamiento de propano T-1200", displayName:"T-1200", family:"Columna de fraccionamiento", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, type:"Columna de fraccionamiento · Criticidad Alta", components:["Cuerpo / bandejas","Rehervidor","Condensador","Sistema de reflujo","Instrumentación"]},
-  "T-1300": {name:"Torre de fraccionamiento de butano T-1300", displayName:"T-1300", family:"Columna de fraccionamiento", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, type:"Columna de fraccionamiento · Criticidad Alta", components:["Cuerpo / bandejas","Rehervidor","Condensador","Sistema de reflujo","Instrumentación"]},
-  "V-270": {name:"Acumulador de propano V-270", displayName:"V-270", family:"Recipiente a presión", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, type:"Recipiente a presión · Criticidad Alta", components:["Cuerpo","Boquillas","Válvula de seguridad","Indicador de nivel"]},
-  "V-280": {name:"Acumulador de butano V-280", displayName:"V-280", family:"Recipiente a presión", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, type:"Recipiente a presión · Criticidad Alta", components:["Cuerpo","Boquillas","Válvula de seguridad","Indicador de nivel"]},
-  "E-505": {name:"Intercambiador fondo debutanizadora E-505", displayName:"E-505", family:"Intercambiador de calor", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:0, type:"Intercambiador de calor · Criticidad Media", components:["Haz de tubos","Carcasa","Cabezal","Instrumentación"]},
-  "E-515": {name:"Intercambiador fondo deetanizadora E-515", displayName:"E-515", family:"Intercambiador de calor", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:0, type:"Intercambiador de calor · Criticidad Media", components:["Haz de tubos","Carcasa","Cabezal","Instrumentación"]},
-  "AC-725": {name:"Aeroventilador de propano AC-725", displayName:"AC-725", family:"Aeroenfriador", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:25, type:"Aeroenfriador · Criticidad Media", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
-  "AC-720": {name:"Aeroenfriador de proceso AC-720", displayName:"AC-720", family:"Aeroenfriador", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:15, type:"Aeroenfriador · Criticidad Media", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
-  "AC-745": {name:"Aeroenfriador de proceso AC-745", displayName:"AC-745", family:"Aeroenfriador", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:9, type:"Aeroenfriador · Criticidad Media", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
+  "T-1200": {name:"Torre de fraccionamiento de propano T-1200", displayName:"T-1200", family:"Columna de fraccionamiento", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, fallas:0, type:"Columna de fraccionamiento · Criticidad Alta", components:["Cuerpo / bandejas","Rehervidor","Condensador","Sistema de reflujo","Instrumentación"]},
+  "T-1300": {name:"Torre de fraccionamiento de butano T-1300", displayName:"T-1300", family:"Columna de fraccionamiento", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, fallas:0, type:"Columna de fraccionamiento · Criticidad Alta", components:["Cuerpo / bandejas","Rehervidor","Condensador","Sistema de reflujo","Instrumentación"]},
+  "V-270": {name:"Acumulador de propano V-270", displayName:"V-270", family:"Recipiente a presión", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, fallas:0, type:"Recipiente a presión · Criticidad Alta", components:["Cuerpo","Boquillas","Válvula de seguridad","Indicador de nivel"]},
+  "V-280": {name:"Acumulador de butano V-280", displayName:"V-280", family:"Recipiente a presión", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, fallas:0, type:"Recipiente a presión · Criticidad Alta", components:["Cuerpo","Boquillas","Válvula de seguridad","Indicador de nivel"]},
+  "E-505": {name:"Intercambiador fondo debutanizadora E-505", displayName:"E-505", family:"Intercambiador de calor", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:0, fallas:0, type:"Intercambiador de calor · Criticidad Media", components:["Haz de tubos","Carcasa","Cabezal","Instrumentación"]},
+  "E-515": {name:"Intercambiador fondo deetanizadora E-515", displayName:"E-515", family:"Intercambiador de calor", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:0, fallas:0, type:"Intercambiador de calor · Criticidad Media", components:["Haz de tubos","Carcasa","Cabezal","Instrumentación"]},
+  "AC-725": {name:"Aeroventilador de propano AC-725", displayName:"AC-725", family:"Aeroenfriador", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:25, fallas:8, type:"Aeroenfriador · Criticidad Media", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
+  "AC-720": {name:"Aeroenfriador de proceso AC-720", displayName:"AC-720", family:"Aeroenfriador", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:15, fallas:5, type:"Aeroenfriador · Criticidad Media", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
+  "AC-745": {name:"Aeroenfriador de proceso AC-745", displayName:"AC-745", family:"Aeroenfriador", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:9, fallas:1, type:"Aeroenfriador · Criticidad Media", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
   // ── Despacho ──
-  "P-80A": {name:"Bomba de cargadero de propano P-80A", displayName:"P-80A", family:"Bomba centrífuga vertical", sector:"Despacho", crit:"Alta", sap:"Sí", orders:16, type:"Bomba de cargadero · Criticidad Alta", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]},
-  "P-80B": {name:"Bomba de cargadero de propano P-80B", displayName:"P-80B", family:"Bomba centrífuga vertical", sector:"Despacho", crit:"Baja", sap:"Sí", orders:6, type:"Bomba de cargadero · Criticidad Baja", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]},
-  "P-80C": {name:"Bomba de cargadero de propano P-80C", displayName:"P-80C", family:"Bomba centrífuga vertical", sector:"Despacho", crit:"Baja", sap:"Sí", orders:0, type:"Bomba de cargadero · Criticidad Baja", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]}
+  "P-80A": {name:"Bomba de cargadero de propano P-80A", displayName:"P-80A", family:"Bomba centrífuga vertical", sector:"Despacho", crit:"Alta", sap:"Sí", orders:16, fallas:6, type:"Bomba de cargadero · Criticidad Alta", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]},
+  "P-80B": {name:"Bomba de cargadero de propano P-80B", displayName:"P-80B", family:"Bomba centrífuga vertical", sector:"Despacho", crit:"Baja", sap:"Sí", orders:6, fallas:3, type:"Bomba de cargadero · Criticidad Baja", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]},
+  "P-80C": {name:"Bomba de cargadero de propano P-80C", displayName:"P-80C", family:"Bomba centrífuga vertical", sector:"Despacho", crit:"Baja", sap:"Sí", orders:0, fallas:0, type:"Bomba de cargadero · Criticidad Baja", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]}
 };
 // TBF (horas de operación entre fallas) del historial real del TP, por modo dominante del AMFE.
 const TBF_SEED = {
@@ -929,6 +945,73 @@ function renderLegend(){
     : '<span><i class="dot ok"></i>Normal</span><span><i class="dot warn"></i>Atención</span><span><i class="dot bad"></i>Crítico</span><span><i class="dot nodata"></i>Sin datos</span>';
 }
 function render(){ ensureSelection(); renderLegend(); renderPlant(); renderSide(); draw(); renderReliability(); renderAmfe(); renderShareAlert(); document.getElementById("aiDiagResult").style.display="none"; renderHistory(); }
+function paretoData(){
+  return Object.keys(META)
+    .map(id => ({id, name: META[id].displayName || id, fallas: META[id].fallas || 0}))
+    .filter(e => e.fallas > 0)
+    .sort((a,b) => b.fallas - a.fallas);
+}
+function drawPareto(){
+  const items = paretoData();
+  const c = setupCanvas("paretoChart");
+  const legend = document.getElementById("paretoLegend");
+  if(!items.length){
+    c.ctx.fillStyle="#8298b4"; c.ctx.font="12px Segoe UI"; c.ctx.fillText("Sin fallas relevadas para graficar",20,35);
+    legend.textContent = "Sin datos.";
+    return;
+  }
+  const total = items.reduce((s,e)=>s+e.fallas,0);
+  let acc = 0;
+  items.forEach(e=>{ acc += e.fallas; e.cumPct = acc/total*100; });
+  const cutoff = items.findIndex(e=>e.cumPct>=80);
+
+  const maxF = Math.max(...items.map(e=>e.fallas));
+  const ax = axes(c.ctx, c.w, c.h, 0, maxF, "Fallas funcionales");
+  const rightPad = 26; // deja lugar a las etiquetas 0/25/50/75/100% sin tapar el último punto
+  const plotW = ax.pw - rightPad;
+  const n = items.length, bw = plotW/n;
+
+  items.forEach((e,i)=>{
+    const bh = ax.ph * e.fallas/maxF;
+    c.ctx.fillStyle = (cutoff>=0 && i<=cutoff) ? "#ff5d6c" : "#6f8dff";
+    c.ctx.fillRect(ax.ml + i*bw + bw*0.18, ax.mt+ax.ph-bh, bw*0.64, bh);
+  });
+
+  c.ctx.fillStyle="#b8c6d8"; c.ctx.font="10px Segoe UI"; c.ctx.textAlign="center";
+  items.forEach((e,i)=>{ c.ctx.fillText(e.name, ax.ml+i*bw+bw/2, ax.mt+ax.ph+16); });
+  c.ctx.textAlign="left";
+
+  // eje derecho manual (0-100%), ya que axes() solo dibuja el eje izquierdo
+  [0,25,50,75,100].forEach(pct=>{
+    const y = ax.mt+ax.ph*(1-pct/100);
+    c.ctx.fillStyle="#8298b4"; c.ctx.font="9px Segoe UI"; c.ctx.textAlign="right";
+    c.ctx.fillText(pct+"%", c.w-2, y+3);
+  });
+  c.ctx.textAlign="left";
+
+  // umbral del 80% ("pocos vitales")
+  const y80 = ax.mt + ax.ph*(1-0.8);
+  c.ctx.strokeStyle="#f2c94c"; c.ctx.setLineDash([5,5]); c.ctx.beginPath();
+  c.ctx.moveTo(ax.ml, y80); c.ctx.lineTo(c.w-ax.mr, y80); c.ctx.stroke(); c.ctx.setLineDash([]);
+  c.ctx.fillStyle="#f2c94c"; c.ctx.font="9px Segoe UI"; c.ctx.fillText("80% acumulado", ax.ml+4, y80-4);
+
+  // línea de porcentaje acumulado
+  c.ctx.strokeStyle="#35d07f"; c.ctx.lineWidth=2; c.ctx.beginPath();
+  items.forEach((e,i)=>{
+    const x=ax.ml+i*bw+bw/2, y=ax.mt+ax.ph*(1-e.cumPct/100);
+    i?c.ctx.lineTo(x,y):c.ctx.moveTo(x,y);
+  });
+  c.ctx.stroke();
+  c.ctx.fillStyle="#35d07f";
+  items.forEach((e,i)=>{
+    const x=ax.ml+i*bw+bw/2, y=ax.mt+ax.ph*(1-e.cumPct/100);
+    c.ctx.beginPath(); c.ctx.arc(x,y,3,0,Math.PI*2); c.ctx.fill();
+  });
+
+  const vitalCount = cutoff>=0 ? cutoff+1 : items.length;
+  const vitalPct = items[cutoff>=0?cutoff:items.length-1].cumPct.toLocaleString("es-AR",{minimumFractionDigits:2,maximumFractionDigits:2});
+  legend.textContent = `${items.length} equipos con fallas relevadas (${total} en total) · los ${vitalCount} equipo(s) marcados en rojo explican el ${vitalPct}% de las fallas.`;
+}
 function showTab(tab){
   activeTab = tab;
   document.querySelectorAll(".tabPanel").forEach(p=>p.classList.toggle("active", p.dataset.tabPanel===tab));
@@ -937,6 +1020,7 @@ function showTab(tab){
   // redibujar recién cuando se muestra, o quedan en blanco (ancho 0 al momento de pintar).
   if(tab==="condicion") draw();
   if(tab==="confiabilidad") renderReliability();
+  if(tab==="diagnostico") drawPareto();
 }
 
 function openModal(id){ document.getElementById(id).style.display="flex"; }
