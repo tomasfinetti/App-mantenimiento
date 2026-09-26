@@ -40,13 +40,13 @@ input[type=file]{display:none}
 .ph small{font-size:10px;color:var(--muted)}
 .plantWrap{padding:16px}
 .plant{
-  min-height:600px;border:1px solid var(--line);border-radius:14px;overflow:auto;
+  min-height:600px;border:1px solid var(--line);border-radius:14px;overflow-x:auto;overflow-y:auto;
   background:
     linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
     linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
   background-size:28px 28px
 }
-svg{display:block;min-width:1560px}
+svg{display:block;width:100%;height:auto;min-width:900px}
 .pipe{stroke:#355472;stroke-width:4;fill:none}
 .stage{font-size:11px;font-weight:800;fill:#b8c6d8;letter-spacing:.4px}
 .node{fill:#10263c;stroke:#2c4969;stroke-width:1.5;rx:14;ry:14;cursor:pointer}

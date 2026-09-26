@@ -1,6 +1,6 @@
 # Guion de demo — Tablero de Mantenimiento (3–4 min)
 
-Guion para exponer el tablero `Tablero_Mantenimiento_v13_G06.html` en la defensa del TP.
+Guion para exponer el tablero `index.html` en la defensa del TP.
 Recorre: mapa → P-80A → condición → Weibull → predicción → generar OT.
 
 ## 0:00 – 0:30 · Mapa general
