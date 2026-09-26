@@ -114,6 +114,8 @@ canvas{width:100%;height:230px;background:#071522;border:1px solid var(--line);b
 table{width:100%;border-collapse:collapse;font-size:10px}
 th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
 th{font-size:9px;color:var(--muted);text-transform:uppercase}
+.planWrap{overflow-x:auto;padding:0 14px 14px}
+.planWrap th,.planWrap td{white-space:normal;vertical-align:top}
 .info{padding:13px 16px;font-size:10px;color:var(--muted);line-height:1.55}
 .info b{color:var(--text)}
 .sourceCards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
@@ -260,6 +262,11 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
       <div class="field"><label>Umbral de confiabilidad R(t) (%)</label><input id="rThreshold" type="number" min="1" max="99" step="1" value="80"></div>
     </div>
     <div id="predAlert" class="predAlert neutral"></div>
+    <div class="sectionLabel">PM programada por uso (horas)</div>
+    <div class="formGrid">
+      <div class="field"><label>Intervalo de PM (horas)</label><input id="pmInterval" type="number" min="1" step="1" placeholder="Sin definir"></div>
+    </div>
+    <div id="pmAlert" class="predAlert neutral"></div>
   </div>
 </div>
 </div>
@@ -270,6 +277,28 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
     <div><h2>AMFE / Modos críticos</h2><small id="amfeSub">Modos de falla, NPR y acción recomendada</small></div>
   </div>
   <div class="side" id="amfeBody"></div>
+</div>
+
+<div class="panel" id="planControlPanel" style="margin-top:14px">
+  <div class="ph">
+    <div><h2>Plan de Control</h2><small>Modo de falla → cómo se controla en el día a día</small></div>
+  </div>
+  <div class="planWrap">
+    <table>
+      <thead><tr>
+        <th style="min-width:28px">N°</th>
+        <th style="min-width:170px">Proceso</th>
+        <th style="min-width:60px">Máquina</th>
+        <th style="min-width:200px">Característica a controlar</th>
+        <th style="min-width:90px">Especificaciones</th>
+        <th style="min-width:200px">Método de evaluación</th>
+        <th style="min-width:170px">Frecuencia</th>
+        <th style="min-width:180px">Método de control</th>
+        <th style="min-width:220px">Plan de reacción</th>
+      </tr></thead>
+      <tbody id="planControlBody"></tbody>
+    </table>
+  </div>
 </div>
 </div>
 
@@ -397,6 +426,32 @@ const AMFE_SEED = {
      action:"Migrar de mantenimiento preventivo por calendario a mantenimiento por condición; codificar en SAP PM los instrumentos del sello (LG-9071B, PI-9071B, PSH-9071B) e incorporarlos a un plan por horas de operación."}
   ]
 };
+// Plan de Control del TP: una fila por modo de falla crítico controlado en la operación diaria.
+// Estructura independiente de AMFE_SEED (no se toca ni se deriva de ella).
+const PLAN_CONTROL = [
+  {proceso:"Enfriamiento por aire mediante transmisión motor-ventilador", maquina:"AC-725",
+   caracteristica:"Estado de correa, alineación de poleas, tensión y estado de canaletas", especificaciones:"—",
+   metodoEval:"Inspección visual, verificación de tensión, control de alineación y revisión de vibraciones",
+   frecuencia:"En cada cambio de correa y durante mantenimiento preventivo/predictivo",
+   metodoControl:"Checklist de cambio de correa con registro específico en SAP PM",
+   planReaccion:"Reemplazar correa, corregir alineación y tensión, revisar poleas/canaletas, registrar intervención y verificar condición posterior"},
+  {proceso:"Enfriamiento por aire posterior a intervención de transmisión", maquina:"AC-725",
+   caracteristica:"Estabilidad de la correa luego del montaje", especificaciones:"—",
+   metodoEval:"Inspección visual, control de tensión, revisión de ruido, temperatura y vibraciones",
+   frecuencia:"A los 2 días y a los 15 días posteriores al cambio",
+   metodoControl:"Inspección post-intervención documentada en hoja de ruta",
+   planReaccion:"Retensar correa, corregir montaje, verificar alineación, reemplazar componente si corresponde y dejar registro de la acción correctiva"},
+  {proceso:"Bombeo de propano líquido hacia islas de carga", maquina:"P-80A",
+   caracteristica:"Condición del sistema de sello: nivel de aceite (LG-9071B), presión de sello (PI-9071B) y alarma de alta presión (PSH-9071B)", especificaciones:"—",
+   metodoEval:"Lectura y registro de los instrumentos del sello, inspección visual de fugas y análisis predictivo de vibraciones",
+   frecuencia:"Según horas de operación (no por calendario), con control de condición entre intervenciones",
+   metodoControl:"Instrumentos del sello codificados en SAP PM con plan asociado; registro y seguimiento de la condición",
+   planReaccion:"Sacar de servicio la bomba ante fuga, caída del nivel de aceite o alarma de presión de sello; intervenir el sello, registrar la intervención y verificar la condición posterior"}
+];
+// Intervalo de PM por horas de operación, por equipo. Editable desde la interfaz.
+// Independiente de TBF_SEED/AMFE_SEED/PLAN_CONTROL — no deriva de ellos ni los modifica.
+const PM_INTERVAL_SEED = { "P-80A": 3024 };
+let PM_INTERVAL = {};
 let META = {};
 let CUSTOM = [];
 let data = [];
@@ -444,6 +499,9 @@ function loadReliability(){
 }
 function loadAmfe(){
   AMFE = JSON.parse(JSON.stringify(AMFE_SEED));
+}
+function loadPmIntervals(){
+  PM_INTERVAL = JSON.parse(JSON.stringify(PM_INTERVAL_SEED));
 }
 function rand(seed){ const x = Math.sin(seed) * 10000; return x - Math.floor(x); }
 function addSeries(arr, eq, comp, tech, param, unit, base, slope, noise, source, n=24, stepH=72){
@@ -508,7 +566,7 @@ function demoData(){
   return arr;
 }
 function resetApp(){
-  cloneMeta(); loadCustom(); loadImported(); loadReliability(); loadAmfe();
+  cloneMeta(); loadCustom(); loadImported(); loadReliability(); loadAmfe(); loadPmIntervals();
   data = demoData().concat(IMPORTED);
   OPHOURS = {};
   selectedEq = "P-80A"; selectedComp = "Rodamiento LA"; selectedSeriesKey = "Vibración|Vibración RMS";
@@ -844,7 +902,7 @@ function renderPrediction(fit){
   const box = document.getElementById("predAlert");
   if(!fit){
     box.className = "predAlert neutral";
-    box.innerHTML = `<div><div class="pTitle">Próxima intervención recomendada</div><div class="pMain">—</div><div class="pSub">Este equipo no tiene un ajuste de Weibull disponible.</div></div>`;
+    box.innerHTML = `<div><div class="pTitle">Recomendación por condición (R(t))</div><div class="pMain">—</div><div class="pSub">Este equipo no tiene un ajuste de Weibull disponible.</div></div>`;
     return;
   }
   const hours = Math.max(0, Number(document.getElementById("opHours").value) || 0);
@@ -857,9 +915,32 @@ function renderPrediction(fit){
   const targetDate = new Date(Date.now() + p.hoursLeft*3600000);
   box.className = "predAlert " + cls;
   box.innerHTML = `<div>
-      <div class="pTitle">Próxima intervención recomendada</div>
+      <div class="pTitle">Recomendación por condición (R(t))</div>
       <div class="pMain">${mainText}</div>
       <div class="pSub">R(t) llega a ${(p.thr*100).toFixed(0)}% a las ${p.tThreshold.toFixed(1)} h de operación (≈ ${targetDate.toLocaleDateString("es-AR")}) · confiabilidad actual estimada ${(p.rNow*100).toFixed(0)}%</div>
+    </div>
+    <div class="badge ${badgeCls}">${badgeText}</div>`;
+}
+function renderPmAlert(){
+  const box = document.getElementById("pmAlert");
+  const intervalo = PM_INTERVAL[selectedEq];
+  if(!intervalo){
+    box.className = "predAlert neutral";
+    box.innerHTML = `<div><div class="pTitle">PM programada por uso (horas)</div><div class="pMain">—</div><div class="pSub">Este equipo no tiene un intervalo de PM definido.</div></div>`;
+    return;
+  }
+  const acumuladas = Math.max(0, Number(document.getElementById("opHours").value) || 0);
+  const remainder = acumuladas % intervalo;
+  const remaining = intervalo - remainder;
+  const cls = acumuladas >= intervalo ? "bad" : remaining <= intervalo*0.10 ? "warn" : "ok";
+  const badgeCls = cls==="bad" ? "red" : cls==="warn" ? "yellow" : "green";
+  const badgeText = cls==="bad" ? "VENCIDA" : cls==="warn" ? "PRÓXIMA" : "EN CONTROL";
+  const mainText = cls==="bad" ? `Vencida hace ${Math.round(acumuladas-intervalo)} h` : `${Math.round(remaining)} h`;
+  box.className = "predAlert " + cls;
+  box.innerHTML = `<div>
+      <div class="pTitle">PM programada por uso (horas)</div>
+      <div class="pMain">${mainText}</div>
+      <div class="pSub">Intervalo ${intervalo} h · ${acumuladas} h acumuladas${cls==="bad" ? " (superó el intervalo sin PM registrada)" : ""}</div>
     </div>
     <div class="badge ${badgeCls}">${badgeText}</div>`;
 }
@@ -870,6 +951,8 @@ function renderReliability(){
   drawWeibull(fit);
   document.getElementById("opHours").value = OPHOURS[selectedEq] ?? 0;
   renderPrediction(fit);
+  document.getElementById("pmInterval").value = PM_INTERVAL[selectedEq] ?? "";
+  renderPmAlert();
 }
 function amfeActionFor(eq, comp){
   const modes = AMFE[eq];
@@ -897,6 +980,20 @@ function renderAmfe(){
       <div class="amfeAction">${m.action}</div>
     </div>`;
   }).join("");
+}
+function renderPlanControl(){
+  const tb = document.getElementById("planControlBody");
+  tb.innerHTML = PLAN_CONTROL.map((r,i)=>`<tr>
+    <td>${i+1}</td>
+    <td>${r.proceso}</td>
+    <td>${r.maquina}</td>
+    <td>${r.caracteristica}</td>
+    <td>${r.especificaciones}</td>
+    <td>${r.metodoEval}</td>
+    <td>${r.frecuencia}</td>
+    <td>${r.metodoControl}</td>
+    <td>${r.planReaccion}</td>
+  </tr>`).join("");
 }
 function renderShareAlert(){
   const box = document.getElementById("shareAlert");
@@ -944,7 +1041,7 @@ function renderLegend(){
     ? '<span><i class="dot bad"></i>Alta</span><span><i class="dot warn"></i>Media</span><span><i class="dot ok"></i>Baja</span><span><i class="dot nodata"></i>Sin definir</span>'
     : '<span><i class="dot ok"></i>Normal</span><span><i class="dot warn"></i>Atención</span><span><i class="dot bad"></i>Crítico</span><span><i class="dot nodata"></i>Sin datos</span>';
 }
-function render(){ ensureSelection(); renderLegend(); renderPlant(); renderSide(); draw(); renderReliability(); renderAmfe(); renderShareAlert(); document.getElementById("aiDiagResult").style.display="none"; renderHistory(); }
+function render(){ ensureSelection(); renderLegend(); renderPlant(); renderSide(); draw(); renderReliability(); renderAmfe(); renderPlanControl(); renderShareAlert(); document.getElementById("aiDiagResult").style.display="none"; renderHistory(); }
 function paretoData(){
   return Object.keys(META)
     .map(id => ({id, name: META[id].displayName || id, fallas: META[id].fallas || 0}))
@@ -1136,6 +1233,13 @@ document.getElementById("toggleMapView").onclick = ()=>{
 document.getElementById("opHours").oninput = ()=>{
   OPHOURS[selectedEq] = Math.max(0, Number(document.getElementById("opHours").value) || 0);
   renderPrediction(currentFit());
+  renderPmAlert();
+};
+document.getElementById("pmInterval").oninput = ()=>{
+  const v = document.getElementById("pmInterval").value;
+  if(v === "") delete PM_INTERVAL[selectedEq];
+  else PM_INTERVAL[selectedEq] = Math.max(1, Number(v) || 1);
+  renderPmAlert();
 };
 document.getElementById("rThreshold").oninput = ()=>{
   renderPrediction(currentFit());
