@@ -262,6 +262,11 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
       <div class="field"><label>Umbral de confiabilidad R(t) (%)</label><input id="rThreshold" type="number" min="1" max="99" step="1" value="80"></div>
     </div>
     <div id="predAlert" class="predAlert neutral"></div>
+    <div class="sectionLabel">Probabilidad condicional de falla</div>
+    <div class="formGrid">
+      <div class="field"><label>Ventana Δ (horas)</label><input id="condWindow" type="number" min="1" step="1" value="720"></div>
+    </div>
+    <div id="condFailAlert" class="predAlert neutral"></div>
     <div class="sectionLabel">PM programada por uso (horas)</div>
     <div class="formGrid">
       <div class="field"><label>Intervalo de PM (horas)</label><input id="pmInterval" type="number" min="1" step="1" placeholder="Sin definir"></div>
@@ -921,6 +926,31 @@ function renderPrediction(fit){
     </div>
     <div class="badge ${badgeCls}">${badgeText}</div>`;
 }
+function renderCondFail(){
+  const box = document.getElementById("condFailAlert");
+  const fit = currentFit();
+  if(!fit){
+    box.className = "predAlert neutral";
+    box.innerHTML = `<div><div class="pTitle">Probabilidad condicional de falla</div><div class="pMain">—</div><div class="pSub">Sin ajuste de Weibull para este equipo.</div></div>`;
+    return;
+  }
+  const {beta, eta} = fit;
+  const t = Math.max(0, Number(document.getElementById("opHours").value) || 0);
+  const delta = Math.max(1, Number(document.getElementById("condWindow").value) || 720);
+  const rt = weibullR(t, beta, eta);
+  box.className = "predAlert neutral";
+  if(rt < 1e-9){
+    box.innerHTML = `<div><div class="pTitle">Probabilidad condicional de falla</div><div class="pMain">—</div><div class="pSub">R(t) es prácticamente 0 con estas horas acumuladas; no se puede calcular la probabilidad condicional.</div></div>`;
+    return;
+  }
+  const rtd = weibullR(t+delta, beta, eta);
+  const p = 1 - (rtd/rt);
+  box.innerHTML = `<div>
+      <div class="pTitle">Probabilidad condicional de falla</div>
+      <div class="pMain">${(p*100).toFixed(1)}%</div>
+      <div class="pSub">Probabilidad de falla en las próximas ${delta} h, habiendo operado ${t} h · β=${beta.toFixed(2)} η=${eta.toFixed(1)} h</div>
+    </div>`;
+}
 function renderPmAlert(){
   const box = document.getElementById("pmAlert");
   const intervalo = PM_INTERVAL[selectedEq];
@@ -953,6 +983,7 @@ function renderReliability(){
   renderPrediction(fit);
   document.getElementById("pmInterval").value = PM_INTERVAL[selectedEq] ?? "";
   renderPmAlert();
+  renderCondFail();
 }
 function amfeActionFor(eq, comp){
   const modes = AMFE[eq];
@@ -1234,6 +1265,10 @@ document.getElementById("opHours").oninput = ()=>{
   OPHOURS[selectedEq] = Math.max(0, Number(document.getElementById("opHours").value) || 0);
   renderPrediction(currentFit());
   renderPmAlert();
+  renderCondFail();
+};
+document.getElementById("condWindow").oninput = ()=>{
+  renderCondFail();
 };
 document.getElementById("pmInterval").oninput = ()=>{
   const v = document.getElementById("pmInterval").value;
