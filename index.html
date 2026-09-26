@@ -826,9 +826,9 @@ function weibullFit(tbf){
 }
 function weibullR(t, beta, eta){ return Math.exp(-Math.pow(t/eta, beta)); }
 function reliabInterpretation(beta){
-  if(beta < 0.95) return {cls:"", text:`β = ${beta.toFixed(2)} (< 1): mortalidad infantil / fallas tempranas recurrentes. Conviene revisar montaje, calidad de repuesto o el procedimiento de intervención en vez de anticipar el reemplazo por calendario.`};
-  if(beta <= 1.15) return {cls:"good", text:`β = ${beta.toFixed(2)} (≈ 1): tasa de falla aproximadamente constante. Intervenir más seguido no reduce el riesgo; el control por condición es la estrategia correcta.`};
-  return {cls:"neutral", text:`β = ${beta.toFixed(2)} (> 1): desgaste progresivo. Tiene sentido planificar el reemplazo antes de alcanzar la vida característica η.`};
+  if(beta < 0.95) return {cls:"", text:`β = ${beta.toFixed(2)} (< 1): Patrón de mortalidad infantil (Nowlan & Heap). Las fallas son tempranas: la estrategia correcta es eliminar la causa raíz, no reemplazar por tiempo.`};
+  if(beta <= 1.15) return {cls:"good", text:`β = ${beta.toFixed(2)} (≈ 1): Patrón de fallas aleatorias (Nowlan & Heap). La tasa de falla es constante: el reemplazo por calendario no aporta; corresponde control por condición.`};
+  return {cls:"neutral", text:`β = ${beta.toFixed(2)} (> 1): Patrón de desgaste (Nowlan & Heap). La probabilidad de falla crece con el uso: conviene planificar el reemplazo antes de la vida característica η.`};
 }
 function renderReliabKpis(fit, seed){
   const rec = document.getElementById("reliabRec");
