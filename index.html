@@ -421,15 +421,55 @@ const TBF_SEED = {
 // Modos de falla del AMFE real del TP, con su NPR (antes/después de la acción) y la acción recomendada.
 const AMFE_SEED = {
   "AC-725": [
-    {mode:"Rotura de correa de transmisión", npr:288, nprAfter:72, share:"75% de las fallas", components:["Correas"],
+    {mode:"Rotura de correa de transmisión", npr:288, nprAfter:72, g:8, o:6, d:6, share:"75% de las fallas", components:["Correas"],
      action:"Incorporar verificación de alineación de poleas, control de tensión, control posterior al cambio y registro específico en SAP PM."},
-    {mode:"Desajuste de correa luego de una intervención", npr:252, nprAfter:63, share:"resto de las fallas de correa", components:["Correas"],
+    {mode:"Desajuste de correa luego de una intervención", npr:252, nprAfter:63, g:7, o:6, d:6, share:"resto de las fallas de correa", components:["Correas"],
      action:"Agregar control obligatorio posterior al cambio de correa, con verificación de tensión, vibraciones y estado de montaje."}
   ],
   "P-80A": [
-    {mode:"Pérdida por el sistema de sello y lubricación", npr:216, nprAfter:108, share:"66,7% de las fallas", components:["Sello mecánico"],
+    {mode:"Pérdida por el sistema de sello y lubricación", npr:216, nprAfter:108, g:9, o:6, d:4, share:"66,7% de las fallas", components:["Sello mecánico"],
      action:"Migrar de mantenimiento preventivo por calendario a mantenimiento por condición; codificar en SAP PM los instrumentos del sello (LG-9071B, PI-9071B, PSH-9071B) e incorporarlos a un plan por horas de operación."}
   ]
+};
+// Escalas de criterios de evaluación G/O/D de la cátedra (no es la AP de AIAG-VDA).
+// Los grados pares no tienen criterio propio en la escala de la cátedra: solo nombre.
+const AMFE_SCALES = {
+  g: {
+    1:{name:"NINGUNO", criterio:"El efecto no tendría impacto significativo."},
+    2:{name:"MÍNIMO"},
+    3:{name:"LEVE", criterio:"El efecto causaría molestias o problemas menores."},
+    4:{name:"MUY BAJO"},
+    5:{name:"BAJO", criterio:"El efecto sería notable, con posibles pérdidas económicas o daños importantes."},
+    6:{name:"MODERADO"},
+    7:{name:"SIGNIFICATIVO", criterio:"El efecto sería considerable, con consecuencias graves para la empresa y sus clientes."},
+    8:{name:"ALTO"},
+    9:{name:"MUY ALTO", criterio:"El efecto sería devastador, corre peligro la vida de los trabajadores."},
+    10:{name:"MUY GRAVE"}
+  },
+  o: {
+    1:{name:"CASI NUNCA", criterio:"La falla es improbable. Defecto inexistente en el pasado"},
+    2:{name:"MUY ESCASA"},
+    3:{name:"ESCASA", criterio:"Muy pocas fallas en circunstancias pasadas similares"},
+    4:{name:"MUY BAJA"},
+    5:{name:"BAJA", criterio:"Fallas ocasionales"},
+    6:{name:"OCASIONAL"},
+    7:{name:"FRECUENTE", criterio:"Fallas frecuentes"},
+    8:{name:"ALTA"},
+    9:{name:"MUY ALTA", criterio:"La falla es casi inevitable"},
+    10:{name:"INEVITABLE"}
+  },
+  d: {
+    1:{name:"INEVITABLE", criterio:"Con los controles actuales es seguro detectar el modo de falla"},
+    2:{name:"REMOTA", criterio:"Muy alta probabilidad de detectar la falla con los controles actuales"},
+    3:{name:"MUY ESCASA", criterio:"Con alta frecuencia los controles actuales podrán detectar la falla"},
+    4:{name:"ESCASA", criterio:"Probabilidad moderadamente alta de detectar la falla con los controles actuales"},
+    5:{name:"MUY BAJA", criterio:"Moderada probabilidad de detectar la falla con los controles actuales"},
+    6:{name:"BAJA", criterio:"Ocasionalmente los controles actuales podrán detectar la falla"},
+    7:{name:"MODERADA", criterio:"Baja probabilidad de detectar la falla con los controles actuales"},
+    8:{name:"ALTA", criterio:"Muy baja probabilidad de detectar la falla con los controles actuales"},
+    9:{name:"MUY ALTA", criterio:"Las fallas no son fácilmente detectables"},
+    10:{name:"CASI SIEMPRE", criterio:"No existen controles en el proceso u operación"}
+  }
 };
 // Plan de Control del TP: una fila por modo de falla crítico controlado en la operación diaria.
 // Estructura independiente de AMFE_SEED (no se toca ni se deriva de ella).
@@ -990,6 +1030,15 @@ function amfeActionFor(eq, comp){
   if(!modes || !modes.length) return null;
   return modes.find(m => m.components && m.components.includes(comp)) || modes.reduce((a,b)=> b.npr>a.npr?b:a, modes[0]);
 }
+function godLine(letter, grade, scale){
+  const entry = scale[grade];
+  if(!entry) return `${letter}=${grade}`;
+  return entry.criterio ? `${letter}=${grade} (${entry.name}): ${entry.criterio}` : `${letter}=${grade} (${entry.name})`;
+}
+function amfeTrace(m){
+  if(m.g==null || m.o==null || m.d==null) return "";
+  return [godLine("G", m.g, AMFE_SCALES.g), godLine("O", m.o, AMFE_SCALES.o), godLine("D", m.d, AMFE_SCALES.d)].join(" · ");
+}
 function renderAmfe(){
   const box = document.getElementById("amfeBody");
   const modes = AMFE[selectedEq];
@@ -1003,12 +1052,14 @@ function renderAmfe(){
   box.innerHTML = modes.map(m=>{
     const sev = m.npr>=200 ? "red" : m.npr>=100 ? "yellow" : "green";
     const sevLabel = m.npr>=200 ? "Alto" : m.npr>=100 ? "Medio" : "Bajo";
+    const trace = amfeTrace(m);
     return `<div class="amfeCard">
       <div class="amfeHead">
         <div><b>${m.mode}</b>${m.share ? `<small>${m.share}</small>` : ""}</div>
         <div class="badge ${sev}">NPR ${m.npr}${m.nprAfter ? " → "+m.nprAfter : ""} · ${sevLabel}</div>
       </div>
       <div class="amfeAction">${m.action}</div>
+      ${trace ? `<div class="amfeAction">${trace}</div>` : ""}
     </div>`;
   }).join("");
 }
