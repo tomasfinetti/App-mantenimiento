@@ -97,14 +97,6 @@ svg{display:block;width:100%;height:auto;min-width:1080px}
 .predAlert.bad{background:rgba(255,93,108,.10);border:1px solid rgba(255,93,108,.35)}
 .predAlert.neutral{background:rgba(125,143,167,.10);border:1px solid rgba(125,143,167,.3)}
 
-.amfeCard{background:#0d1b2d;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
-.amfeCard:last-child{margin-bottom:0}
-.amfeCard.sel{border-color:#4f99c4;background:#102840}
-.amfeHead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
-.amfeHead b{font-size:13px}
-.amfeHead small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
-.amfeAction{margin-top:8px;font-size:11px;line-height:1.5;color:#c9d6e6}
-
 .charts{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:14px;margin-top:14px}
 .charts2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .cp{padding:12px}
@@ -171,19 +163,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 
 
 /* --- Visual refinements: Weibull + AMFE --- */
-.weibullPanel, .amfePanel, .chartShell, .paperShell{
-  background: linear-gradient(180deg, #10253f 0%, #0b1c31 100%) !important;
-  border: 1px solid #2f5b8a !important;
-  color: #eef6ff !important;
-  border-radius: 14px;
-}
-.weibullPanel h3, .amfePanel h3, .chartShell h3, .paperShell h3{
-  color:#eef6ff !important;
-}
-.weibullPanel .sub, .amfePanel .sub, .chartShell .sub, .paperShell .sub{
-  color:#a9c3e6 !important;
-}
-#weibullCanvas, #curveChart, #trendChart, #histChart, #controlChart{
+#trendChart, #histChart, #controlChart{
   background:#0b1f36 !important;
   border:1px solid #2f5b8a !important;
 }
