@@ -20,7 +20,7 @@ header{display:flex;justify-content:space-between;align-items:center;gap:14px;fl
   display:flex;align-items:center;justify-content:center;position:relative;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)
 }
 .ypfLogo span{font-weight:900;letter-spacing:1px;color:#fff;font-size:21px}
-.ypfLogo:after{content:"";position:absolute;right:8px;top:9px;width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 10px 0 #fff,0 20px 0 #fff;opacity:.9}
+.ypfLogo:after{content:"";position:absolute;right:8px;top:9px;width:6px;height:6px;border-radius:50%;background:#0b1f36;box-shadow:0 10px 0 #fff,0 20px 0 #fff;opacity:.9}
 h1{font-size:22px;margin:0}
 .sub{font-size:11px;color:var(--muted);margin-top:4px}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
@@ -34,6 +34,7 @@ button:hover,.fileBtn:hover{background:#19304d}
 input[type=file]{display:none}
 
 .grid{display:grid;grid-template-columns:1.55fr .95fr;gap:14px}
+.mapGrid{grid-template-columns:minmax(0,2.25fr) minmax(390px,.75fr)}
 .panel{background:linear-gradient(180deg,rgba(17,33,55,.97),rgba(9,20,34,.97));border:1px solid rgba(105,140,187,.18);border-radius:var(--r);box-shadow:var(--shadow)}
 .ph{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
 .ph h2{margin:0;font-size:14px}
@@ -46,13 +47,14 @@ input[type=file]{display:none}
     linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
   background-size:28px 28px
 }
-svg{display:block;width:100%;height:auto;min-width:900px}
+svg{display:block;width:100%;height:auto;min-width:1080px}
+#plantSvg{min-width:1080px}
 .pipe{stroke:#355472;stroke-width:4;fill:none}
-.stage{font-size:11px;font-weight:800;fill:#b8c6d8;letter-spacing:.4px}
+.stage{font-size:14px;font-weight:800;fill:#b8c6d8;letter-spacing:.6px}
 .node{fill:#10263c;stroke:#2c4969;stroke-width:1.5;rx:14;ry:14;cursor:pointer}
 .node.sel{stroke:var(--cyan);stroke-width:2.2;filter:drop-shadow(0 0 8px rgba(79,209,255,.25))}
-.label{font-size:12px;font-weight:800;fill:#edf4ff}
-.sublabel{font-size:10px;fill:#90a5c0}
+.label{font-size:15px;font-weight:850;fill:#edf4ff}
+.sublabel{font-size:11px;fill:#90a5c0}
 
 .legendRow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .legendRow span{font-size:11px;color:var(--muted)}
@@ -108,7 +110,7 @@ svg{display:block;width:100%;height:auto;min-width:900px}
 .cp{padding:12px}
 .ct{font-size:12px;font-weight:750;margin:0 0 8px}
 .legend{font-size:9px;color:var(--muted);margin-top:6px}
-canvas{width:100%;height:230px;background:#071522;border:1px solid var(--line);border-radius:11px}
+canvas{width:100%;height:230px;background:#0b1f36;border:1px solid #2f5b8a;border-radius:11px}
 
 .bottom{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:14px}
 .tableWrap{overflow:auto;padding:0 14px 12px;max-height:320px}
@@ -140,9 +142,104 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 .tabPanel.active{display:block}
 
 @media(max-width:1100px){
-  .grid,.charts,.charts2,.bottom{grid-template-columns:1fr}
+  .grid,.mapGrid,.charts,.charts2,.bottom{grid-template-columns:1fr}
   .kpis,.infoGrid,.formGrid,.sourceCards,.componentList{grid-template-columns:1fr}
 }
+
+/* Papel de probabilidad de Weibull: mantiene el cálculo actual y cambia solo la visualización. */
+#weibullLineChart{height:430px;background:#0b1f36;border-color:#bac7d3}
+.weibullPaperPanel{background:linear-gradient(180deg,#10253f 0%, #0b1c31 100%);border:1px solid #2f5b8a}
+.weibullPaperPanel .ct{color:#eef6ff}
+.weibullPaperPanel .legend{color:#d9e8f8}
+
+/* AMFE tipo planilla */
+.amfeToolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.amfeToolbarActions{display:flex;gap:8px;flex-wrap:wrap}
+.amfeTableWrap{overflow:auto;max-height:620px;border:1px solid var(--line);border-radius:12px}
+.amfeTable{min-width:1720px;width:100%;border-collapse:separate;border-spacing:0;font-size:10px}
+.amfeTable th{position:sticky;top:0;z-index:2;background:#b9cff0;color:#071322;border-right:1px solid #36506e;border-bottom:2px solid #36506e;text-align:center;vertical-align:middle;padding:10px 8px;white-space:normal;font-size:10px;text-transform:none}
+.amfeTable td{background:#f7f9fc;color:#111820;border-right:1px solid #7a8798;border-bottom:1px solid #7a8798;padding:9px 8px;vertical-align:middle;white-space:normal;line-height:1.35}
+.amfeTable td.machineCell{font-weight:850;text-align:center;background:#eef3fa;min-width:90px}
+.amfeTable td.scoreCell{text-align:center;font-size:13px;font-weight:850;min-width:42px}
+.amfeTable td.nprCell{text-align:center;font-size:14px;font-weight:900;min-width:64px}
+.amfeTable td.nprHigh{background:#df7c68}
+.amfeTable td.nprMedium{background:#f3d578}
+.amfeTable td.nprLow{background:#d7f0d2}
+.amfeTable td.actionsCell{min-width:118px;text-align:center}
+.amfeTable .miniBtn{padding:5px 7px;font-size:10px;color:var(--text);margin:2px}
+.nprPreview{font-size:18px;font-weight:850;color:#f2c94c}
+
+
+/* --- Visual refinements: Weibull + AMFE --- */
+.weibullPanel, .amfePanel, .chartShell, .paperShell{
+  background: linear-gradient(180deg, #10253f 0%, #0b1c31 100%) !important;
+  border: 1px solid #2f5b8a !important;
+  color: #eef6ff !important;
+  border-radius: 14px;
+}
+.weibullPanel h3, .amfePanel h3, .chartShell h3, .paperShell h3{
+  color:#eef6ff !important;
+}
+.weibullPanel .sub, .amfePanel .sub, .chartShell .sub, .paperShell .sub{
+  color:#a9c3e6 !important;
+}
+#weibullCanvas, #curveChart, #trendChart, #histChart, #controlChart{
+  background:#0b1f36 !important;
+  border:1px solid #2f5b8a !important;
+}
+.amfeTableWrap{
+  background: linear-gradient(180deg, #10253f 0%, #0b1c31 100%) !important;
+  border: 1px solid #2f5b8a !important;
+  border-radius: 14px;
+  overflow:auto;
+}
+.amfeTableWrap table{
+  color:#eef6ff !important;
+}
+.amfeTableWrap th{
+  background:#173458 !important;
+  color:#ffffff !important;
+  border-color:#35679d !important;
+}
+.amfeTableWrap td{
+  background:#0f2743 !important;
+  color:#eef6ff !important;
+  border-color:#274a73 !important;
+}
+.amfeTableWrap tr:nth-child(even) td{
+  background:#102b49 !important;
+}
+.amfeTableWrap .npr-high{
+  background:#7b2d2d !important;
+  color:#fff3f3 !important;
+  font-weight:800;
+}
+.amfeTableWrap .npr-mid{
+  background:#6c581e !important;
+  color:#fff3cf !important;
+  font-weight:800;
+}
+.amfeTableWrap .npr-low{
+  background:#1d5635 !important;
+  color:#e3ffef !important;
+  font-weight:800;
+}
+.amfeToolbar, .weibullToolbar{
+  background:#0f2743 !important;
+  border:1px solid #2f5b8a !important;
+  border-radius:12px;
+  color:#eef6ff !important;
+}
+.amfeToolbar button, .weibullToolbar button, .amfeToolbar select, .weibullToolbar select,
+.amfeToolbar input, .weibullToolbar input{
+  background:#163559 !important;
+  color:#ffffff !important;
+  border:1px solid #35679d !important;
+}
+.amfeToolbar button:hover, .weibullToolbar button:hover{
+  background:#1d4675 !important;
+}
+
 </style>
 </head>
 <body>
@@ -178,7 +275,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 </div>
 
 <div class="tabPanel active" data-tab-panel="mapa">
-<div class="grid">
+<div class="grid mapGrid">
 <section class="panel">
   <div class="ph">
     <div><h2>Mapa general de planta</h2><small>Torres, aeroenfriadores, tanques y bombas</small></div>
@@ -258,7 +355,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
       <div class="card kpi"><b>MTBF</b><div class="v" id="rMtbf">—</div><div class="t">h · η·Γ(1+1/β)</div></div>
     </div>
     <div class="charts2" style="margin-top:12px">
-      <section class="panel cp"><h3 class="ct">Recta linealizada de Weibull</h3><canvas id="weibullLineChart"></canvas><div class="legend" id="weibullLineLegend"></div></section>
+      <section class="panel cp weibullPaperPanel"><h3 class="ct">Weibull</h3><canvas id="weibullLineChart"></canvas><div class="legend" id="weibullLineLegend"></div></section>
       <section class="panel cp"><h3 class="ct">Curva de confiabilidad R(t)</h3><canvas id="weibullRChart"></canvas><div class="legend" id="weibullRLegend"></div></section>
     </div>
     <div id="reliabRec" class="rec neutral"></div>
@@ -309,12 +406,16 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 </div>
 
 <div class="tabPanel" data-tab-panel="amfe">
-<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-  <button id="filterMachineBtn">🔍 Filtrar máquina</button>
+<div class="amfeToolbar">
+  <div class="sub">Análisis de Modos y Efectos de Falla · G × O × D = NPR</div>
+  <div class="amfeToolbarActions">
+    <button id="filterMachineBtn">🔍 Filtrar máquina</button>
+    <button class="primary" id="addAmfeBtn">➕ Agregar modo de falla</button>
+  </div>
 </div>
 <div class="panel" id="amfePanel">
   <div class="ph">
-    <div><h2>AMFE / Modos críticos</h2><small id="amfeSub">Modos de falla, NPR y acción recomendada</small></div>
+    <div><h2>AMFE</h2><small id="amfeSub">Tabla de modos de falla, efectos, causas, controles y NPR</small></div>
   </div>
   <div class="side" id="amfeBody"></div>
 </div>
@@ -429,6 +530,29 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
   </div>
 </div></div>
 
+
+<div class="modalBack" id="amfeModal"><div class="modal" style="width:min(980px,96vw)">
+  <div class="mh"><b id="amfeModalTitle">Agregar modo de falla</b><button data-close="amfeModal">✕</button></div>
+  <div class="mb">
+    <div class="formGrid">
+      <div class="field"><label>Máquina / Tag *</label><select id="amfeEq"></select></div>
+      <div class="field"><label>Requerimiento / Función *</label><input id="amfeReq" placeholder="Ej.: Mantener la tensión de correa"></div>
+      <div class="field full"><label>Modo de falla potencial *</label><input id="amfeMode" placeholder="Ej.: Desajuste de correa luego de una intervención"></div>
+      <div class="field full"><label>Efecto(s) potencial(es) de la falla</label><textarea id="amfeEffect" rows="3"></textarea></div>
+      <div class="field"><label>Gravedad (G) · 1 a 10 *</label><input id="amfeG" type="number" min="1" max="10" value="5"></div>
+      <div class="field"><label>Clasificación</label><input id="amfeClass" placeholder="Ej.: -"></div>
+      <div class="field full"><label>Causa(s) potencial(es) de la falla</label><textarea id="amfeCause" rows="3"></textarea></div>
+      <div class="field full"><label>Controles actuales · Prevención</label><textarea id="amfePrev" rows="2"></textarea></div>
+      <div class="field"><label>Ocurrencia (O) · 1 a 10 *</label><input id="amfeO" type="number" min="1" max="10" value="5"></div>
+      <div class="field full"><label>Controles actuales · Detección</label><textarea id="amfeDetect" rows="2"></textarea></div>
+      <div class="field"><label>No detección (D) · 1 a 10 *</label><input id="amfeD" type="number" min="1" max="10" value="5"></div>
+      <div class="field"><label>NPR calculado</label><div class="nprPreview" id="amfeNprPreview">125</div></div>
+      <div class="field full"><label>Acción recomendada</label><textarea id="amfeAction" rows="3"></textarea></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="primary" id="saveAmfeBtn">Guardar modo de falla</button><button data-close="amfeModal">Cancelar</button></div>
+  </div>
+</div></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -456,13 +580,13 @@ const TBF_SEED = {
 // Modos de falla del AMFE real del TP, con su NPR (antes/después de la acción) y la acción recomendada.
 const AMFE_SEED = {
   "AC-725": [
-    {mode:"Rotura de correa de transmisión", npr:288, nprAfter:72, g:8, o:6, d:6, share:"75% de las fallas", components:["Correas"],
+    {id:"ac725-correa-rotura", requirement:"Transmitir el movimiento del motor al ventilador", mode:"Rotura de correa de transmisión del ventilador", effect:"Pérdida de una rama de ventilación, reducción de la capacidad de enfriamiento y aumento de temperatura de la corriente de propano.", g:8, classification:"-", cause:"Tensión incorrecta, montaje o alineación deficiente, o ausencia de control posterior al cambio.", prevention:"Plan preventivo general e inspección visual.", o:6, detection:"Inspección visual y análisis de vibraciones.", d:6, npr:288, nprAfter:72, share:"75% de las fallas", components:["Correas"],
      action:"Incorporar verificación de alineación de poleas, control de tensión, control posterior al cambio y registro específico en SAP PM."},
-    {mode:"Desajuste de correa luego de una intervención", npr:252, nprAfter:63, g:7, o:6, d:6, share:"resto de las fallas de correa", components:["Correas"],
+    {id:"ac725-correa-desajuste", requirement:"Mantener la tensión de correa", mode:"Desajuste de correa luego de una intervención", effect:"Desgastes por fricción, vibraciones, rotura de correa y pérdida de eficiencia del ventilador.", g:7, classification:"-", cause:"Falta de tensión posterior al montaje, estiramiento inicial de la correa, montaje sin verificación posterior o alineación deficiente.", prevention:"Plan preventivo según hoja de ruta genérica.", o:6, detection:"Inspección visual y análisis de vibraciones.", d:6, npr:252, nprAfter:63, share:"resto de las fallas de correa", components:["Correas"],
      action:"Agregar control obligatorio posterior al cambio de correa, con verificación de tensión, vibraciones y estado de montaje."}
   ],
   "P-80A": [
-    {mode:"Pérdida por el sistema de sello y lubricación", npr:216, nprAfter:108, g:9, o:6, d:4, share:"66,7% de las fallas", components:["Sello mecánico"],
+    {id:"p80a-sello", requirement:"Mantener la estanqueidad y lubricación del sistema de sello", mode:"Pérdida por el sistema de sello y lubricación", effect:"Pérdida de contención de propano, indisponibilidad de la bomba y riesgo operativo asociado a la fuga.", g:9, classification:"-", cause:"Desgaste del sello, pérdida de nivel de aceite, presión inadecuada del sistema de sello o degradación por operación.", prevention:"Mantenimiento por condición y seguimiento del sistema de sello según horas de operación.", o:6, detection:"Lectura de LG-9071B, PI-9071B y PSH-9071B, inspección visual de fugas y vibraciones.", d:4, npr:216, nprAfter:108, share:"66,7% de las fallas", components:["Sello mecánico"],
      action:"Migrar de mantenimiento preventivo por calendario a mantenimiento por condición; codificar en SAP PM los instrumentos del sello (LG-9071B, PI-9071B, PSH-9071B) e incorporarlos a un plan por horas de operación."}
   ]
 };
@@ -584,7 +708,17 @@ function loadReliability(){
   RELIAB = JSON.parse(JSON.stringify(TBF_SEED));
 }
 function loadAmfe(){
-  AMFE = JSON.parse(JSON.stringify(AMFE_SEED));
+  try{
+    const saved = JSON.parse(localStorage.getItem("cv13amfe") || "null");
+    AMFE = saved && typeof saved === "object" ? saved : JSON.parse(JSON.stringify(AMFE_SEED));
+  }catch(e){ AMFE = JSON.parse(JSON.stringify(AMFE_SEED)); }
+  Object.keys(AMFE).forEach(eq => AMFE[eq].forEach((m,i)=>{
+    if(!m.id) m.id = `${eq.toLowerCase()}-${i}-${Date.now()}`;
+    m.npr = Math.max(1,Number(m.g)||1) * Math.max(1,Number(m.o)||1) * Math.max(1,Number(m.d)||1);
+  }));
+}
+function saveAmfe(){
+  try{ localStorage.setItem("cv13amfe", JSON.stringify(AMFE)); }catch(e){}
 }
 function loadPmIntervals(){
   PM_INTERVAL = JSON.parse(JSON.stringify(PM_INTERVAL_SEED));
@@ -736,13 +870,16 @@ function renderPlant(){
     g.style.cursor = "pointer";
     g.addEventListener("click",()=> selectEquipo(id));
     const r = mk("rect");
-    r.setAttribute("x",-58); r.setAttribute("y",-34); r.setAttribute("width",116); r.setAttribute("height",68); r.setAttribute("rx",14);
+    r.setAttribute("x",-80); r.setAttribute("y",-48); r.setAttribute("width",160); r.setAttribute("height",96); r.setAttribute("rx",16);
     r.setAttribute("class","node"+(selectedEq===id?" sel":"")); g.appendChild(r);
-    const t1 = mk("text"); t1.setAttribute("x",0); t1.setAttribute("y",-8); t1.setAttribute("text-anchor","middle"); t1.setAttribute("class","label"); t1.textContent=META[id].displayName||id; g.appendChild(t1);
-    const t2 = mk("text"); t2.setAttribute("x",0); t2.setAttribute("y",12); t2.setAttribute("text-anchor","middle"); t2.setAttribute("class","sublabel"); t2.textContent=id; g.appendChild(t2);
+    const t1 = mk("text"); t1.setAttribute("x",0); t1.setAttribute("y",-16); t1.setAttribute("text-anchor","middle"); t1.setAttribute("class","label"); t1.textContent=META[id].displayName||id; g.appendChild(t1);
+    const t2 = mk("text"); t2.setAttribute("x",0); t2.setAttribute("y",6); t2.setAttribute("text-anchor","middle"); t2.setAttribute("class","sublabel");
+    const fam=(META[id].family||id); t2.textContent=fam.length>20 ? fam.slice(0,18)+"…" : fam; g.appendChild(t2);
     const s = eqStatus(id);
+    const t3 = mk("text"); t3.setAttribute("x",0); t3.setAttribute("y",29); t3.setAttribute("text-anchor","middle"); t3.setAttribute("class","sublabel");
+    t3.setAttribute("fill", s==="ok"?"#35d07f":s==="warn"?"#f2c94c":s==="bad"?"#ff5d6c":"#7d8fa7"); t3.textContent=prettyStatus(s).toUpperCase(); g.appendChild(t3);
     const c = mapView==="criticidad" ? critColor(META[id].crit) : (s==="ok"?"#35d07f":s==="warn"?"#f2c94c":s==="bad"?"#ff5d6c":"#7d8fa7");
-    const b = mk("rect"); b.setAttribute("x",27); b.setAttribute("y",-29); b.setAttribute("width",23); b.setAttribute("height",14); b.setAttribute("rx",7); b.setAttribute("fill",c); g.appendChild(b);
+    const b = mk("rect"); b.setAttribute("x",46); b.setAttribute("y",-41); b.setAttribute("width",28); b.setAttribute("height",16); b.setAttribute("rx",8); b.setAttribute("fill",c); g.appendChild(b);
     svg.appendChild(g);
   };
 
@@ -750,18 +887,18 @@ function renderPlant(){
   label(1210,45,"DESPACHO");
 
   // Torres -> Acumuladores -> Intercambiadores (dos filas)
-  line(258,160,372,160); line(488,160,602,160);
-  line(258,340,372,340); line(488,340,602,340);
+  line(276,160,354,160); line(506,160,584,160);
+  line(276,340,354,340); line(506,340,584,340);
 
   // Intercambiadores -> colector -> Aeroenfriadores
-  line(718,160,790,160); line(718,340,790,340);
+  line(736,160,790,160); line(736,340,790,340);
   line(790,160,790,480);
-  line(790,120,842,120); line(790,300,842,300); line(790,480,842,480);
+  line(790,120,824,120); line(790,300,824,300); line(790,480,824,480);
 
   // Aeroenfriadores -> colector de despacho -> Bombas
-  line(958,120,1090,120); line(958,300,1090,300); line(958,480,1090,480);
+  line(976,120,1090,120); line(976,300,1090,300); line(976,480,1090,480);
   line(1090,120,1090,480);
-  line(1090,120,1152,120); line(1090,300,1152,300); line(1090,480,1152,480);
+  line(1090,120,1134,120); line(1090,300,1134,300); line(1090,480,1134,480);
 
   Object.keys(LAYOUT).forEach(id => node(id, LAYOUT[id][0], LAYOUT[id][1]));
   if(CUSTOM.length){
@@ -837,6 +974,12 @@ function setupCanvas(id){
   c.width = rect.width * d; c.height = 230 * d;
   const ctx = c.getContext("2d"); ctx.scale(d,d);
   return {ctx, w:rect.width, h:230};
+}
+function setupCanvasHeight(id, height){
+  const c = document.getElementById(id), rect = c.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+  c.width = rect.width * d; c.height = height * d;
+  const ctx = c.getContext("2d"); ctx.scale(d,d);
+  return {ctx, w:rect.width, h:height};
 }
 function axes(ctx,w,h,min,max,label){
   const ml=42,mr=10,mt=18,mb=26,pw=w-ml-mr,ph=h-mt-mb;
@@ -933,32 +1076,118 @@ function renderReliabKpis(fit, seed){
   rec.textContent = interp.text;
 }
 function drawWeibull(fit){
-  ["weibullLineChart","weibullRChart"].forEach(id=>{
-    const {ctx} = setupCanvas(id);
-    if(!fit){ ctx.fillStyle="#8298b4"; ctx.font="12px Segoe UI"; ctx.fillText("Sin TBF cargados para este equipo",20,35); }
-  });
-  document.getElementById("weibullLineLegend").textContent = fit ? "" : "Sin serie de fallas seleccionada.";
-  document.getElementById("weibullRLegend").textContent = "";
-  if(!fit) return;
+  const paper = setupCanvasHeight("weibullLineChart", 430);
+  const rcanvas = setupCanvas("weibullRChart");
+  if(!fit){
+    paper.ctx.fillStyle="#0b1f36"; paper.ctx.fillRect(0,0,paper.w,paper.h);
+    paper.ctx.fillStyle="#eef6ff"; paper.ctx.font="12px Segoe UI"; paper.ctx.fillText("Sin TBF cargados para este equipo",20,35);
+    rcanvas.ctx.fillStyle="#8298b4"; rcanvas.ctx.font="12px Segoe UI"; rcanvas.ctx.fillText("Sin TBF cargados para este equipo",20,35);
+    document.getElementById("weibullLineLegend").textContent = "Sin serie de fallas seleccionada.";
+    document.getElementById("weibullRLegend").textContent = "";
+    return;
+  }
+
   const {beta, eta, points} = fit;
+  const ctx=paper.ctx, w=paper.w, h=paper.h;
+  const ML=54, MR=18, MT=48, MB=45, PW=w-ML-MR, PH=h-MT-MB;
+  const ll=v=>Math.log(-Math.log(1-v));
+  const fMin=0.01, fMax=0.995, yBot=ll(fMin), yTop=ll(fMax);
+  const tVals=points.map(p=>p.t);
+  let logMin=Math.floor(Math.log10(Math.min(...tVals)));
+  let logMax=Math.ceil(Math.log10(Math.max(...tVals)));
+  if(logMax-logMin<2){ logMax=logMin+2; }
+  // Deja margen si eta cae apenas fuera del rango de los TBF.
+  logMin=Math.min(logMin, Math.floor(Math.log10(Math.max(1,eta))));
+  logMax=Math.max(logMax, Math.ceil(Math.log10(Math.max(1,eta))));
+  const xFromT=t=>ML+(Math.log10(t)-logMin)/(logMax-logMin)*PW;
+  const yFromF=f=>MT+(yTop-ll(Math.min(fMax,Math.max(fMin,f))))/(yTop-yBot)*PH;
 
-  const xs = points.map(p=>p.x), ys = points.map(p=>p.y);
-  let xmin=Math.min(...xs), xmax=Math.max(...xs), xpad=(xmax-xmin||1)*.15; xmin-=xpad; xmax+=xpad;
-  let ymin=Math.min(...ys), ymax=Math.max(...ys), ypad=(ymax-ymin||1)*.15; ymin-=ypad; ymax+=ypad;
-  const a = setupCanvas("weibullLineChart"), ax = axes(a.ctx,a.w,a.h,ymin,ymax,"ln(-ln(1-F))");
-  const xTo = x => ax.ml + ax.pw*(x-xmin)/(xmax-xmin||1);
-  const yTo = y => ax.mt + ax.ph*(1-(y-ymin)/(ymax-ymin||1));
-  a.ctx.strokeStyle="#f2c94c"; a.ctx.lineWidth=1.6; a.ctx.beginPath();
-  const lnEta = Math.log(eta);
-  a.ctx.moveTo(xTo(xmin), yTo(beta*xmin - beta*lnEta));
-  a.ctx.lineTo(xTo(xmax), yTo(beta*xmax - beta*lnEta));
-  a.ctx.stroke();
-  a.ctx.fillStyle="#52d6ff";
-  points.forEach(p=>{ const x=xTo(p.x), y=yTo(p.y); a.ctx.beginPath(); a.ctx.arc(x,y,3,0,Math.PI*2); a.ctx.fill(); });
-  document.getElementById("weibullLineLegend").textContent = `${points.length} TBF · pendiente = β = ${beta.toFixed(2)}`;
+  ctx.fillStyle="#0b1f36"; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle="#d7e8f8"; ctx.lineWidth=1; ctx.strokeRect(ML,MT,PW,PH);
 
+  // Grilla vertical logarítmica (tiempo).
+  ctx.save(); ctx.beginPath(); ctx.rect(ML,MT,PW,PH); ctx.clip();
+  ctx.strokeStyle="rgba(160,255,180,.45)"; ctx.lineWidth=.65;
+  for(let d=logMin; d<=logMax; d++){
+    const base=Math.pow(10,d);
+    for(let i=1;i<=9;i++){
+      const t=i*base;
+      if(t<Math.pow(10,logMin) || t>Math.pow(10,logMax)) continue;
+      const x=xFromT(t); ctx.beginPath(); ctx.moveTo(x,MT); ctx.lineTo(x,MT+PH); ctx.stroke();
+    }
+  }
+  const fGrid=[.01,.02,.03,.05,.10,.20,.30,.40,.50,.60,.6321,.70,.80,.90,.95,.99];
+  fGrid.forEach(f=>{ const y=yFromF(f); ctx.beginPath(); ctx.moveTo(ML,y); ctx.lineTo(ML+PW,y); ctx.stroke(); });
+
+  // Líneas de referencia del papel del profesor.
+  ctx.strokeStyle="#c0392b"; ctx.lineWidth=1.35;
+  [.10,.6321].forEach(f=>{ const y=yFromF(f); ctx.beginPath(); ctx.moveTo(ML,y); ctx.lineTo(ML+PW,y); ctx.stroke(); });
+
+  // Recta de mejor ajuste Weibull.
+  ctx.strokeStyle="#4fb3ff"; ctx.lineWidth=2; ctx.setLineDash([7,4]);
+  ctx.beginPath();
+  const t0=Math.pow(10,logMin), t1=Math.pow(10,logMax);
+  const f0=1-Math.exp(-Math.pow(t0/eta,beta));
+  const f1=1-Math.exp(-Math.pow(t1/eta,beta));
+  ctx.moveTo(xFromT(t0),yFromF(f0)); ctx.lineTo(xFromT(t1),yFromF(f1)); ctx.stroke(); ctx.setLineDash([]);
+
+  // Puntos reales con rango mediano de Bernard.
+  points.forEach((p,i)=>{
+    const F=(i+1-0.3)/(points.length+0.4), x=xFromT(p.t), y=yFromF(F);
+    ctx.fillStyle="#c44732"; ctx.strokeStyle="#7f1a0a"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  });
+
+  // Eta: intersección con F=63,21%.
+  const xEta=xFromT(eta), yEta=yFromF(.6321);
+  ctx.strokeStyle="#7fd0ff"; ctx.lineWidth=1.1; ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.moveTo(xEta,yEta); ctx.lineTo(xEta,MT+PH); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle="#7fd0ff"; ctx.beginPath(); ctx.arc(xEta,yEta,4,0,Math.PI*2); ctx.fill();
+
+  // Abanico de β y paralela a la recta de ajuste para lectura gráfica.
+  const bx0=ML, by0=yFromF(.6321);
+  const betaRefs=[.5,.6,.7,.8,.9,1,1.2,1.5,2,3,6];
+  const screenSlope=b=>-b*Math.LN10*(logMax-logMin)*PH/(PW*(yTop-yBot));
+  ctx.strokeStyle="rgba(114,180,255,.75)"; ctx.lineWidth=.95; ctx.setLineDash([5,4]);
+  betaRefs.forEach(b=>{
+    const sl=screenSlope(b), dx=Math.min(105,PW*.22), dy=sl*dx;
+    const lim=(MT-by0)/dy;
+    const k=(dy<0 && by0+dy<MT) ? Math.max(0,Math.min(1,lim)) : 1;
+    const ex=bx0+dx*k, ey=by0+dy*k;
+    ctx.beginPath(); ctx.moveTo(bx0,by0); ctx.lineTo(ex,ey); ctx.stroke();
+    ctx.save(); ctx.setLineDash([]); ctx.fillStyle="#eef6ff"; ctx.font="9px Segoe UI"; ctx.textAlign="center"; ctx.fillText(String(b),ex,Math.max(MT+9,ey-3)); ctx.restore();
+  });
+  // Paralela destacada: misma pendiente que la recta ajustada, trasladada al origen β.
+  const sl=screenSlope(beta), dx=Math.min(150,PW*.30), dy=sl*dx;
+  const lim=(MT-by0)/dy;
+  const k=(dy<0 && by0+dy<MT) ? Math.max(0,Math.min(1,lim)) : 1;
+  const ex=bx0+dx*k, ey=by0+dy*k;
+  ctx.strokeStyle="#91d0ff"; ctx.lineWidth=2.2; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(bx0,by0); ctx.lineTo(ex,ey); ctx.stroke();
+  ctx.restore();
+
+  // Etiquetas y ejes.
+  ctx.fillStyle="#eef6ff"; ctx.font="bold 12px Segoe UI"; ctx.textAlign="center";
+  ctx.fillText("Weibull",w/2,20);
+  ctx.font="10px Segoe UI"; ctx.textAlign="right";
+  const labels=[[.01,"1"],[.02,"2"],[.03,"3"],[.05,"5"],[.10,"10"],[.20,"20"],[.30,"30"],[.40,"40"],[.50,"50"],[.60,"60"],[.70,"70"],[.80,"80"],[.90,"90"],[.95,"95"],[.99,"99"]];
+  labels.forEach(([f,l])=>ctx.fillText(l,ML-6,yFromF(f)+3));
+  ctx.save(); ctx.translate(13,MT+PH/2); ctx.rotate(-Math.PI/2); ctx.font="bold 10px Segoe UI"; ctx.textAlign="center"; ctx.fillText("No confiabilidad, F(t) %",0,0); ctx.restore();
+  ctx.textAlign="center"; ctx.fillStyle="#eef6ff";
+  for(let d=logMin;d<=logMax;d++){ const t=Math.pow(10,d); ctx.fillText(t.toLocaleString("es-AR"),xFromT(t),MT+PH+17); }
+  ctx.font="bold 10px Segoe UI"; ctx.fillText("Tiempo, t (h)",ML+PW/2,h-7);
+  ctx.fillStyle="#eef6ff"; ctx.textAlign="left"; ctx.font="bold 11px Segoe UI";
+  ctx.fillText("β",ML+7,MT-8);
+  ctx.fillText(`β=${beta.toFixed(2)}   η=${eta.toFixed(1)} h`,ML+4,MT+14);
+  ctx.fillText(`β=${beta.toFixed(2)}`,Math.min(ex+5,ML+PW-65),Math.max(MT+13,ey-4));
+  ctx.textAlign="center"; ctx.font="10px Segoe UI"; ctx.fillText(`η=${eta.toFixed(1)} h`,xEta,MT+PH+32);
+  ctx.textAlign="left"; ctx.fillText("η →",ML+PW+2,yEta+4);
+
+  document.getElementById("weibullLineLegend").textContent = `${points.length} TBF · puntos con rango mediano de Bernard · recta azul = mejor ajuste · paralela azul = lectura gráfica de β`;
+
+  // Curva R(t) original: se mantiene sin cambios conceptuales.
   const tmax = Math.max(...points.map(p=>p.t)) * 1.3;
-  const b = setupCanvas("weibullRChart"), bx = axes(b.ctx,b.w,b.h,0,1,"R(t)");
+  const b = rcanvas, bx = axes(b.ctx,b.w,b.h,0,1,"R(t)");
   const txTo = t => bx.ml + bx.pw*(t/tmax);
   b.ctx.strokeStyle="#35d07f"; b.ctx.lineWidth=2; b.ctx.beginPath();
   const steps=60;
@@ -1182,31 +1411,98 @@ function amfeTrace(m){
   if(m.g==null || m.o==null || m.d==null) return "";
   return [godLine("G", m.g, AMFE_SCALES.g), godLine("O", m.o, AMFE_SCALES.o), godLine("D", m.d, AMFE_SCALES.d)].join(" · ");
 }
+function escHtml(v){
+  return String(v ?? "").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+}
+function nprClass(npr){ return npr>200 ? "nprHigh" : npr>=100 ? "nprMedium" : "nprLow"; }
 function renderAmfe(){
   const box = document.getElementById("amfeBody");
-  const all = Object.keys(AMFE).flatMap(eq => AMFE[eq].map(m => ({...m, eq})));
-  const list = filterMachine ? all.filter(m => m.eq === selectedEq) : all;
+  const eqs = Object.keys(AMFE).filter(eq => !filterMachine || eq===selectedEq);
   document.getElementById("amfeSub").textContent = filterMachine
-    ? `${META[selectedEq]?.displayName || selectedEq} · modos de falla relevados en el AMFE`
-    : "Modos de falla, NPR y acción recomendada de todas las máquinas";
-  if(!list.length){
+    ? `${META[selectedEq]?.displayName || selectedEq} · tabla AMFE del equipo seleccionado`
+    : "Tabla de modos de falla, efectos, causas, controles y NPR";
+  const total = eqs.reduce((s,eq)=>s+(AMFE[eq]?.length||0),0);
+  if(!total){
     box.innerHTML = `<div class="rec neutral">${filterMachine ? "El equipo seleccionado no tiene modos de falla cargados." : "Todavía no hay modos de falla relevados en el AMFE."}</div>`;
     return;
   }
-  box.innerHTML = list.map(m=>{
-    const sev = m.npr>=200 ? "red" : m.npr>=100 ? "yellow" : "green";
-    const sevLabel = m.npr>=200 ? "Alto" : m.npr>=100 ? "Medio" : "Bajo";
-    const trace = amfeTrace(m);
-    const tag = META[m.eq]?.displayName || m.eq;
-    return `<div class="amfeCard${m.eq===selectedEq ? " sel" : ""}">
-      <div class="amfeHead">
-        <div><b>${m.mode}</b><small>${tag}${m.share ? " · "+m.share : ""}</small></div>
-        <div class="badge ${sev}">NPR ${m.npr}${m.nprAfter ? " → "+m.nprAfter : ""} · ${sevLabel}</div>
-      </div>
-      <div class="amfeAction">${m.action}</div>
-      ${trace ? `<div class="amfeAction">${trace}</div>` : ""}
-    </div>`;
-  }).join("");
+  let html = `<div class="amfeTableWrap"><table class="amfeTable"><thead><tr>
+    <th>Máquina</th><th>Requerimiento</th><th>Modo de Falla Potencial</th><th>Efecto(s) Potencial(es) de la Falla</th>
+    <th>Gravedad (G)</th><th>Clasificación</th><th>Causa(s) Potencial(es) de la Falla</th><th>Controles Actuales<br>Prevención</th>
+    <th>Ocurrencia (O)</th><th>Controles Actuales<br>Detección</th><th>No Detección (D)</th><th>N.P.R.</th><th>Acciones</th>
+  </tr></thead><tbody>`;
+  eqs.forEach(eq=>{
+    const modes=AMFE[eq]||[];
+    modes.forEach((m,i)=>{
+      const npr=(Number(m.g)||1)*(Number(m.o)||1)*(Number(m.d)||1);
+      m.npr=npr;
+      html += `<tr>`;
+      if(i===0) html += `<td class="machineCell" rowspan="${modes.length}">${escHtml(META[eq]?.displayName||eq)}</td>`;
+      html += `<td>${escHtml(m.requirement||"—")}</td>
+        <td><b>${escHtml(m.mode)}</b></td>
+        <td>${escHtml(m.effect||"—")}</td>
+        <td class="scoreCell">${escHtml(m.g)}</td>
+        <td>${escHtml(m.classification||"-")}</td>
+        <td>${escHtml(m.cause||"—")}</td>
+        <td>${escHtml(m.prevention||"—")}</td>
+        <td class="scoreCell">${escHtml(m.o)}</td>
+        <td>${escHtml(m.detection||"—")}</td>
+        <td class="scoreCell">${escHtml(m.d)}</td>
+        <td class="nprCell ${nprClass(npr)}">${npr}</td>
+        <td class="actionsCell"><button class="miniBtn editAmfeBtn" data-eq="${escHtml(eq)}" data-id="${escHtml(m.id)}">✏️ Editar</button><button class="miniBtn danger delAmfeBtn" data-eq="${escHtml(eq)}" data-id="${escHtml(m.id)}">🗑 Eliminar</button></td></tr>`;
+    });
+  });
+  html += `</tbody></table></div>`;
+  box.innerHTML=html;
+  box.querySelectorAll(".editAmfeBtn").forEach(btn=>btn.onclick=()=>openAmfeModal(btn.dataset.eq,btn.dataset.id));
+  box.querySelectorAll(".delAmfeBtn").forEach(btn=>btn.onclick=()=>deleteAmfeMode(btn.dataset.eq,btn.dataset.id));
+}
+let amfeEditing=null;
+function populateAmfeEqSelect(){
+  const sel=document.getElementById("amfeEq");
+  sel.innerHTML=Object.keys(META).map(id=>`<option value="${escHtml(id)}">${escHtml(id)} · ${escHtml(META[id].name||id)}</option>`).join("");
+}
+function updateAmfeNprPreview(){
+  const g=Math.min(10,Math.max(1,Number(document.getElementById("amfeG").value)||1));
+  const o=Math.min(10,Math.max(1,Number(document.getElementById("amfeO").value)||1));
+  const d=Math.min(10,Math.max(1,Number(document.getElementById("amfeD").value)||1));
+  document.getElementById("amfeNprPreview").textContent=g*o*d;
+}
+function openAmfeModal(eq=null,id=null){
+  populateAmfeEqSelect(); amfeEditing=null;
+  ["amfeReq","amfeMode","amfeEffect","amfeClass","amfeCause","amfePrev","amfeDetect","amfeAction"].forEach(x=>document.getElementById(x).value="");
+  document.getElementById("amfeG").value=5; document.getElementById("amfeO").value=5; document.getElementById("amfeD").value=5;
+  document.getElementById("amfeEq").value=eq||selectedEq;
+  document.getElementById("amfeModalTitle").textContent="Agregar modo de falla";
+  document.getElementById("saveAmfeBtn").textContent="Guardar modo de falla";
+  if(eq&&id){
+    const m=(AMFE[eq]||[]).find(x=>x.id===id);
+    if(m){
+      amfeEditing={eq,id}; document.getElementById("amfeEq").value=eq; document.getElementById("amfeEq").disabled=true;
+      document.getElementById("amfeReq").value=m.requirement||""; document.getElementById("amfeMode").value=m.mode||""; document.getElementById("amfeEffect").value=m.effect||"";
+      document.getElementById("amfeG").value=m.g||1; document.getElementById("amfeClass").value=m.classification||""; document.getElementById("amfeCause").value=m.cause||"";
+      document.getElementById("amfePrev").value=m.prevention||""; document.getElementById("amfeO").value=m.o||1; document.getElementById("amfeDetect").value=m.detection||""; document.getElementById("amfeD").value=m.d||1;
+      document.getElementById("amfeAction").value=m.action||""; document.getElementById("amfeModalTitle").textContent=`Editar modo de falla · ${eq}`; document.getElementById("saveAmfeBtn").textContent="Guardar cambios";
+    }
+  }else document.getElementById("amfeEq").disabled=false;
+  updateAmfeNprPreview(); openModal("amfeModal");
+}
+function saveAmfeMode(){
+  const eq=document.getElementById("amfeEq").value, requirement=document.getElementById("amfeReq").value.trim(), mode=document.getElementById("amfeMode").value.trim();
+  if(!eq||!requirement||!mode){ toast("Completá máquina, requerimiento y modo de falla"); return; }
+  const g=Math.min(10,Math.max(1,Number(document.getElementById("amfeG").value)||1));
+  const o=Math.min(10,Math.max(1,Number(document.getElementById("amfeO").value)||1));
+  const d=Math.min(10,Math.max(1,Number(document.getElementById("amfeD").value)||1));
+  const old=amfeEditing ? (AMFE[amfeEditing.eq]||[]).find(x=>x.id===amfeEditing.id) : null;
+  const item={...(old||{}), id:old?.id||`amfe-${Date.now()}`, requirement, mode, effect:document.getElementById("amfeEffect").value.trim(), g, classification:document.getElementById("amfeClass").value.trim()||"-", cause:document.getElementById("amfeCause").value.trim(), prevention:document.getElementById("amfePrev").value.trim(), o, detection:document.getElementById("amfeDetect").value.trim(), d, npr:g*o*d, action:document.getElementById("amfeAction").value.trim(), components:old?.components||[]};
+  if(amfeEditing){ const arr=AMFE[amfeEditing.eq]; const ix=arr.findIndex(x=>x.id===amfeEditing.id); if(ix>=0) arr[ix]=item; }
+  else { if(!AMFE[eq]) AMFE[eq]=[]; AMFE[eq].push(item); }
+  saveAmfe(); closeModal("amfeModal"); document.getElementById("amfeEq").disabled=false; amfeEditing=null; renderAmfe(); toast("AMFE actualizado");
+}
+function deleteAmfeMode(eq,id){
+  const m=(AMFE[eq]||[]).find(x=>x.id===id); if(!m) return;
+  if(!confirm(`¿Eliminar el modo de falla “${m.mode}” de ${eq}?`)) return;
+  AMFE[eq]=AMFE[eq].filter(x=>x.id!==id); if(!AMFE[eq].length) delete AMFE[eq]; saveAmfe(); renderAmfe(); toast("Modo de falla eliminado");
 }
 function renderPlanControl(){
   const tb = document.getElementById("planControlBody");
@@ -1367,7 +1663,7 @@ function showTab(tab){
 }
 
 function openModal(id){ document.getElementById(id).style.display="flex"; }
-function closeModal(id){ document.getElementById(id).style.display="none"; }
+function closeModal(id){ document.getElementById(id).style.display="none"; if(id==="amfeModal") document.getElementById("amfeEq").disabled=false; }
 document.querySelectorAll("[data-close]").forEach(b => b.onclick = ()=>closeModal(b.dataset.close));
 document.querySelectorAll(".tabBtn").forEach(b => b.onclick = ()=> showTab(b.dataset.tab));
 function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.style.display="block"; setTimeout(()=>t.style.display="none",2600); }
@@ -1469,6 +1765,7 @@ document.getElementById("downloadInt").onclick = ()=>{
 document.getElementById("resetBtn").onclick = ()=>{
   localStorage.removeItem("cv12custom");
   localStorage.removeItem("cv12imported");
+  localStorage.removeItem("cv13amfe");
   resetApp(); render(); toast("Demo restaurada");
 };
 document.getElementById("toggleMapView").onclick = ()=>{
@@ -1500,6 +1797,9 @@ document.getElementById("filterMachineBtn").onclick = ()=>{
   renderAmfe();
   renderPlanControl();
 };
+document.getElementById("addAmfeBtn").onclick = ()=>openAmfeModal(selectedEq,null);
+document.getElementById("saveAmfeBtn").onclick = saveAmfeMode;
+["amfeG","amfeO","amfeD"].forEach(id=>document.getElementById(id).oninput=updateAmfeNprPreview);
 function updateFilterBtn(){
   const btn = document.getElementById("filterMachineBtn");
   btn.classList.toggle("primary", filterMachine);
