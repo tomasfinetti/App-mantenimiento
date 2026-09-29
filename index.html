@@ -97,6 +97,7 @@ svg{display:block;width:100%;height:auto;min-width:900px}
 
 .amfeCard{background:#0d1b2d;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
 .amfeCard:last-child{margin-bottom:0}
+.amfeCard.sel{border-color:#4f99c4;background:#102840}
 .amfeHead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
 .amfeHead b{font-size:13px}
 .amfeHead small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
@@ -116,6 +117,7 @@ th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;white-spac
 th{font-size:9px;color:var(--muted);text-transform:uppercase}
 .planWrap{overflow-x:auto;padding:0 14px 14px}
 .planWrap th,.planWrap td{white-space:normal;vertical-align:top}
+.planWrap tr.sel td{background:#102840}
 .info{padding:13px 16px;font-size:10px;color:var(--muted);line-height:1.55}
 .info b{color:var(--text)}
 .sourceCards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
@@ -154,6 +156,10 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
     </div>
   </div>
   <div class="actions">
+    <div style="display:flex;align-items:center;gap:6px">
+      <label for="eqSelect" style="font-size:11px;color:var(--muted)">Equipo:</label>
+      <select id="eqSelect"></select>
+    </div>
     <button class="primary" id="openImport">📥 Importar mediciones</button>
     <button id="addMachineBtn">➕ Agregar máquina</button>
     <button id="deleteMachineBtn" class="danger">🗑 Eliminar máquina</button>
@@ -274,9 +280,38 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
     <div id="pmAlert" class="predAlert neutral"></div>
   </div>
 </div>
+
+<div class="panel" id="sysRelPanel" style="margin-top:14px">
+  <div class="ph">
+    <div><h2>Fiabilidad de sistemas (serie / paralelo)</h2><small>Sistema mixto por grupos — Unidad 2</small></div>
+  </div>
+  <div class="side" id="sysRelBody">
+    <div class="formGrid">
+      <div class="field">
+        <label>Tiempo de misión t (horas de operación)</label>
+        <input id="sysT" type="number" min="0" step="1" value="2000">
+        <small class="sub">t se expresa en horas de operación, igual que el resto de la app.</small>
+      </div>
+      <div class="field">
+        <label>Grupos en:</label>
+        <div style="display:flex;gap:8px">
+          <button id="sysTopSerie" class="metric sel">Serie</button>
+          <button id="sysTopParalelo" class="metric">Paralelo</button>
+        </div>
+      </div>
+    </div>
+    <div class="sectionLabel">Grupos</div>
+    <div id="sysGroups"></div>
+    <button id="sysAddGroup" style="margin-top:4px">+ Agregar grupo</button>
+    <div id="sysResult" class="rec neutral" style="margin-top:12px"></div>
+  </div>
+</div>
 </div>
 
 <div class="tabPanel" data-tab-panel="amfe">
+<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+  <button id="filterMachineBtn">🔍 Filtrar máquina</button>
+</div>
 <div class="panel" id="amfePanel">
   <div class="ph">
     <div><h2>AMFE / Modos críticos</h2><small id="amfeSub">Modos de falla, NPR y acción recomendada</small></div>
@@ -505,10 +540,16 @@ let RELIAB = {};
 let AMFE = {};
 let OPHOURS = {};
 let selectedEq = "P-80A";
+let SYS_TOPCONFIG = "serie";
+let SYS_GROUPS = [
+  {name:"Grupo 1", config:"serie", elements:[{type:"weibull", eq:"AC-725", manualR:0.9}]},
+  {name:"Grupo 2", config:"serie", elements:[{type:"weibull", eq:"P-80A", manualR:0.9}]}
+];
 let selectedComp = "Rodamiento LA";
 let selectedSeriesKey = "Vibración|Vibración RMS";
 let mapView = "condicion";
 let activeTab = "mapa";
+let filterMachine = false;
 
 const LAYOUT = {
   "T-1200":[200,160], "T-1300":[200,340],
@@ -693,7 +734,7 @@ function renderPlant(){
     const g = mk("g");
     g.setAttribute("transform",`translate(${x},${y})`);
     g.style.cursor = "pointer";
-    g.addEventListener("click",()=>{ selectedEq=id; selectedComp=(META[id].components||[])[0]||""; selectedSeriesKey=""; ensureSelection(); render(); });
+    g.addEventListener("click",()=> selectEquipo(id));
     const r = mk("rect");
     r.setAttribute("x",-58); r.setAttribute("y",-34); r.setAttribute("width",116); r.setAttribute("height",68); r.setAttribute("rx",14);
     r.setAttribute("class","node"+(selectedEq===id?" sel":"")); g.appendChild(r);
@@ -991,6 +1032,108 @@ function renderCondFail(){
       <div class="pSub">Probabilidad de falla en las próximas ${delta} h, habiendo operado ${t} h · β=${beta.toFixed(2)} η=${eta.toFixed(1)} h</div>
     </div>`;
 }
+function reliabEqIds(){ return Object.keys(RELIAB); }
+function sysElementR(el, t){
+  if(el.type === "weibull"){
+    const ids = reliabEqIds();
+    const eq = (el.eq && ids.includes(el.eq)) ? el.eq : ids[0];
+    if(!eq) return null;
+    const fit = weibullFit(RELIAB[eq].tbf);
+    if(!fit) return null;
+    return weibullR(t, fit.beta, fit.eta);
+  }
+  const r = Number(el.manualR);
+  if(!Number.isFinite(r)) return null;
+  return Math.min(1, Math.max(0, r));
+}
+function combineR(rs, config){
+  if(!rs.length) return null;
+  if(config === "serie") return rs.reduce((a,b)=>a*b, 1);
+  return 1 - rs.reduce((a,b)=>a*(1-b), 1);
+}
+function groupFormula(rs, config){
+  if(config === "serie") return `R = ${rs.map(r=>r.toFixed(3)).join(" · ")} = ${combineR(rs,config).toFixed(4)}`;
+  const prodFail = rs.reduce((a,b)=>a*(1-b), 1);
+  return `R = 1 − [${rs.map(r=>(1-r).toFixed(3)).join(" · ")}] = 1 − ${prodFail.toFixed(4)} = ${(1-prodFail).toFixed(4)}`;
+}
+function groupR(group, t){
+  const rs = group.elements.map(el=>sysElementR(el,t)).filter(r=>r!=null);
+  if(!rs.length) return null;
+  return combineR(rs, group.config);
+}
+function renderSystemReliability(){
+  const ids = reliabEqIds();
+  const t = Math.max(0, Number(document.getElementById("sysT").value) || 0);
+  const box = document.getElementById("sysGroups");
+
+  box.innerHTML = SYS_GROUPS.map((g, gi)=>{
+    const elsHtml = g.elements.map((el, ei)=>{
+      if(el.type === "weibull" && (!el.eq || !ids.includes(el.eq))) el.eq = ids[0] || null;
+      const r = sysElementR(el, t);
+      const rTxt = r==null ? "—" : (r*100).toFixed(1)+"%";
+      const eqOptions = ids.map(id => `<option value="${id}" ${id===el.eq?"selected":""}>${META[id]?.displayName||id}</option>`).join("");
+      return `<div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <select class="sysElType" data-g="${gi}" data-e="${ei}">
+          <option value="weibull" ${el.type==="weibull"?"selected":""}>Equipo con Weibull</option>
+          <option value="manual" ${el.type==="manual"?"selected":""}>Manual</option>
+        </select>
+        ${el.type==="weibull"
+          ? (ids.length ? `<select class="sysElEq" data-g="${gi}" data-e="${ei}">${eqOptions}</select>` : `<span class="sub">No hay equipos con Weibull cargado</span>`)
+          : `<input class="sysElManual" data-g="${gi}" data-e="${ei}" type="number" min="0" max="1" step="0.01" value="${el.manualR}">`}
+        <span style="margin-left:auto;font-weight:800">${rTxt}</span>
+        <button class="sysElRemove danger" data-g="${gi}" data-e="${ei}">✕</button>
+      </div>`;
+    }).join("") || `<div class="sub">Este grupo no tiene elementos. Agregá al menos uno.</div>`;
+
+    const rs = g.elements.map(el=>sysElementR(el,t)).filter(r=>r!=null);
+    const gR = rs.length ? combineR(rs, g.config) : null;
+    const gFormula = rs.length ? groupFormula(rs, g.config) : "Sin elementos válidos.";
+
+    return `<div class="panel cp" style="margin-bottom:12px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <input class="sysGroupName" data-g="${gi}" value="${g.name}" style="flex:1;min-width:120px">
+        <div style="display:flex;gap:6px">
+          <button class="sysGroupCfg metric ${g.config==="serie"?"sel":""}" data-g="${gi}" data-cfg="serie">Serie</button>
+          <button class="sysGroupCfg metric ${g.config==="paralelo"?"sel":""}" data-g="${gi}" data-cfg="paralelo">Paralelo</button>
+        </div>
+        <button class="sysGroupRemove danger" data-g="${gi}">✕ grupo</button>
+      </div>
+      ${elsHtml}
+      <button class="sysAddElement" data-g="${gi}">+ Agregar elemento</button>
+      <div class="sub" style="margin-top:8px">${gFormula}</div>
+      <div style="font-weight:800;margin-top:2px">R equivalente: ${gR==null ? "—" : (gR*100).toFixed(2)+"%"}</div>
+    </div>`;
+  }).join("") || `<div class="sub">Todavía no hay grupos. Agregá al menos uno.</div>`;
+
+  [...box.querySelectorAll(".sysGroupName")].forEach(inp=> inp.oninput = ()=>{ SYS_GROUPS[+inp.dataset.g].name = inp.value; });
+  [...box.querySelectorAll(".sysGroupCfg")].forEach(btn=> btn.onclick = ()=>{ SYS_GROUPS[+btn.dataset.g].config = btn.dataset.cfg; renderSystemReliability(); });
+  [...box.querySelectorAll(".sysGroupRemove")].forEach(btn=> btn.onclick = ()=>{ SYS_GROUPS.splice(+btn.dataset.g,1); renderSystemReliability(); });
+  [...box.querySelectorAll(".sysAddElement")].forEach(btn=> btn.onclick = ()=>{ SYS_GROUPS[+btn.dataset.g].elements.push({type:"weibull", eq:null, manualR:0.9}); renderSystemReliability(); });
+  [...box.querySelectorAll(".sysElType")].forEach(s=> s.onchange = ()=>{ SYS_GROUPS[+s.dataset.g].elements[+s.dataset.e].type = s.value; renderSystemReliability(); });
+  [...box.querySelectorAll(".sysElEq")].forEach(s=> s.onchange = ()=>{ SYS_GROUPS[+s.dataset.g].elements[+s.dataset.e].eq = s.value; renderSystemReliability(); });
+  [...box.querySelectorAll(".sysElManual")].forEach(inp=> inp.oninput = ()=>{ SYS_GROUPS[+inp.dataset.g].elements[+inp.dataset.e].manualR = inp.value; renderSystemReliability(); });
+  [...box.querySelectorAll(".sysElRemove")].forEach(btn=> btn.onclick = ()=>{ SYS_GROUPS[+btn.dataset.g].elements.splice(+btn.dataset.e,1); renderSystemReliability(); });
+
+  const groupRs = SYS_GROUPS.map(g=>groupR(g,t)).filter(r=>r!=null);
+  const result = document.getElementById("sysResult");
+  if(groupRs.length === 0){
+    result.className = "rec neutral";
+    result.textContent = "Agregá al menos dos grupos para calcular el sistema mixto.";
+    return;
+  }
+  if(groupRs.length === 1){
+    result.className = "rec good";
+    result.innerHTML = `<div style="font-size:22px;font-weight:850">${(groupRs[0]*100).toFixed(2)}%</div><div class="sub" style="margin-top:4px">Un solo grupo válido: el R del sistema es el R equivalente de ese grupo · t = ${t} h</div>`;
+    return;
+  }
+  const rSys = combineR(groupRs, SYS_TOPCONFIG);
+  const labels = groupRs.map((_,i)=>`R_G${i+1}`);
+  const topFormula = SYS_TOPCONFIG === "serie"
+    ? `Rs = ${labels.join(" · ")} = ${groupRs.map(r=>r.toFixed(3)).join(" · ")} = ${rSys.toFixed(4)}`
+    : `Rp = 1 − [${labels.map(l=>"(1−"+l+")").join("·")}] = 1 − [${groupRs.map(r=>(1-r).toFixed(3)).join("·")}] = ${rSys.toFixed(4)}`;
+  result.className = "rec good";
+  result.innerHTML = `<div style="font-size:22px;font-weight:850">${(rSys*100).toFixed(2)}%</div><div style="margin-top:6px">${topFormula}</div><div class="sub" style="margin-top:4px">Grupos combinados en: ${SYS_TOPCONFIG==="serie"?"Serie":"Paralelo"} · t = ${t} h</div>`;
+}
 function renderPmAlert(){
   const box = document.getElementById("pmAlert");
   const intervalo = PM_INTERVAL[selectedEq];
@@ -1041,21 +1184,23 @@ function amfeTrace(m){
 }
 function renderAmfe(){
   const box = document.getElementById("amfeBody");
-  const modes = AMFE[selectedEq];
-  document.getElementById("amfeSub").textContent = modes && modes.length
+  const all = Object.keys(AMFE).flatMap(eq => AMFE[eq].map(m => ({...m, eq})));
+  const list = filterMachine ? all.filter(m => m.eq === selectedEq) : all;
+  document.getElementById("amfeSub").textContent = filterMachine
     ? `${META[selectedEq]?.displayName || selectedEq} · modos de falla relevados en el AMFE`
-    : "Modos de falla, NPR y acción recomendada";
-  if(!modes || !modes.length){
-    box.innerHTML = `<div class="rec neutral">Este equipo todavía no tiene modos de falla relevados en el AMFE.</div>`;
+    : "Modos de falla, NPR y acción recomendada de todas las máquinas";
+  if(!list.length){
+    box.innerHTML = `<div class="rec neutral">${filterMachine ? "El equipo seleccionado no tiene modos de falla cargados." : "Todavía no hay modos de falla relevados en el AMFE."}</div>`;
     return;
   }
-  box.innerHTML = modes.map(m=>{
+  box.innerHTML = list.map(m=>{
     const sev = m.npr>=200 ? "red" : m.npr>=100 ? "yellow" : "green";
     const sevLabel = m.npr>=200 ? "Alto" : m.npr>=100 ? "Medio" : "Bajo";
     const trace = amfeTrace(m);
-    return `<div class="amfeCard">
+    const tag = META[m.eq]?.displayName || m.eq;
+    return `<div class="amfeCard${m.eq===selectedEq ? " sel" : ""}">
       <div class="amfeHead">
-        <div><b>${m.mode}</b>${m.share ? `<small>${m.share}</small>` : ""}</div>
+        <div><b>${m.mode}</b><small>${tag}${m.share ? " · "+m.share : ""}</small></div>
         <div class="badge ${sev}">NPR ${m.npr}${m.nprAfter ? " → "+m.nprAfter : ""} · ${sevLabel}</div>
       </div>
       <div class="amfeAction">${m.action}</div>
@@ -1065,8 +1210,13 @@ function renderAmfe(){
 }
 function renderPlanControl(){
   const tb = document.getElementById("planControlBody");
-  tb.innerHTML = PLAN_CONTROL.map((r,i)=>`<tr>
-    <td>${i+1}</td>
+  const items = PLAN_CONTROL.map((r,i)=>({r, num:i+1})).filter(x => !filterMachine || x.r.maquina === selectedEq);
+  if(!items.length){
+    tb.innerHTML = `<tr><td colspan="9">El equipo seleccionado no tiene plan de control cargado.</td></tr>`;
+    return;
+  }
+  tb.innerHTML = items.map(({r,num})=>`<tr class="${r.maquina===selectedEq ? "sel" : ""}">
+    <td>${num}</td>
     <td>${r.proceso}</td>
     <td>${r.maquina}</td>
     <td>${r.caracteristica}</td>
@@ -1123,7 +1273,21 @@ function renderLegend(){
     ? '<span><i class="dot bad"></i>Alta</span><span><i class="dot warn"></i>Media</span><span><i class="dot ok"></i>Baja</span><span><i class="dot nodata"></i>Sin definir</span>'
     : '<span><i class="dot ok"></i>Normal</span><span><i class="dot warn"></i>Atención</span><span><i class="dot bad"></i>Crítico</span><span><i class="dot nodata"></i>Sin datos</span>';
 }
-function render(){ ensureSelection(); renderLegend(); renderPlant(); renderSide(); draw(); renderReliability(); renderAmfe(); renderPlanControl(); renderShareAlert(); document.getElementById("aiDiagResult").style.display="none"; renderHistory(); }
+function selectEquipo(id){
+  selectedEq = id;
+  selectedComp = (META[id].components||[])[0] || "";
+  selectedSeriesKey = "";
+  ensureSelection();
+  render();
+}
+function renderEqSelect(){
+  const sel = document.getElementById("eqSelect");
+  const ids = Object.keys(META);
+  const html = ids.map(id => `<option value="${id}">${META[id].displayName || id}</option>`).join("");
+  if(sel.innerHTML !== html) sel.innerHTML = html;
+  sel.value = selectedEq;
+}
+function render(){ ensureSelection(); renderLegend(); renderPlant(); renderSide(); draw(); renderReliability(); renderSystemReliability(); renderAmfe(); renderPlanControl(); updateFilterBtn(); renderEqSelect(); renderShareAlert(); document.getElementById("aiDiagResult").style.display="none"; renderHistory(); }
 function paretoData(){
   return Object.keys(META)
     .map(id => ({id, name: META[id].displayName || id, fallas: META[id].fallas || 0}))
@@ -1198,7 +1362,7 @@ function showTab(tab){
   // Los canvas miden su contenedor al dibujar: si la pestaña estaba oculta, hay que
   // redibujar recién cuando se muestra, o quedan en blanco (ancho 0 al momento de pintar).
   if(tab==="condicion") draw();
-  if(tab==="confiabilidad") renderReliability();
+  if(tab==="confiabilidad") { renderReliability(); renderSystemReliability(); }
   if(tab==="diagnostico") drawPareto();
 }
 
@@ -1312,6 +1476,35 @@ document.getElementById("toggleMapView").onclick = ()=>{
   document.getElementById("toggleMapView").textContent = mapView==="condicion" ? "🎯 Ver criticidad" : "🚦 Ver condición";
   render();
 };
+document.getElementById("eqSelect").onchange = (e)=> selectEquipo(e.target.value);
+document.getElementById("sysT").oninput = ()=> renderSystemReliability();
+document.getElementById("sysAddGroup").onclick = ()=>{
+  SYS_GROUPS.push({name:`Grupo ${SYS_GROUPS.length+1}`, config:"serie", elements:[{type:"weibull", eq:null, manualR:0.9}]});
+  renderSystemReliability();
+};
+document.getElementById("sysTopSerie").onclick = ()=>{
+  SYS_TOPCONFIG = "serie";
+  document.getElementById("sysTopSerie").classList.add("sel");
+  document.getElementById("sysTopParalelo").classList.remove("sel");
+  renderSystemReliability();
+};
+document.getElementById("sysTopParalelo").onclick = ()=>{
+  SYS_TOPCONFIG = "paralelo";
+  document.getElementById("sysTopParalelo").classList.add("sel");
+  document.getElementById("sysTopSerie").classList.remove("sel");
+  renderSystemReliability();
+};
+document.getElementById("filterMachineBtn").onclick = ()=>{
+  filterMachine = !filterMachine;
+  updateFilterBtn();
+  renderAmfe();
+  renderPlanControl();
+};
+function updateFilterBtn(){
+  const btn = document.getElementById("filterMachineBtn");
+  btn.classList.toggle("primary", filterMachine);
+  btn.textContent = filterMachine ? `🔍 Filtrando: ${selectedEq}` : "🔍 Filtrar máquina";
+}
 document.getElementById("opHours").oninput = ()=>{
   OPHOURS[selectedEq] = Math.max(0, Number(document.getElementById("opHours").value) || 0);
   renderPrediction(currentFit());
