@@ -153,6 +153,8 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 /* AMFE tipo planilla */
 .amfeToolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .amfeToolbarActions{display:flex;gap:8px;flex-wrap:wrap}
+.planToolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.planToolbarActions{display:flex;gap:8px;flex-wrap:wrap}
 .amfeTableWrap{overflow:auto;max-height:620px;border:1px solid var(--line);border-radius:12px}
 .amfeTable{min-width:1720px;width:100%;border-collapse:separate;border-spacing:0;font-size:10px}
 .amfeTable th{position:sticky;top:0;z-index:2;background:#b9cff0;color:#071322;border-right:1px solid #36506e;border-bottom:2px solid #36506e;text-align:center;vertical-align:middle;padding:10px 8px;white-space:normal;font-size:10px;text-transform:none}
@@ -210,19 +212,19 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
   color:#e3ffef !important;
   font-weight:800;
 }
-.amfeToolbar, .weibullToolbar{
+.amfeToolbar, .weibullToolbar, .planToolbar{
   background:#0f2743 !important;
   border:1px solid #2f5b8a !important;
   border-radius:12px;
   color:#eef6ff !important;
 }
 .amfeToolbar button, .weibullToolbar button, .amfeToolbar select, .weibullToolbar select,
-.amfeToolbar input, .weibullToolbar input{
+.amfeToolbar input, .weibullToolbar input, .planToolbar button{
   background:#163559 !important;
   color:#ffffff !important;
   border:1px solid #35679d !important;
 }
-.amfeToolbar button:hover, .weibullToolbar button:hover{
+.amfeToolbar button:hover, .weibullToolbar button:hover, .planToolbar button:hover{
   background:#1d4675 !important;
 }
 .amfeToolbarActions label{display:flex;align-items:center;gap:6px;font-size:12px;color:#eef6ff}
@@ -258,6 +260,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
   <button class="tabBtn" data-tab="condicion">📈 Condición</button>
   <button class="tabBtn" data-tab="confiabilidad">🔧 Fiabilidad</button>
   <button class="tabBtn" data-tab="amfe">⚠️ AMFE</button>
+  <button class="tabBtn" data-tab="plancontrol">🗒️ Plan de Control</button>
   <button class="tabBtn" data-tab="historial">📋 Historial</button>
   <button class="tabBtn" data-tab="diagnostico">🔍 Diagnóstico</button>
 </div>
@@ -402,8 +405,16 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
   </div>
   <div class="side" id="amfeBody"></div>
 </div>
+</div>
 
-<div class="panel" id="planControlPanel" style="margin-top:14px">
+<div class="tabPanel" data-tab-panel="plancontrol">
+<div class="planToolbar">
+  <div class="sub">Filtro por máquina</div>
+  <div class="planToolbarActions">
+    <button id="planFilterMachineBtn">👁 Ver todas</button>
+  </div>
+</div>
+<div class="panel" id="planControlPanel">
   <div class="ph">
     <div><h2>Plan de Control</h2><small>Modo de falla → cómo se controla en el día a día</small></div>
   </div>
@@ -681,6 +692,7 @@ let mapView = "condicion";
 let activeTab = "mapa";
 let filterMachine = false;
 let amfeMinNpr = 0;
+let planFilterMachine = false;
 
 const LAYOUT = {
   "T-1200":[200,160], "T-1300":[200,340],
@@ -1357,7 +1369,7 @@ function deleteAmfeMode(eq,id){
 }
 function renderPlanControl(){
   const tb = document.getElementById("planControlBody");
-  const items = PLAN_CONTROL.map((r,i)=>({r, num:i+1})).filter(x => !filterMachine || x.r.maquina === selectedEq);
+  const items = PLAN_CONTROL.map((r,i)=>({r, num:i+1})).filter(x => !planFilterMachine || x.r.maquina === selectedEq);
   if(!items.length){
     tb.innerHTML = `<tr><td colspan="9">El equipo seleccionado no tiene plan de control cargado.</td></tr>`;
     return;
@@ -1435,7 +1447,7 @@ function renderEqSelect(){
   if(sel.innerHTML !== html) sel.innerHTML = html;
   sel.value = selectedEq;
 }
-function render(){ ensureSelection(); renderLegend(); renderPlant(); renderSide(); draw(); renderReliability(); renderSystemReliability(); renderAmfe(); renderPlanControl(); updateFilterBtn(); renderEqSelect(); renderShareAlert(); document.getElementById("aiDiagResult").style.display="none"; renderHistory(); }
+function render(){ ensureSelection(); renderLegend(); renderPlant(); renderSide(); draw(); renderReliability(); renderSystemReliability(); renderAmfe(); renderPlanControl(); updateFilterBtn(); updatePlanFilterBtn(); renderEqSelect(); renderShareAlert(); document.getElementById("aiDiagResult").style.display="none"; renderHistory(); }
 function paretoData(){
   return Object.keys(META)
     .map(id => ({id, name: META[id].displayName || id, fallas: META[id].fallas || 0}))
@@ -1647,6 +1659,10 @@ document.getElementById("filterMachineBtn").onclick = ()=>{
   filterMachine = !filterMachine;
   updateFilterBtn();
   renderAmfe();
+};
+document.getElementById("planFilterMachineBtn").onclick = ()=>{
+  planFilterMachine = !planFilterMachine;
+  updatePlanFilterBtn();
   renderPlanControl();
 };
 document.getElementById("amfeNprFilter").oninput = ()=>{
@@ -1660,6 +1676,11 @@ function updateFilterBtn(){
   const btn = document.getElementById("filterMachineBtn");
   btn.classList.toggle("primary", filterMachine);
   btn.textContent = filterMachine ? `🔍 Filtrando: ${selectedEq}` : "🔍 Filtrar máquina";
+}
+function updatePlanFilterBtn(){
+  const btn = document.getElementById("planFilterMachineBtn");
+  btn.classList.toggle("primary", planFilterMachine);
+  btn.textContent = planFilterMachine ? `🔍 Solo ${selectedEq}` : "👁 Ver todas";
 }
 // Diagnóstico con IA — OPCIONAL. Solo funciona si esta app corre dentro del
 // entorno de artefactos de Claude (claude.ai), que expone window.claude.complete().
