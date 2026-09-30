@@ -139,7 +139,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 }
 
 /* Papel de probabilidad de Weibull: mantiene el cálculo actual y cambia solo la visualización. */
-#weibullLineChart{height:430px;background:#0b1f36;border-color:#bac7d3}
+#weibullLineChart{height:600px;background:#0b1f36;border-color:#bac7d3}
 .weibullPaperPanel{background:linear-gradient(180deg,#10253f 0%, #0b1c31 100%);border:1px solid #2f5b8a}
 .weibullPaperPanel .ct{color:#eef6ff}
 .weibullPaperPanel .legend{color:#d9e8f8}
@@ -1017,7 +1017,7 @@ function renderReliabKpis(fit, seed){
   document.getElementById("reliabSub").textContent = `${seed.mode} · modo dominante (${seed.share}) · ${n} TBF analizados`;
 }
 function drawWeibull(fit){
-  const paper = setupCanvasHeight("weibullLineChart", 430);
+  const paper = setupCanvasHeight("weibullLineChart", 600);
   const rcanvas = setupCanvas("weibullRChart");
   if(!fit){
     paper.ctx.fillStyle="#0b1f36"; paper.ctx.fillRect(0,0,paper.w,paper.h);
@@ -1030,7 +1030,7 @@ function drawWeibull(fit){
 
   const {beta, eta, points} = fit;
   const ctx=paper.ctx, w=paper.w, h=paper.h;
-  const ML=54, MR=18, MT=48, MB=45, PW=w-ML-MR, PH=h-MT-MB;
+  const ML=58, MR=34, MT=52, MB=56, PW=w-ML-MR, PH=h-MT-MB;
   const ll=v=>Math.log(-Math.log(1-v));
   const fMin=0.01, fMax=0.995, yBot=ll(fMin), yTop=ll(fMax);
   const tVals=points.map(p=>p.t);
@@ -1046,37 +1046,60 @@ function drawWeibull(fit){
   ctx.fillStyle="#0b1f36"; ctx.fillRect(0,0,w,h);
   ctx.strokeStyle="#d7e8f8"; ctx.lineWidth=1; ctx.strokeRect(ML,MT,PW,PH);
 
-  // Grilla vertical logarítmica (tiempo).
+  // Grilla de fondo (verde, fina y de bajo contraste): vertical logarítmica (tiempo)
+  // y horizontal de probabilidad — solo textura, los rótulos van aparte.
   ctx.save(); ctx.beginPath(); ctx.rect(ML,MT,PW,PH); ctx.clip();
-  ctx.strokeStyle="rgba(160,255,180,.45)"; ctx.lineWidth=.65;
+  ctx.strokeStyle="rgba(120,220,150,.35)"; ctx.lineWidth=.6;
   for(let d=logMin; d<=logMax; d++){
-    const base=Math.pow(10,d);
     for(let i=1;i<=9;i++){
-      const t=i*base;
-      if(t<Math.pow(10,logMin) || t>Math.pow(10,logMax)) continue;
+      const t=i*Math.pow(10,d);
+      if(t<Math.pow(10,logMin)-1e-9 || t>Math.pow(10,logMax)+1e-9) continue;
       const x=xFromT(t); ctx.beginPath(); ctx.moveTo(x,MT); ctx.lineTo(x,MT+PH); ctx.stroke();
     }
   }
   const fGrid=[.01,.02,.03,.05,.10,.20,.30,.40,.50,.60,.6321,.70,.80,.90,.95,.99];
   fGrid.forEach(f=>{ const y=yFromF(f); ctx.beginPath(); ctx.moveTo(ML,y); ctx.lineTo(ML+PW,y); ctx.stroke(); });
+  ctx.restore();
 
-  // Líneas de referencia del papel del profesor.
-  ctx.strokeStyle="#c0392b"; ctx.lineWidth=1.35;
+  // Líneas de referencia destacadas (rojas): F=10% y F=63,21% (la de η).
+  ctx.strokeStyle="#e2483a"; ctx.lineWidth=1.4;
   [.10,.6321].forEach(f=>{ const y=yFromF(f); ctx.beginPath(); ctx.moveTo(ML,y); ctx.lineTo(ML+PW,y); ctx.stroke(); });
 
+  // Abanico de β de referencia: cada recta sale del mismo origen (η) y llega a una
+  // fila fija cerca del borde superior — así ninguna etiqueta se amontona con otra
+  // (a β más alto, la recta es más empinada y llega antes, quedando más a la izquierda).
+  const bx0=ML, by0=yFromF(.6321);
+  const betaRefs=[6,3,2,1.6,1.4,1.2,1,0.9,0.8,0.7,0.6,0.5];
+  const screenSlope=b=>-b*Math.LN10*(logMax-logMin)*PH/(PW*(yTop-yBot));
+  const yRow = MT + 10, maxFanX = ML + PW*0.94;
+  ctx.strokeStyle="rgba(120,170,255,.65)"; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+  betaRefs.forEach(b=>{
+    const sl = screenSlope(b);
+    let x = bx0 + (yRow-by0)/sl, y = yRow;
+    if(x > maxFanX){ x = maxFanX; y = by0 + sl*(x-bx0); }
+    ctx.beginPath(); ctx.moveTo(bx0,by0); ctx.lineTo(x,y); ctx.stroke();
+    ctx.save(); ctx.setLineDash([]); ctx.translate(x,y); ctx.rotate(-Math.atan2(by0-y, x-bx0));
+    ctx.fillStyle="#bcd6ff"; ctx.font="9px Segoe UI"; ctx.textAlign="left"; ctx.textBaseline="bottom";
+    ctx.fillText(b.toFixed(1), 3, -2);
+    ctx.restore();
+  });
+  ctx.setLineDash([]);
+  ctx.fillStyle="#bcd6ff"; ctx.font="bold 10px Segoe UI"; ctx.textAlign="left"; ctx.textBaseline="alphabetic";
+  ctx.fillText("β", ML, MT-6);
+
   // Recta de mejor ajuste Weibull.
-  ctx.strokeStyle="#4fb3ff"; ctx.lineWidth=2; ctx.setLineDash([7,4]);
+  ctx.strokeStyle="#4fb3ff"; ctx.lineWidth=2.2;
   ctx.beginPath();
   const t0=Math.pow(10,logMin), t1=Math.pow(10,logMax);
   const f0=1-Math.exp(-Math.pow(t0/eta,beta));
   const f1=1-Math.exp(-Math.pow(t1/eta,beta));
-  ctx.moveTo(xFromT(t0),yFromF(f0)); ctx.lineTo(xFromT(t1),yFromF(f1)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.moveTo(xFromT(t0),yFromF(f0)); ctx.lineTo(xFromT(t1),yFromF(f1)); ctx.stroke();
 
   // Puntos reales con rango mediano de Bernard.
   points.forEach((p,i)=>{
     const F=(i+1-0.3)/(points.length+0.4), x=xFromT(p.t), y=yFromF(F);
-    ctx.fillStyle="#c44732"; ctx.strokeStyle="#7f1a0a"; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle="#ff8f6b"; ctx.strokeStyle="#7f1a0a"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(x,y,4.5,0,Math.PI*2); ctx.fill(); ctx.stroke();
   });
 
   // Eta: intersección con F=63,21%.
@@ -1085,46 +1108,22 @@ function drawWeibull(fit){
   ctx.beginPath(); ctx.moveTo(xEta,yEta); ctx.lineTo(xEta,MT+PH); ctx.stroke(); ctx.setLineDash([]);
   ctx.fillStyle="#7fd0ff"; ctx.beginPath(); ctx.arc(xEta,yEta,4,0,Math.PI*2); ctx.fill();
 
-  // Abanico de β y paralela a la recta de ajuste para lectura gráfica.
-  const bx0=ML, by0=yFromF(.6321);
-  const betaRefs=[.5,.6,.7,.8,.9,1,1.2,1.5,2,3,6];
-  const screenSlope=b=>-b*Math.LN10*(logMax-logMin)*PH/(PW*(yTop-yBot));
-  ctx.strokeStyle="rgba(114,180,255,.75)"; ctx.lineWidth=.95; ctx.setLineDash([5,4]);
-  betaRefs.forEach(b=>{
-    const sl=screenSlope(b), dx=Math.min(105,PW*.22), dy=sl*dx;
-    const lim=(MT-by0)/dy;
-    const k=(dy<0 && by0+dy<MT) ? Math.max(0,Math.min(1,lim)) : 1;
-    const ex=bx0+dx*k, ey=by0+dy*k;
-    ctx.beginPath(); ctx.moveTo(bx0,by0); ctx.lineTo(ex,ey); ctx.stroke();
-    ctx.save(); ctx.setLineDash([]); ctx.fillStyle="#eef6ff"; ctx.font="9px Segoe UI"; ctx.textAlign="center"; ctx.fillText(String(b),ex,Math.max(MT+9,ey-3)); ctx.restore();
-  });
-  // Paralela destacada: misma pendiente que la recta ajustada, trasladada al origen β.
-  const sl=screenSlope(beta), dx=Math.min(150,PW*.30), dy=sl*dx;
-  const lim=(MT-by0)/dy;
-  const k=(dy<0 && by0+dy<MT) ? Math.max(0,Math.min(1,lim)) : 1;
-  const ex=bx0+dx*k, ey=by0+dy*k;
-  ctx.strokeStyle="#91d0ff"; ctx.lineWidth=2.2; ctx.setLineDash([]);
-  ctx.beginPath(); ctx.moveTo(bx0,by0); ctx.lineTo(ex,ey); ctx.stroke();
-  ctx.restore();
+  // Etiquetas de los ejes — solo los valores clave del eje Y (sin amontonar).
+  ctx.fillStyle="#eef6ff"; ctx.font="12px Segoe UI"; ctx.textAlign="right"; ctx.textBaseline="middle";
+  const yLabels=[[.01,"1"],[.05,"5"],[.10,"10"],[.50,"50"],[.6321,"63,21"],[.90,"90"],[.99,"99"]];
+  yLabels.forEach(([f,l])=>ctx.fillText(l, ML-8, yFromF(f)));
+  ctx.save(); ctx.translate(16, MT+PH/2); ctx.rotate(-Math.PI/2);
+  ctx.font="bold 11px Segoe UI"; ctx.textAlign="center"; ctx.textBaseline="alphabetic";
+  ctx.fillText("No fiabilidad, F(t) %",0,0); ctx.restore();
 
-  // Etiquetas y ejes.
-  ctx.fillStyle="#eef6ff"; ctx.font="bold 12px Segoe UI"; ctx.textAlign="center";
-  ctx.fillText("Weibull",w/2,20);
-  ctx.font="10px Segoe UI"; ctx.textAlign="right";
-  const labels=[[.01,"1"],[.02,"2"],[.03,"3"],[.05,"5"],[.10,"10"],[.20,"20"],[.30,"30"],[.40,"40"],[.50,"50"],[.60,"60"],[.70,"70"],[.80,"80"],[.90,"90"],[.95,"95"],[.99,"99"]];
-  labels.forEach(([f,l])=>ctx.fillText(l,ML-6,yFromF(f)+3));
-  ctx.save(); ctx.translate(13,MT+PH/2); ctx.rotate(-Math.PI/2); ctx.font="bold 10px Segoe UI"; ctx.textAlign="center"; ctx.fillText("No fiabilidad, F(t) %",0,0); ctx.restore();
-  ctx.textAlign="center"; ctx.fillStyle="#eef6ff";
-  for(let d=logMin;d<=logMax;d++){ const t=Math.pow(10,d); ctx.fillText(t.toLocaleString("es-AR"),xFromT(t),MT+PH+17); }
-  ctx.font="bold 10px Segoe UI"; ctx.fillText("Tiempo, t (h)",ML+PW/2,h-7);
-  ctx.fillStyle="#eef6ff"; ctx.textAlign="left"; ctx.font="bold 11px Segoe UI";
-  ctx.fillText("β",ML+7,MT-8);
-  ctx.fillText(`β=${beta.toFixed(2)}   η=${eta.toFixed(1)} h`,ML+4,MT+14);
-  ctx.fillText(`β=${beta.toFixed(2)}`,Math.min(ex+5,ML+PW-65),Math.max(MT+13,ey-4));
-  ctx.textAlign="center"; ctx.font="10px Segoe UI"; ctx.fillText(`η=${eta.toFixed(1)} h`,xEta,MT+PH+32);
-  ctx.textAlign="left"; ctx.fillText("η →",ML+PW+2,yEta+4);
+  ctx.textAlign="center"; ctx.textBaseline="alphabetic"; ctx.font="bold 12px Segoe UI"; ctx.fillStyle="#eef6ff";
+  for(let d=logMin; d<=logMax; d++){ const t=Math.pow(10,d); ctx.fillText(t.toLocaleString("es-AR"), xFromT(t), MT+PH+18); }
+  ctx.font="bold 11px Segoe UI";
+  ctx.fillText("Tiempo, t (h)", ML+PW/2, h-6);
+  ctx.textAlign="left"; ctx.font="10px Segoe UI"; ctx.fillStyle="#7fd0ff";
+  ctx.fillText("η →", ML+PW+2, yEta+4);
 
-  document.getElementById("weibullLineLegend").textContent = `${points.length} TBF · puntos con rango mediano de Bernard · recta azul = mejor ajuste · paralela azul = lectura gráfica de β`;
+  document.getElementById("weibullLineLegend").textContent = `${points.length} TBF · puntos con rango mediano de Bernard · recta = mejor ajuste · abanico punteado = lectura gráfica de β`;
 
   // Curva R(t) original: se mantiene sin cambios conceptuales.
   const tmax = Math.max(...points.map(p=>p.t)) * 1.3;
