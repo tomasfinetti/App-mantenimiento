@@ -269,6 +269,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 
 <div class="tabPanel active" data-tab-panel="mapa">
 <div class="grid mapGrid">
+<div>
 <section class="panel">
   <div class="ph">
     <div><h2>Mapa general de planta</h2><small>Torres, aeroenfriadores, tanques y bombas</small></div>
@@ -289,6 +290,26 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
   </div>
   <div class="plantWrap"><div class="plant"><svg id="plantSvg" width="1560" height="600" viewBox="0 0 1560 600"></svg></div></div>
 </section>
+
+<div class="panel" id="sysRelPanel" style="margin-top:14px">
+  <div class="ph">
+    <div><h2>Fiabilidad de sistemas (serie / paralelo)</h2><small>Sistema mixto por grupos — Unidad 2 · usa el t del mapa</small></div>
+  </div>
+  <div class="side" id="sysRelBody">
+    <div class="field" style="max-width:260px">
+      <label>Grupos en:</label>
+      <div style="display:flex;gap:8px">
+        <button id="sysTopSerie" class="metric sel">Serie</button>
+        <button id="sysTopParalelo" class="metric">Paralelo</button>
+      </div>
+    </div>
+    <div class="sectionLabel">Grupos</div>
+    <div id="sysGroups"></div>
+    <button id="sysAddGroup" style="margin-top:4px">+ Agregar grupo</button>
+    <div id="sysResult" class="rec neutral" style="margin-top:12px"></div>
+  </div>
+</div>
+</div>
 
 <aside class="panel">
   <div class="ph"><div><h2 id="eqTitle">Bomba cargadero propano islas 1/2 P-80A</h2><small id="eqType">Bomba de cargadero · Criticidad Alta</small></div></div>
@@ -367,32 +388,6 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
       <div class="card kpi"><b>η (escala)</b><div class="v" id="rEta">—</div><div class="t">h</div></div>
       <div class="card kpi"><b>MTBF</b><div class="v" id="rMtbf">—</div><div class="t">h · η·Γ(1+1/β)</div></div>
     </div>
-  </div>
-</div>
-
-<div class="panel" id="sysRelPanel" style="margin-top:14px">
-  <div class="ph">
-    <div><h2>Fiabilidad de sistemas (serie / paralelo)</h2><small>Sistema mixto por grupos — Unidad 2</small></div>
-  </div>
-  <div class="side" id="sysRelBody">
-    <div class="formGrid">
-      <div class="field">
-        <label>Tiempo de misión t (horas de operación)</label>
-        <input id="sysT" type="number" min="0" step="1" value="2000">
-        <small class="sub">t se expresa en horas de operación, igual que el resto de la app.</small>
-      </div>
-      <div class="field">
-        <label>Grupos en:</label>
-        <div style="display:flex;gap:8px">
-          <button id="sysTopSerie" class="metric sel">Serie</button>
-          <button id="sysTopParalelo" class="metric">Paralelo</button>
-        </div>
-      </div>
-    </div>
-    <div class="sectionLabel">Grupos</div>
-    <div id="sysGroups"></div>
-    <button id="sysAddGroup" style="margin-top:4px">+ Agregar grupo</button>
-    <div id="sysResult" class="rec neutral" style="margin-top:12px"></div>
   </div>
 </div>
 </div>
@@ -1192,7 +1187,7 @@ function groupR(group, t){
 }
 function renderSystemReliability(){
   const ids = reliabEqIds();
-  const t = Math.max(0, Number(document.getElementById("sysT").value) || 0);
+  const t = Math.max(0, Number(mapMissionT) || 0);
   const box = document.getElementById("sysGroups");
 
   box.innerHTML = SYS_GROUPS.map((g, gi)=>{
@@ -1541,7 +1536,7 @@ function showTab(tab){
   // Los canvas miden su contenedor al dibujar: si la pestaña estaba oculta, hay que
   // redibujar recién cuando se muestra, o quedan en blanco (ancho 0 al momento de pintar).
   if(tab==="condicion") draw();
-  if(tab==="confiabilidad") { renderReliability(); renderSystemReliability(); }
+  if(tab==="confiabilidad") { renderReliability(); }
   if(tab==="diagnostico") drawPareto();
 }
 
@@ -1660,8 +1655,8 @@ document.getElementById("eqSelect").onchange = (e)=> selectEquipo(e.target.value
 document.getElementById("mapMissionT").oninput = ()=>{
   mapMissionT = Math.max(1, Number(document.getElementById("mapMissionT").value) || 2000);
   renderPlant();
+  renderSystemReliability();
 };
-document.getElementById("sysT").oninput = ()=> renderSystemReliability();
 document.getElementById("sysAddGroup").onclick = ()=>{
   SYS_GROUPS.push({name:`Grupo ${SYS_GROUPS.length+1}`, config:"serie", elements:[{type:"weibull", eq:null, manualR:0.9}]});
   renderSystemReliability();
