@@ -55,6 +55,8 @@ svg{display:block;width:100%;height:auto;min-width:1080px}
 .node.sel{stroke:var(--cyan);stroke-width:2.2;filter:drop-shadow(0 0 8px rgba(79,209,255,.25))}
 .label{font-size:15px;font-weight:850;fill:#edf4ff}
 .sublabel{font-size:11px;fill:#90a5c0}
+.rtag{font-size:10px;font-weight:750;fill:#7fd0ff}
+.rtag.nd{fill:#7d8fa7;font-weight:700}
 
 .legendRow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .legendRow span{font-size:11px;color:var(--muted)}
@@ -272,6 +274,11 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
     <div><h2>Mapa general de planta</h2><small>Torres, aeroenfriadores, tanques y bombas</small></div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <button id="toggleMapView">🎯 Ver criticidad</button>
+      <div class="field" style="margin:0">
+        <label>Tiempo de misión t</label>
+        <input id="mapMissionT" type="number" min="1" step="1" value="2000" style="width:90px">
+        <small class="sub">horas de operación</small>
+      </div>
       <div class="legendRow" id="mapLegend">
         <span><i class="dot ok"></i>Normal</span>
         <span><i class="dot warn"></i>Atención</span>
@@ -689,6 +696,7 @@ let SYS_GROUPS = [
 let selectedComp = "Rodamiento LA";
 let selectedSeriesKey = "Vibración|Vibración RMS";
 let mapView = "condicion";
+let mapMissionT = 2000;
 let activeTab = "mapa";
 let filterMachine = false;
 let amfeMinNpr = 0;
@@ -886,6 +894,7 @@ function renderPlant(){
   svg.innerHTML = "";
   const NS = "http://www.w3.org/2000/svg";
   const mk = n => document.createElementNS(NS, n);
+  const t = mapMissionT;
   const line = (x1,y1,x2,y2) => { const p = mk("path"); p.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2}`); p.setAttribute("class","pipe"); svg.appendChild(p); };
   const label = (x,y,t) => { const e = mk("text"); e.setAttribute("x",x); e.setAttribute("y",y); e.setAttribute("class","stage"); e.textContent=t; svg.appendChild(e); };
   const node = (id,x,y) => {
@@ -900,10 +909,13 @@ function renderPlant(){
     const t2 = mk("text"); t2.setAttribute("x",0); t2.setAttribute("y",6); t2.setAttribute("text-anchor","middle"); t2.setAttribute("class","sublabel");
     const fam=(META[id].family||id); t2.textContent=fam.length>20 ? fam.slice(0,18)+"…" : fam; g.appendChild(t2);
     const s = eqStatus(id);
-    const t3 = mk("text"); t3.setAttribute("x",0); t3.setAttribute("y",29); t3.setAttribute("text-anchor","middle"); t3.setAttribute("class","sublabel");
+    const t3 = mk("text"); t3.setAttribute("x",0); t3.setAttribute("y",26); t3.setAttribute("text-anchor","middle"); t3.setAttribute("class","sublabel");
     t3.setAttribute("fill", s==="ok"?"#35d07f":s==="warn"?"#f2c94c":s==="bad"?"#ff5d6c":"#7d8fa7"); t3.textContent=prettyStatus(s).toUpperCase(); g.appendChild(t3);
     const c = mapView==="criticidad" ? critColor(META[id].crit) : (s==="ok"?"#35d07f":s==="warn"?"#f2c94c":s==="bad"?"#ff5d6c":"#7d8fa7");
     const b = mk("rect"); b.setAttribute("x",46); b.setAttribute("y",-41); b.setAttribute("width",28); b.setAttribute("height",16); b.setAttribute("rx",8); b.setAttribute("fill",c); g.appendChild(b);
+    const rLabel = rLabelFor(id, t);
+    const t4 = mk("text"); t4.setAttribute("x",72); t4.setAttribute("y",42); t4.setAttribute("text-anchor","end");
+    t4.setAttribute("class","rtag"+(rLabel==="ND"?" nd":"")); t4.textContent=rLabel; g.appendChild(t4);
     svg.appendChild(g);
   };
 
@@ -1137,6 +1149,13 @@ function drawWeibull(fit){
   const tmax=Math.max(...points.map(p=>p.t))*1.3,b=rcanvas,bx=axes(b.ctx,b.w,b.h,0,1,"R(t)"),txTo=t=>bx.ml+bx.pw*(t/tmax);b.ctx.strokeStyle="#35d07f";b.ctx.lineWidth=2;b.ctx.beginPath();for(let i=0;i<=60;i++){const t=tmax*i/60,r=weibullR(t,beta,eta),x=txTo(t),y=bx.mt+bx.ph*(1-r);i?b.ctx.lineTo(x,y):b.ctx.moveTo(x,y);}b.ctx.stroke();b.ctx.strokeStyle="#8298b4";b.ctx.setLineDash([4,4]);b.ctx.beginPath();b.ctx.moveTo(txTo(eta),bx.mt);b.ctx.lineTo(txTo(eta),bx.mt+bx.ph);b.ctx.stroke();b.ctx.setLineDash([]);document.getElementById("weibullRLegend").textContent=`η = ${eta.toFixed(1)} h (t donde R(t) ≈ 36,8%)`;
 }
 function currentFit(){return fitForEq(selectedEq);}
+function rLabelFor(eq, t){
+  const fit = fitForEq(eq);
+  if(!fit || !Number.isFinite(fit.beta) || !Number.isFinite(fit.eta) || fit.beta<=0 || fit.eta<=0) return "ND";
+  const r = weibullR(t, fit.beta, fit.eta);
+  if(!Number.isFinite(r)) return "ND";
+  return `R=${(r*100).toFixed(1).replace(".",",")}%`;
+}
 function updateWeibullPointList(){const el=document.getElementById("weibullPointList");if(!el)return;const pts=[...ensureWeibullState(selectedEq).points].sort((a,b)=>a.t-b.t);el.innerHTML=pts.length?`<b>Puntos:</b> ${pts.map((p,i)=>`#${i+1} t=${p.t.toFixed(1)} h, F=${(p.f*100).toFixed(1)}%`).join(" &nbsp;|&nbsp; ")}`:"Sin puntos. Usá Dibujar para agregarlos o Restaurar equipo para recuperar los TBF del activo.";}
 function resetWeibullView(){WEIBULL_UI.zoom=1;WEIBULL_UI.panX=0;WEIBULL_UI.panY=0;WEIBULL_UI.isPanning=false;WEIBULL_UI.dragged=false;applyWeibullTransform();}
 function applyWeibullTransform(){const c=document.getElementById("weibullLineChart");if(!c)return;c.style.transform=`translate(${WEIBULL_UI.panX}px,${WEIBULL_UI.panY}px) scale(${WEIBULL_UI.zoom})`;const z=document.getElementById("weibullZoomLevel");if(z)z.textContent=Math.round(WEIBULL_UI.zoom*100)+"%";}
@@ -1638,6 +1657,10 @@ document.getElementById("toggleMapView").onclick = ()=>{
   render();
 };
 document.getElementById("eqSelect").onchange = (e)=> selectEquipo(e.target.value);
+document.getElementById("mapMissionT").oninput = ()=>{
+  mapMissionT = Math.max(1, Number(document.getElementById("mapMissionT").value) || 2000);
+  renderPlant();
+};
 document.getElementById("sysT").oninput = ()=> renderSystemReliability();
 document.getElementById("sysAddGroup").onclick = ()=>{
   SYS_GROUPS.push({name:`Grupo ${SYS_GROUPS.length+1}`, config:"serie", elements:[{type:"weibull", eq:null, manualR:0.9}]});
