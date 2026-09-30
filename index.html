@@ -1030,7 +1030,7 @@ function drawWeibull(fit){
 
   const {beta, eta, points} = fit;
   const ctx=paper.ctx, w=paper.w, h=paper.h;
-  const ML=58, MR=34, MT=52, MB=56, PW=w-ML-MR, PH=h-MT-MB;
+  const ML=58, MR=34, MT=92, MB=56, PW=w-ML-MR, PH=h-MT-MB;
   const ll=v=>Math.log(-Math.log(1-v));
   const fMin=0.01, fMax=0.995, yBot=ll(fMin), yTop=ll(fMax);
   const tVals=points.map(p=>p.t);
@@ -1057,7 +1057,7 @@ function drawWeibull(fit){
       const x=xFromT(t); ctx.beginPath(); ctx.moveTo(x,MT); ctx.lineTo(x,MT+PH); ctx.stroke();
     }
   }
-  const fGrid=[.01,.02,.03,.05,.10,.20,.30,.40,.50,.60,.6321,.70,.80,.90,.95,.99];
+  const fGrid=[.01,.02,.03,.05,.20,.30,.40,.50,.60,.70,.80,.90,.95,.99];
   fGrid.forEach(f=>{ const y=yFromF(f); ctx.beginPath(); ctx.moveTo(ML,y); ctx.lineTo(ML+PW,y); ctx.stroke(); });
   ctx.restore();
 
@@ -1071,7 +1071,7 @@ function drawWeibull(fit){
   const bx0=ML, by0=yFromF(.6321);
   const betaRefs=[6,3,2,1.6,1.4,1.2,1,0.9,0.8,0.7,0.6,0.5];
   const screenSlope=b=>-b*Math.LN10*(logMax-logMin)*PH/(PW*(yTop-yBot));
-  const yRow = MT + 10, maxFanX = ML + PW*0.94;
+  const yRow = MT, maxFanX = ML + PW*0.94;
   ctx.strokeStyle="rgba(120,170,255,.65)"; ctx.lineWidth=1; ctx.setLineDash([4,3]);
   betaRefs.forEach(b=>{
     const sl = screenSlope(b);
@@ -1080,12 +1080,25 @@ function drawWeibull(fit){
     ctx.beginPath(); ctx.moveTo(bx0,by0); ctx.lineTo(x,y); ctx.stroke();
     ctx.save(); ctx.setLineDash([]); ctx.translate(x,y); ctx.rotate(-Math.atan2(by0-y, x-bx0));
     ctx.fillStyle="#bcd6ff"; ctx.font="9px Segoe UI"; ctx.textAlign="left"; ctx.textBaseline="bottom";
-    ctx.fillText(b.toFixed(1), 3, -2);
+    ctx.fillText(b.toFixed(1), 3, -1);
     ctx.restore();
   });
   ctx.setLineDash([]);
   ctx.fillStyle="#bcd6ff"; ctx.font="bold 10px Segoe UI"; ctx.textAlign="left"; ctx.textBaseline="alphabetic";
-  ctx.fillText("β", ML, MT-6);
+  ctx.fillText("β", ML, 16);
+
+  // Paralela con la pendiente REAL del ajuste (β calculado), sale del mismo pivote
+  // que el abanico de referencia pero se diferencia por color sólido (no punteada)
+  // para que se vea claramente cuál rayo del abanico coincide con el β del equipo.
+  const slReal = screenSlope(beta);
+  let xReal = bx0 + (yRow-by0)/slReal, yReal = yRow;
+  if(xReal > maxFanX){ xReal = maxFanX; yReal = by0 + slReal*(xReal-bx0); }
+  ctx.strokeStyle="#ffb454"; ctx.lineWidth=1.8;
+  ctx.beginPath(); ctx.moveTo(bx0,by0); ctx.lineTo(xReal,yReal); ctx.stroke();
+  ctx.save(); ctx.translate(xReal,yReal); ctx.rotate(-Math.atan2(by0-yReal, xReal-bx0));
+  ctx.fillStyle="#ffb454"; ctx.font="bold 9px Segoe UI"; ctx.textAlign="left"; ctx.textBaseline="bottom";
+  ctx.fillText(`β=${beta.toFixed(2)}`, 4, -1);
+  ctx.restore();
 
   // Recta de mejor ajuste Weibull.
   ctx.strokeStyle="#4fb3ff"; ctx.lineWidth=2.2;
@@ -1121,7 +1134,7 @@ function drawWeibull(fit){
   ctx.font="bold 11px Segoe UI";
   ctx.fillText("Tiempo, t (h)", ML+PW/2, h-6);
   ctx.textAlign="left"; ctx.font="10px Segoe UI"; ctx.fillStyle="#7fd0ff";
-  ctx.fillText("η →", ML+PW+2, yEta+4);
+  ctx.fillText("η", ML+PW+2, yEta+4);
 
   document.getElementById("weibullLineLegend").textContent = `${points.length} TBF · puntos con rango mediano de Bernard · recta = mejor ajuste · abanico punteado = lectura gráfica de β`;
 
