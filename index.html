@@ -558,16 +558,41 @@ const TBF_SEED = {
   "P-80A":  {tbf:[302.4,604.8,705.6,1932,3578.4], unit:"h", mode:"Sistema de sello", share:"66,7% de las fallas"}
 };
 // Modos de falla del AMFE real del TP, con su NPR (antes/después de la acción) y la acción recomendada.
+// AMFE_SEED_VERSION: subir este número cuando se reemplacen/agreguen modos, para que
+// loadAmfe() descarte el localStorage viejo de los usuarios y cargue el set nuevo.
+const AMFE_SEED_VERSION = 2;
 const AMFE_SEED = {
   "AC-725": [
-    {id:"ac725-correa-rotura", requirement:"Transmitir el movimiento del motor al ventilador", mode:"Rotura de correa de transmisión del ventilador", effect:"Pérdida de una rama de ventilación, reducción de la capacidad de enfriamiento y aumento de temperatura de la corriente de propano.", g:8, classification:"-", cause:"Tensión incorrecta, montaje o alineación deficiente, o ausencia de control posterior al cambio.", prevention:"Plan preventivo general e inspección visual.", o:6, detection:"Inspección visual y análisis de vibraciones.", d:6, npr:288, nprAfter:72, share:"75% de las fallas", components:["Correas"],
-     action:"Incorporar verificación de alineación de poleas, control de tensión, control posterior al cambio y registro específico en SAP PM."},
-    {id:"ac725-correa-desajuste", requirement:"Mantener la tensión de correa", mode:"Desajuste de correa luego de una intervención", effect:"Desgastes por fricción, vibraciones, rotura de correa y pérdida de eficiencia del ventilador.", g:7, classification:"-", cause:"Falta de tensión posterior al montaje, estiramiento inicial de la correa, montaje sin verificación posterior o alineación deficiente.", prevention:"Plan preventivo según hoja de ruta genérica.", o:6, detection:"Inspección visual y análisis de vibraciones.", d:6, npr:252, nprAfter:63, share:"resto de las fallas de correa", components:["Correas"],
-     action:"Agregar control obligatorio posterior al cambio de correa, con verificación de tensión, vibraciones y estado de montaje."}
+    {id:"ac725-rotura-correa", requirement:"Transmitir el movimiento al motor ventilador", mode:"Rotura de correa de transmisión del ventilador", effect:"Pérdida de una rama de ventilación, reducción de la capacidad de enfriamiento de la corriente de propano y aumento de temperatura.", g:8, classification:"-", cause:"Tensión incorrecta, montaje/alineación deficiente o ausencia de control posterior al cambio.", prevention:"Plan preventivo general, inspección visual.", o:6, detection:"Inspección visual, vibraciones.", d:6, npr:288, nprAfter:72, share:"75% de las fallas", components:["Correas"],
+     action:"Incorporar procedimiento de verificación de alineación de poleas, verificación de tensión con criterio definido, control posterior al cambio y registro específico en SAP PM."},
+    {id:"ac725-desajuste-correa", requirement:"Mantener la tensión de correa", mode:"Desajuste de correa luego de una intervención", effect:"Desgastes por fricción, vibraciones, rotura de correa y pérdida de eficiencia del ventilador.", g:7, classification:"-", cause:"Falta de tensión posterior al montaje, estiramiento inicial de la correa, montaje sin verificación posterior o alineación deficiente.", prevention:"Plan preventivo según hoja de ruta genérica.", o:6, detection:"Inspección visual, vibraciones.", d:6, npr:252, nprAfter:63, share:"resto de las fallas de correa", components:["Correas"],
+     action:"Agregar control posterior al cambio de correa a los dos días y verificación complementaria a los 15 días."},
+    {id:"ac725-motor-electrico", requirement:"Accionar los ventiladores", mode:"Falla de motor eléctrico", effect:"Pérdida de accionamiento de una rama, reducción del caudal de aire y menor capacidad de enfriamiento del equipo.", g:8, classification:"-", cause:"Sobretemperatura, falla de aislamiento, sobrecarga, falla de rodamiento (falta de lubricación, contaminación) y deterioro de ventilador enfriador de motor.", prevention:"Plan preventivo/predictivo, protecciones eléctricas.", o:2, detection:"Alarmas eléctricas, protecciones, inspección de tablero.", d:4, npr:64, components:["Motor eléctrico"],
+     action:"Sin acción"},
+    {id:"ac725-variador", requirement:"Accionar los ventiladores", mode:"Falla de variador de frecuencia", effect:"", g:8, classification:"-", cause:"Ensuciamiento y variaciones de tensión.", prevention:"Plan preventivo/predictivo, monitoreo operativo.", o:1, detection:"Alarmas eléctricas, protecciones, inspección de tablero.", d:4, npr:32, components:[],
+     action:"Sin acción"},
+    {id:"ac725-instrumentacion", requirement:"Medir y transmitir variables críticas", mode:"Falla de instrumentación de presión, caudal o temperatura", effect:"Lecturas incorrectas, falsas alarmas o funcionamiento del equipo fuera de condición sin detección temprana.", g:8, classification:"-", cause:"Cableado defectuoso, suciedad, error de conexión, pérdida de señal o falta de calibración periódica.", prevention:"Comparación de lecturas, alarmas, verificación eventual.", o:3, detection:"Comparación de lecturas, alarmas, verificación eventual y prueba de lazo.", d:7, npr:168, components:[],
+     action:"Sin acción"},
+    {id:"ac725-obstruccion-externa", requirement:"Permitir el intercambio térmico entre corriente y aire", mode:"Obstrucción externa del mazo de tubos enfriadores", effect:"Menor transferencia térmica, aumento de temperatura de salida y pérdida progresiva de eficiencia del aeroenfriador.", g:8, classification:"-", cause:"Acumulación de polvo, suciedad ambiental, residuos, obstrucción externa o falta de limpieza del haz tubular.", prevention:"Observación del estado físico del equipo.", o:4, detection:"Observación visual.", d:5, npr:160, components:[],
+     action:"Sin acción"},
+    {id:"ac725-obstruccion-interna", requirement:"Permitir el intercambio térmico entre corriente y aire", mode:"Obstrucción interna del mazo de tubos enfriadores", effect:"", g:8, classification:"-", cause:"Suciedad en el fluido por filtrado incorrecto.", prevention:"Cumplimiento de frecuencia de filtros.", o:1, detection:"Revisión esporádica de caudal.", d:7, npr:56, components:[],
+     action:"Sin acción"},
+    {id:"ac725-rodamiento", requirement:"Permitir el giro del eje de ventiladores", mode:"Engrane de rodamiento", effect:"Bloqueo del sistema de ventilación, fricción entre pista interna y eje generando desgaste del eje de ventiladores. Desbalanceo de hélices.", g:8, classification:"-", cause:"Falta de lubricación, contaminación o problema de montajes.", prevention:"Control visual, análisis de vibraciones y cumplimiento de lubricación.", o:5, detection:"Control visual, análisis de vibraciones.", d:4, npr:160, components:["Rodamiento LA","Rodamiento LOA"],
+     action:"Sin acción"}
   ],
   "P-80A": [
-    {id:"p80a-sello", requirement:"Mantener la estanqueidad y lubricación del sistema de sello", mode:"Pérdida por el sistema de sello y lubricación", effect:"Pérdida de contención de propano, indisponibilidad de la bomba y riesgo operativo asociado a la fuga.", g:9, classification:"-", cause:"Desgaste del sello, pérdida de nivel de aceite, presión inadecuada del sistema de sello o degradación por operación.", prevention:"Mantenimiento por condición y seguimiento del sistema de sello según horas de operación.", o:6, detection:"Lectura de LG-9071B, PI-9071B y PSH-9071B, inspección visual de fugas y vibraciones.", d:4, npr:216, nprAfter:108, share:"66,7% de las fallas", components:["Sello mecánico"],
-     action:"Migrar de mantenimiento preventivo por calendario a mantenimiento por condición; codificar en SAP PM los instrumentos del sello (LG-9071B, PI-9071B, PSH-9071B) e incorporarlos a un plan por horas de operación."}
+    {id:"p80a-sello", requirement:"Flujo constante", mode:"Pérdida por el sistema de sello y lubricación", effect:"Fuga de producto al exterior, salida de servicio de la bomba, riesgo de atmósfera explosiva y reducción de la capacidad de carga de propano.", g:9, classification:"-", cause:"Plan de mantenimiento por calendario que no controla la condición del sello; instrumentos del sello sin codificar en SAP PM; degradación acelerada por operar el 70% del año.", prevention:"Sin control de condición entre intervenciones.", o:6, detection:"Recorridas del personal de operación; lectura del nivel de vidrio sin registro.", d:4, npr:216, nprAfter:108, share:"66,7% de las fallas", components:["Sello mecánico"],
+     action:"Migrar de mantenimiento preventivo por calendario a mantenimiento predictivo por condición; codificar en SAP PM los instrumentos del sello e incorporarlos a un plan definido por horas de operación."},
+    {id:"p80a-succion", requirement:"Flujo constante", mode:"Obstrucción/restricción en succión", effect:"Reducción de caudal y cavitación.", g:6, classification:"-", cause:"Contaminación en el producto, error de cálculo en NPSHA.", prevention:"Inspección preventiva (limpieza de filtros).", o:2, detection:"Recorridas de personal de operación, verificando diferenciales de filtros de succión.", d:2, npr:24, components:[],
+     action:"Sin acción"},
+    {id:"p80a-rodamiento", requirement:"Flujo constante", mode:"Engrane de rodamiento", effect:"Salida de servicio de bomba, desgaste de eje.", g:7, classification:"-", cause:"Falta de lubricación, contaminación o problema de montajes.", prevention:"Inspección preventiva (control de niveles de aceite).", o:2, detection:"Recorridas de personal de operación.", d:2, npr:28, components:["Rodamiento LA","Rodamiento LOA"],
+     action:"Sin acción"},
+    {id:"p80a-bobinado", requirement:"Rotación de impulsor de bomba", mode:"Pérdida de aislación en bobinado", effect:"Bomba fuera de servicio, pérdida de capacidad de despacho y mayor dependencia de bombas alternativas.", g:4, classification:"-", cause:"Variaciones de tensión o esfuerzos anormales.", prevention:"Plan preventivo (análisis de megado de bobinado).", o:2, detection:"Plan predictivo (termografías).", d:2, npr:16, components:["Motor eléctrico"],
+     action:"Sin acción"},
+    {id:"p80a-variador", requirement:"Rotación de impulsor de bomba", mode:"Falla de variador de frecuencia", effect:"", g:4, classification:"-", cause:"Ensuciamiento o variaciones de tensión.", prevention:"Plan preventivo.", o:1, detection:"Alarmas eléctricas, protecciones, inspección de tablero.", d:1, npr:4, components:[],
+     action:"Sin acción"},
+    {id:"p80a-ventilador-refrigeracion", requirement:"Refrigeración", mode:"Rotura de aspas de ventilador de refrigeración", effect:"Sobrecalentamiento de motor, rotura de bobinado.", g:7, classification:"-", cause:"Ingreso de agente externo, debilitamiento por acción de rayos UV.", prevention:"Plan preventivo / control visual.", o:4, detection:"Control visual y termografías predictivas.", d:3, npr:84, components:["Motor eléctrico"],
+     action:"Sin acción"}
   ]
 };
 // Escalas de criterios de evaluación G/O/D de la cátedra (no es la AP de AIAG-VDA).
@@ -689,13 +714,20 @@ function loadReliability(){
 }
 function loadAmfe(){
   try{
-    const saved = JSON.parse(localStorage.getItem("cv13amfe") || "null");
-    AMFE = saved && typeof saved === "object" ? saved : JSON.parse(JSON.stringify(AMFE_SEED));
+    const savedVersion = Number(localStorage.getItem("cv13amfeVersion") || 0);
+    if(savedVersion < AMFE_SEED_VERSION){
+      AMFE = JSON.parse(JSON.stringify(AMFE_SEED));
+    }else{
+      const saved = JSON.parse(localStorage.getItem("cv13amfe") || "null");
+      AMFE = saved && typeof saved === "object" ? saved : JSON.parse(JSON.stringify(AMFE_SEED));
+    }
   }catch(e){ AMFE = JSON.parse(JSON.stringify(AMFE_SEED)); }
   Object.keys(AMFE).forEach(eq => AMFE[eq].forEach((m,i)=>{
     if(!m.id) m.id = `${eq.toLowerCase()}-${i}-${Date.now()}`;
     m.npr = Math.max(1,Number(m.g)||1) * Math.max(1,Number(m.o)||1) * Math.max(1,Number(m.d)||1);
   }));
+  localStorage.setItem("cv13amfeVersion", String(AMFE_SEED_VERSION));
+  saveAmfe();
 }
 function saveAmfe(){
   try{ localStorage.setItem("cv13amfe", JSON.stringify(AMFE)); }catch(e){}
