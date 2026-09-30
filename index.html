@@ -225,6 +225,8 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 .amfeToolbar button:hover, .weibullToolbar button:hover{
   background:#1d4675 !important;
 }
+.amfeToolbarActions label{display:flex;align-items:center;gap:6px;font-size:12px;color:#eef6ff}
+.amfeToolbarActions input[type=number]{width:64px}
 
 </style>
 </head>
@@ -390,6 +392,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
   <div class="sub">Análisis de Modos y Efectos de Falla · G × O × D = NPR</div>
   <div class="amfeToolbarActions">
     <button id="filterMachineBtn">🔍 Filtrar máquina</button>
+    <label>NPR ≥ <input type="number" id="amfeNprFilter" min="0" max="1000" step="1" value="0"></label>
     <button class="primary" id="addAmfeBtn">➕ Agregar modo de falla</button>
   </div>
 </div>
@@ -677,6 +680,7 @@ let selectedSeriesKey = "Vibración|Vibración RMS";
 let mapView = "condicion";
 let activeTab = "mapa";
 let filterMachine = false;
+let amfeMinNpr = 0;
 
 const LAYOUT = {
   "T-1200":[200,160], "T-1300":[200,340],
@@ -1255,13 +1259,23 @@ function escHtml(v){
 function nprClass(npr){ return npr>200 ? "nprHigh" : npr>=100 ? "nprMedium" : "nprLow"; }
 function renderAmfe(){
   const box = document.getElementById("amfeBody");
+  const minNpr = Math.min(1000, Math.max(0, Number(amfeMinNpr) || 0));
   const eqs = Object.keys(AMFE).filter(eq => !filterMachine || eq===selectedEq);
+  const filtered = eqs.map(eq => ({
+    eq,
+    modes: (AMFE[eq]||[]).filter(m => (Number(m.g)||1)*(Number(m.o)||1)*(Number(m.d)||1) >= minNpr)
+  })).filter(x => x.modes.length);
   document.getElementById("amfeSub").textContent = filterMachine
-    ? `${META[selectedEq]?.displayName || selectedEq} · tabla AMFE del equipo seleccionado`
-    : "Tabla de modos de falla, efectos, causas, controles y NPR";
-  const total = eqs.reduce((s,eq)=>s+(AMFE[eq]?.length||0),0);
-  if(!total){
+    ? `${META[selectedEq]?.displayName || selectedEq} · tabla AMFE del equipo seleccionado${minNpr>0?` · NPR ≥ ${minNpr}`:""}`
+    : `Tabla de modos de falla, efectos, causas, controles y NPR${minNpr>0?` · NPR ≥ ${minNpr}`:""}`;
+  const totalAll = eqs.reduce((s,eq)=>s+(AMFE[eq]?.length||0),0);
+  const totalFiltered = filtered.reduce((s,x)=>s+x.modes.length,0);
+  if(!totalAll){
     box.innerHTML = `<div class="rec neutral">${filterMachine ? "El equipo seleccionado no tiene modos de falla cargados." : "Todavía no hay modos de falla relevados en el AMFE."}</div>`;
+    return;
+  }
+  if(!totalFiltered){
+    box.innerHTML = `<div class="rec neutral">Ningún modo de falla cumple los filtros aplicados.</div>`;
     return;
   }
   let html = `<div class="amfeTableWrap"><table class="amfeTable"><thead><tr>
@@ -1269,8 +1283,7 @@ function renderAmfe(){
     <th>Gravedad (G)</th><th>Clasificación</th><th>Causa(s) Potencial(es) de la Falla</th><th>Controles Actuales<br>Prevención</th>
     <th>Ocurrencia (O)</th><th>Controles Actuales<br>Detección</th><th>No Detección (D)</th><th>N.P.R.</th><th>Acciones</th>
   </tr></thead><tbody>`;
-  eqs.forEach(eq=>{
-    const modes=AMFE[eq]||[];
+  filtered.forEach(({eq,modes})=>{
     modes.forEach((m,i)=>{
       const npr=(Number(m.g)||1)*(Number(m.o)||1)*(Number(m.d)||1);
       m.npr=npr;
@@ -1635,6 +1648,10 @@ document.getElementById("filterMachineBtn").onclick = ()=>{
   updateFilterBtn();
   renderAmfe();
   renderPlanControl();
+};
+document.getElementById("amfeNprFilter").oninput = ()=>{
+  amfeMinNpr = Number(document.getElementById("amfeNprFilter").value) || 0;
+  renderAmfe();
 };
 document.getElementById("addAmfeBtn").onclick = ()=>openAmfeModal(selectedEq,null);
 document.getElementById("saveAmfeBtn").onclick = saveAmfeMode;
