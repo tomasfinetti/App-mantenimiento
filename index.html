@@ -328,33 +328,15 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
     <div><h2>Fiabilidad (Weibull)</h2><small id="reliabSub">Tiempo entre fallas (TBF, horas de operación) · rango mediano de Bernard</small></div>
   </div>
   <div class="side" id="reliabBody">
-    <div class="kpis" id="reliabKpis">
-      <div class="card kpi"><b>β (forma)</b><div class="v" id="rBeta">—</div><div class="t" id="rBetaNote"></div></div>
-      <div class="card kpi"><b>η (escala)</b><div class="v" id="rEta">—</div><div class="t">h</div></div>
-      <div class="card kpi"><b>R²</b><div class="v" id="rR2">—</div><div class="t">bondad de ajuste</div></div>
-      <div class="card kpi"><b>MTBF</b><div class="v" id="rMtbf">—</div><div class="t">h · η·Γ(1+1/β)</div></div>
-    </div>
-    <div class="charts2" style="margin-top:12px">
+    <div class="charts2">
       <section class="panel cp weibullPaperPanel"><h3 class="ct">Weibull</h3><canvas id="weibullLineChart"></canvas><div class="legend" id="weibullLineLegend"></div></section>
       <section class="panel cp"><h3 class="ct">Curva de fiabilidad R(t)</h3><canvas id="weibullRChart"></canvas><div class="legend" id="weibullRLegend"></div></section>
     </div>
-    <div id="reliabRec" class="rec neutral"></div>
-    <div class="sectionLabel">Predicción de intervención</div>
-    <div class="formGrid">
-      <div class="field"><label>Horas de operación acumuladas</label><input id="opHours" type="number" min="0" step="1" value="0"></div>
-      <div class="field"><label>Umbral de fiabilidad R(t) (%)</label><input id="rThreshold" type="number" min="1" max="99" step="1" value="80"></div>
+    <div class="kpis" id="reliabKpis">
+      <div class="card kpi"><b>β (forma)</b><div class="v" id="rBeta">—</div><div class="t" id="rBetaNote"></div></div>
+      <div class="card kpi"><b>η (escala)</b><div class="v" id="rEta">—</div><div class="t">h</div></div>
+      <div class="card kpi"><b>MTBF</b><div class="v" id="rMtbf">—</div><div class="t">h · η·Γ(1+1/β)</div></div>
     </div>
-    <div id="predAlert" class="predAlert neutral"></div>
-    <div class="sectionLabel">Probabilidad condicional de falla</div>
-    <div class="formGrid">
-      <div class="field"><label>Ventana Δ (horas)</label><input id="condWindow" type="number" min="1" step="1" value="720"></div>
-    </div>
-    <div id="condFailAlert" class="predAlert neutral"></div>
-    <div class="sectionLabel">PM programada por uso (horas)</div>
-    <div class="formGrid">
-      <div class="field"><label>Intervalo de PM (horas)</label><input id="pmInterval" type="number" min="1" step="1" placeholder="Sin definir"></div>
-    </div>
-    <div id="pmAlert" class="predAlert neutral"></div>
   </div>
 </div>
 
@@ -632,17 +614,12 @@ const PLAN_CONTROL = [
    metodoControl:"Instrumentos del sello codificados en SAP PM con plan asociado; registro y seguimiento de la condición",
    planReaccion:"Sacar de servicio la bomba ante fuga, caída del nivel de aceite o alarma de presión de sello; intervenir el sello, registrar la intervención y verificar la condición posterior"}
 ];
-// Intervalo de PM por horas de operación, por equipo. Editable desde la interfaz.
-// Independiente de TBF_SEED/AMFE_SEED/PLAN_CONTROL — no deriva de ellos ni los modifica.
-const PM_INTERVAL_SEED = { "P-80A": 3024 };
-let PM_INTERVAL = {};
 let META = {};
 let CUSTOM = [];
 let data = [];
 let IMPORTED = [];
 let RELIAB = {};
 let AMFE = {};
-let OPHOURS = {};
 let selectedEq = "P-80A";
 let SYS_TOPCONFIG = "serie";
 let SYS_GROUPS = [
@@ -699,9 +676,6 @@ function loadAmfe(){
 }
 function saveAmfe(){
   try{ localStorage.setItem("cv13amfe", JSON.stringify(AMFE)); }catch(e){}
-}
-function loadPmIntervals(){
-  PM_INTERVAL = JSON.parse(JSON.stringify(PM_INTERVAL_SEED));
 }
 function rand(seed){ const x = Math.sin(seed) * 10000; return x - Math.floor(x); }
 function addSeries(arr, eq, comp, tech, param, unit, base, slope, noise, source, n=24, stepH=72){
@@ -766,9 +740,8 @@ function demoData(){
   return arr;
 }
 function resetApp(){
-  cloneMeta(); loadCustom(); loadImported(); loadReliability(); loadAmfe(); loadPmIntervals();
+  cloneMeta(); loadCustom(); loadImported(); loadReliability(); loadAmfe();
   data = demoData().concat(IMPORTED);
-  OPHOURS = {};
   selectedEq = "P-80A"; selectedComp = "Rodamiento LA"; selectedSeriesKey = "Vibración|Vibración RMS";
 }
 
@@ -1029,31 +1002,19 @@ function weibullFit(tbf){
   return {beta, eta, r2, mtbf, n, points:sorted.map((t,i)=>({t, x:xs[i], y:ys[i]}))};
 }
 function weibullR(t, beta, eta){ return Math.exp(-Math.pow(t/eta, beta)); }
-function reliabInterpretation(beta){
-  if(beta < 0.95) return {cls:"", text:`β = ${beta.toFixed(2)} (< 1): Patrón de mortalidad infantil (Nowlan & Heap). Las fallas son tempranas: la estrategia correcta es eliminar la causa raíz, no reemplazar por tiempo.`};
-  if(beta <= 1.15) return {cls:"good", text:`β = ${beta.toFixed(2)} (≈ 1): Patrón de fallas aleatorias (Nowlan & Heap). La tasa de falla es constante: el reemplazo por calendario no aporta; corresponde control por condición.`};
-  return {cls:"neutral", text:`β = ${beta.toFixed(2)} (> 1): Patrón de desgaste (Nowlan & Heap). La probabilidad de falla crece con el uso: conviene planificar el reemplazo antes de la vida característica η.`};
-}
 function renderReliabKpis(fit, seed){
-  const rec = document.getElementById("reliabRec");
   if(!fit){
-    ["rBeta","rEta","rR2","rMtbf"].forEach(id=>document.getElementById(id).textContent="—");
+    ["rBeta","rEta","rMtbf"].forEach(id=>document.getElementById(id).textContent="—");
     document.getElementById("rBetaNote").textContent="";
     document.getElementById("reliabSub").textContent = "Tiempo entre fallas (TBF, horas de operación) · rango mediano de Bernard";
-    rec.className = "rec neutral";
-    rec.textContent = "Este equipo todavía no tiene tiempos entre fallas (TBF) cargados para el análisis de fiabilidad.";
     return;
   }
-  const {beta,eta,r2,mtbf,n} = fit;
+  const {beta,eta,mtbf,n} = fit;
   document.getElementById("rBeta").textContent = beta.toFixed(2);
   document.getElementById("rEta").textContent = eta.toFixed(1);
-  document.getElementById("rR2").textContent = r2.toFixed(3);
   document.getElementById("rMtbf").textContent = mtbf.toFixed(1);
   document.getElementById("rBetaNote").textContent = beta<0.95 ? "mortalidad infantil" : beta<=1.15 ? "tasa constante" : "desgaste";
   document.getElementById("reliabSub").textContent = `${seed.mode} · modo dominante (${seed.share}) · ${n} TBF analizados`;
-  const interp = reliabInterpretation(beta);
-  rec.className = "rec" + (interp.cls ? " "+interp.cls : "");
-  rec.textContent = interp.text;
 }
 function drawWeibull(fit){
   const paper = setupCanvasHeight("weibullLineChart", 430);
@@ -1184,63 +1145,6 @@ function currentFit(){
   const seed = RELIAB[selectedEq];
   return seed && seed.tbf ? weibullFit(seed.tbf) : null;
 }
-function reliabPrediction(fit, hours, thrPct){
-  if(!fit) return null;
-  const h = Math.max(0, hours);
-  const thr = Math.min(0.99, Math.max(0.01, thrPct/100));
-  const {beta, eta} = fit;
-  const tThreshold = eta * Math.pow(-Math.log(thr), 1/beta);
-  const rNow = weibullR(h, beta, eta);
-  return {hours: h, thr, tThreshold, rNow, hoursLeft: tThreshold - h};
-}
-function renderPrediction(fit){
-  const box = document.getElementById("predAlert");
-  if(!fit){
-    box.className = "predAlert neutral";
-    box.innerHTML = `<div><div class="pTitle">Recomendación por condición (R(t))</div><div class="pMain">—</div><div class="pSub">Este equipo no tiene un ajuste de Weibull disponible.</div></div>`;
-    return;
-  }
-  const hours = Math.max(0, Number(document.getElementById("opHours").value) || 0);
-  const thrPct = Math.min(99, Math.max(1, Number(document.getElementById("rThreshold").value) || 80));
-  const p = reliabPrediction(fit, hours, thrPct);
-  const cls = p.hoursLeft <= 0 ? "bad" : p.hoursLeft <= 720 ? "warn" : "ok";
-  const badgeCls = cls==="bad" ? "red" : cls==="warn" ? "yellow" : "green";
-  const badgeText = p.hoursLeft <= 0 ? "VENCIDA" : p.hoursLeft <= 720 ? "PRÓXIMA" : "EN CONTROL";
-  const mainText = p.hoursLeft <= 0 ? `Vencida hace ${Math.abs(Math.round(p.hoursLeft))} h` : `${Math.round(p.hoursLeft)} h`;
-  const targetDate = new Date(Date.now() + p.hoursLeft*3600000);
-  box.className = "predAlert " + cls;
-  box.innerHTML = `<div>
-      <div class="pTitle">Recomendación por condición (R(t))</div>
-      <div class="pMain">${mainText}</div>
-      <div class="pSub">R(t) llega a ${(p.thr*100).toFixed(0)}% a las ${p.tThreshold.toFixed(1)} h de operación (≈ ${targetDate.toLocaleDateString("es-AR")}) · fiabilidad actual estimada ${(p.rNow*100).toFixed(0)}%</div>
-    </div>
-    <div class="badge ${badgeCls}">${badgeText}</div>`;
-}
-function renderCondFail(){
-  const box = document.getElementById("condFailAlert");
-  const fit = currentFit();
-  if(!fit){
-    box.className = "predAlert neutral";
-    box.innerHTML = `<div><div class="pTitle">Probabilidad condicional de falla</div><div class="pMain">—</div><div class="pSub">Sin ajuste de Weibull para este equipo.</div></div>`;
-    return;
-  }
-  const {beta, eta} = fit;
-  const t = Math.max(0, Number(document.getElementById("opHours").value) || 0);
-  const delta = Math.max(1, Number(document.getElementById("condWindow").value) || 720);
-  const rt = weibullR(t, beta, eta);
-  box.className = "predAlert neutral";
-  if(rt < 1e-9){
-    box.innerHTML = `<div><div class="pTitle">Probabilidad condicional de falla</div><div class="pMain">—</div><div class="pSub">R(t) es prácticamente 0 con estas horas acumuladas; no se puede calcular la probabilidad condicional.</div></div>`;
-    return;
-  }
-  const rtd = weibullR(t+delta, beta, eta);
-  const p = 1 - (rtd/rt);
-  box.innerHTML = `<div>
-      <div class="pTitle">Probabilidad condicional de falla</div>
-      <div class="pMain">${(p*100).toFixed(1)}%</div>
-      <div class="pSub">Probabilidad de falla en las próximas ${delta} h, habiendo operado ${t} h · β=${beta.toFixed(2)} η=${eta.toFixed(1)} h</div>
-    </div>`;
-}
 function reliabEqIds(){ return Object.keys(RELIAB); }
 function sysElementR(el, t){
   if(el.type === "weibull"){
@@ -1343,39 +1247,11 @@ function renderSystemReliability(){
   result.className = "rec good";
   result.innerHTML = `<div style="font-size:22px;font-weight:850">${(rSys*100).toFixed(2)}%</div><div style="margin-top:6px">${topFormula}</div><div class="sub" style="margin-top:4px">Grupos combinados en: ${SYS_TOPCONFIG==="serie"?"Serie":"Paralelo"} · t = ${t} h</div>`;
 }
-function renderPmAlert(){
-  const box = document.getElementById("pmAlert");
-  const intervalo = PM_INTERVAL[selectedEq];
-  if(!intervalo){
-    box.className = "predAlert neutral";
-    box.innerHTML = `<div><div class="pTitle">PM programada por uso (horas)</div><div class="pMain">—</div><div class="pSub">Este equipo no tiene un intervalo de PM definido.</div></div>`;
-    return;
-  }
-  const acumuladas = Math.max(0, Number(document.getElementById("opHours").value) || 0);
-  const remainder = acumuladas % intervalo;
-  const remaining = intervalo - remainder;
-  const cls = acumuladas >= intervalo ? "bad" : remaining <= intervalo*0.10 ? "warn" : "ok";
-  const badgeCls = cls==="bad" ? "red" : cls==="warn" ? "yellow" : "green";
-  const badgeText = cls==="bad" ? "VENCIDA" : cls==="warn" ? "PRÓXIMA" : "EN CONTROL";
-  const mainText = cls==="bad" ? `Vencida hace ${Math.round(acumuladas-intervalo)} h` : `${Math.round(remaining)} h`;
-  box.className = "predAlert " + cls;
-  box.innerHTML = `<div>
-      <div class="pTitle">PM programada por uso (horas)</div>
-      <div class="pMain">${mainText}</div>
-      <div class="pSub">Intervalo ${intervalo} h · ${acumuladas} h acumuladas${cls==="bad" ? " (superó el intervalo sin PM registrada)" : ""}</div>
-    </div>
-    <div class="badge ${badgeCls}">${badgeText}</div>`;
-}
 function renderReliability(){
   const seed = RELIAB[selectedEq];
   const fit = currentFit();
   renderReliabKpis(fit, seed);
   drawWeibull(fit);
-  document.getElementById("opHours").value = OPHOURS[selectedEq] ?? 0;
-  renderPrediction(fit);
-  document.getElementById("pmInterval").value = PM_INTERVAL[selectedEq] ?? "";
-  renderPmAlert();
-  renderCondFail();
 }
 function amfeActionFor(eq, comp){
   const modes = AMFE[eq];
@@ -1785,24 +1661,6 @@ function updateFilterBtn(){
   btn.classList.toggle("primary", filterMachine);
   btn.textContent = filterMachine ? `🔍 Filtrando: ${selectedEq}` : "🔍 Filtrar máquina";
 }
-document.getElementById("opHours").oninput = ()=>{
-  OPHOURS[selectedEq] = Math.max(0, Number(document.getElementById("opHours").value) || 0);
-  renderPrediction(currentFit());
-  renderPmAlert();
-  renderCondFail();
-};
-document.getElementById("condWindow").oninput = ()=>{
-  renderCondFail();
-};
-document.getElementById("pmInterval").oninput = ()=>{
-  const v = document.getElementById("pmInterval").value;
-  if(v === "") delete PM_INTERVAL[selectedEq];
-  else PM_INTERVAL[selectedEq] = Math.max(1, Number(v) || 1);
-  renderPmAlert();
-};
-document.getElementById("rThreshold").oninput = ()=>{
-  renderPrediction(currentFit());
-};
 // Diagnóstico con IA — OPCIONAL. Solo funciona si esta app corre dentro del
 // entorno de artefactos de Claude (claude.ai), que expone window.claude.complete().
 // Abierta como archivo .html local (el modo normal de uso de este tablero) NO hay
