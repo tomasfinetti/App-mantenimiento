@@ -259,12 +259,12 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 
 <div class="tabBar">
   <button class="tabBtn sel" data-tab="mapa">🗺️ Mapa</button>
-  <button class="tabBtn" data-tab="condicion">📈 Condición</button>
   <button class="tabBtn" data-tab="confiabilidad">🔧 Fiabilidad</button>
   <button class="tabBtn" data-tab="amfe">⚠️ AMFE</button>
   <button class="tabBtn" data-tab="plancontrol">🗒️ Plan de Control</button>
   <button class="tabBtn" data-tab="historial">📋 Historial</button>
   <button class="tabBtn" data-tab="diagnostico">🔍 Diagnóstico</button>
+  <button class="tabBtn" data-tab="condicion">📈 Condición</button>
 </div>
 
 <div class="tabPanel active" data-tab-panel="mapa">
@@ -353,14 +353,6 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 </div>
 </div>
 
-<div class="tabPanel" data-tab-panel="condicion">
-<div class="charts">
-  <section class="panel cp"><h3 class="ct">Tendencia temporal</h3><canvas id="trendChart"></canvas><div class="legend" id="trendLegend"></div></section>
-  <section class="panel cp"><h3 class="ct">Histograma</h3><canvas id="histChart"></canvas><div class="legend">Distribución de mediciones del punto seleccionado.</div></section>
-  <section class="panel cp"><h3 class="ct">Carta de control</h3><canvas id="controlChart"></canvas><div class="legend">Media ± 2σ para visualizar desvíos.</div></section>
-</div>
-</div>
-
 <div class="tabPanel" data-tab-panel="confiabilidad">
 <div class="panel" id="reliabPanel">
   <div class="ph">
@@ -381,12 +373,14 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
         <div id="weibullZoomInfo"><span id="weibullZoomLevel">100%</span><span>· Con zoom activo, arrastrá para mover el gráfico.</span></div>
         <div id="weibullPointList"></div><div class="legend" id="weibullLineLegend"></div>
       </section>
-      <section class="panel cp"><h3 class="ct">Curva de fiabilidad R(t)</h3><canvas id="weibullRChart"></canvas><div class="legend" id="weibullRLegend"></div></section>
-    </div>
-    <div class="kpis" id="reliabKpis">
-      <div class="card kpi"><b>β (forma)</b><div class="v" id="rBeta">—</div><div class="t" id="rBetaNote"></div></div>
-      <div class="card kpi"><b>η (escala)</b><div class="v" id="rEta">—</div><div class="t">h</div></div>
-      <div class="card kpi"><b>MTBF</b><div class="v" id="rMtbf">—</div><div class="t">h · η·Γ(1+1/β)</div></div>
+      <div>
+        <section class="panel cp"><h3 class="ct">Curva de fiabilidad R(t)</h3><canvas id="weibullRChart"></canvas><div class="legend" id="weibullRLegend"></div></section>
+        <div class="kpis" id="reliabKpis" style="margin-top:14px">
+          <div class="card kpi"><b>β (forma)</b><div class="v" id="rBeta">—</div><div class="t" id="rBetaNote"></div></div>
+          <div class="card kpi"><b>η (escala)</b><div class="v" id="rEta">—</div><div class="t">h</div></div>
+          <div class="card kpi"><b>MTBF</b><div class="v" id="rMtbf">—</div><div class="t">h · η·Γ(1+1/β)</div></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -479,6 +473,14 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
       <div class="legend" id="paretoLegend"></div>
     </section>
   </div>
+</div>
+</div>
+
+<div class="tabPanel" data-tab-panel="condicion">
+<div class="charts">
+  <section class="panel cp"><h3 class="ct">Tendencia temporal</h3><canvas id="trendChart"></canvas><div class="legend" id="trendLegend"></div></section>
+  <section class="panel cp"><h3 class="ct">Histograma</h3><canvas id="histChart"></canvas><div class="legend">Distribución de mediciones del punto seleccionado.</div></section>
+  <section class="panel cp"><h3 class="ct">Carta de control</h3><canvas id="controlChart"></canvas><div class="legend">Media ± 2σ para visualizar desvíos.</div></section>
 </div>
 </div>
 
@@ -923,7 +925,7 @@ function renderPlant(){
 
   // Intercambiadores -> colector -> Aeroenfriadores
   line(736,160,790,160); line(736,340,790,340);
-  line(790,160,790,480);
+  line(790,120,790,480);
   line(790,120,824,120); line(790,300,824,300); line(790,480,824,480);
 
   // Aeroenfriadores -> colector de despacho -> Bombas
