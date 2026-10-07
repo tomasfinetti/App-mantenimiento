@@ -141,27 +141,41 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 }
 
 /* Papel de probabilidad de Weibull interactivo, integrado al tablero. */
-#weibullLineChart{height:600px;background:#0b1f36;border:0;border-radius:10px;transform-origin:0 0;display:block;cursor:crosshair}
+#weibullLineChart{height:600px;background:#0b1f36;border:0;border-radius:10px;transform-origin:0 0;display:block}
 .weibullPaperPanel{background:linear-gradient(180deg,#10253f 0%,#0b1c31 100%);border:1px solid #2f5b8a}
 .weibullPaperPanel .ct{color:#eef6ff}.weibullPaperPanel .legend{color:#d9e8f8}
 .weibullControls{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0 7px;padding:8px;background:#0f2743;border:1px solid #2f5b8a;border-radius:10px}
-.weibullControls button{padding:6px 9px;border:1px solid #35679d;border-radius:8px;background:#163559;color:#fff;cursor:pointer;font-size:10px;font-weight:700}
-.weibullControls button:hover{background:#1d4675}.weibullControls button.active{background:#b53a32;border-color:#e56f63}
-.weibullControls label{font-size:10px;color:#e6f1ff;display:flex;align-items:center;gap:4px;cursor:pointer}
-#weibullInfo,#weibullZoomInfo{font-size:10px;color:#a9c3e6;line-height:1.4}
-#weibullCanvasWrap{height:600px;overflow:hidden;position:relative;background:#0b1f36;border:1px solid #2f5b8a;border-radius:11px;cursor:crosshair}
+.weibullControls button{padding:6px 9px;border:1px solid #35679d;border-radius:8px;background:#163559;color:#fff;cursor:pointer;font-size:12px;font-weight:700}
+.weibullControls button:hover{background:#1d4675}
+.weibullControls label{font-size:12px;color:#e6f1ff;display:flex;align-items:center;gap:4px;cursor:pointer}
+#weibullInfo,#weibullZoomInfo{font-size:12px;color:#a9c3e6;line-height:1.4}
+#weibullCanvasWrap{height:600px;overflow:hidden;position:relative;background:#0b1f36;border:1px solid #2f5b8a;border-radius:11px}
 #weibullZoomInfo{display:flex;gap:8px;align-items:center;margin-top:6px}#weibullZoomLevel{min-width:35px;color:#eef6ff;font-weight:800}
-/* Columna derecha de Fiabilidad: tabla de puntos (con scroll) + KPIs, de la misma altura que la sección Weibull */
+/* Columna derecha de Fiabilidad: fallas (con scroll) + KPIs, de la misma altura que la sección Weibull */
 .weibullSide{position:relative;min-height:460px}
 .weibullSideInner{position:absolute;inset:0;display:flex;flex-direction:column;gap:14px}
 .weibullTablePanel{flex:1 1 0;min-height:0;display:flex;flex-direction:column}
-.wPtAdd{display:flex;gap:6px;margin-bottom:8px}
-.wPtAdd input{flex:1;min-width:0;padding:7px 9px;font-size:11px}
-.wPtAdd button{white-space:nowrap;font-size:10px;padding:7px 9px}
+.wCfg{display:grid;grid-template-columns:1.7fr .8fr .9fr;gap:8px;margin-bottom:6px}
+.wCfg label,.wPtAdd label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+.wCfg input,.wCfg select,.wPtAdd input{padding:6px 8px;font-size:13px;color-scheme:dark;min-width:0}
+.wCfgNote{font-size:12px;color:#a9c3e6;margin-bottom:8px}
+.wPtAdd{display:flex;gap:8px;align-items:flex-end;margin-bottom:8px}
+.wPtAdd label{flex:1}
+.wPtAdd button{white-space:nowrap;font-size:12px;padding:7px 10px}
 .wPtScroll{flex:1 1 0;min-height:0;overflow-y:auto;border:1px solid var(--line);border-radius:11px}
 .wPtScroll th{position:sticky;top:0;background:#0d1b2d}
 .weibullSideInner .kpis{margin-top:0;flex:0 0 auto}
-@media(max-width:1100px){.weibullSide{min-height:640px}}
+@media(max-width:1100px){.weibullSide{min-height:760px}}
+/* Fiabilidad: tipografía +2 px (solo esta pestaña) */
+[data-tab-panel="confiabilidad"] .ph h2{font-size:16px}
+[data-tab-panel="confiabilidad"] .ph small{font-size:12px}
+[data-tab-panel="confiabilidad"] .ct{font-size:14px}
+[data-tab-panel="confiabilidad"] .legend{font-size:11px}
+[data-tab-panel="confiabilidad"] .card b{font-size:12px}
+[data-tab-panel="confiabilidad"] .kpi .v{font-size:19px}
+[data-tab-panel="confiabilidad"] .kpi .t{font-size:11px}
+[data-tab-panel="confiabilidad"] table{font-size:12px}
+[data-tab-panel="confiabilidad"] th{font-size:11px}
 
 /* AMFE tipo planilla */
 .amfeToolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
@@ -374,25 +388,29 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
       <section class="panel cp weibullPaperPanel">
         <h3 class="ct">Weibull</h3>
         <div class="weibullControls" id="weibullControls">
-          <button id="wBtnDraw" class="active">✏️ Dibujar</button><button id="wBtnErase">🗑 Borrar</button>
           <label><input type="checkbox" id="wChkLine"> Unir con línea</label><label><input type="checkbox" id="wChkBestFit" checked> Mejor ajuste</label>
-          <button id="wRestoreEq">↩ Restaurar equipo</button><button id="wClearPts">Limpiar puntos</button>
+          <button id="wRestoreEq">↩ Restaurar equipo</button><button id="wClearPts">Limpiar fallas</button>
         </div>
-        <div id="weibullInfo">Hacé clic en el gráfico para agregar puntos · los puntos del equipo se cargan automáticamente.</div>
+        <div id="weibullInfo">Los puntos salen de las fechas de falla y de los turnos cargados en la tabla de la derecha.</div>
         <div id="weibullCanvasWrap"><canvas id="weibullLineChart" role="img" aria-label="Papel de probabilidad de Weibull interactivo"></canvas></div>
         <div id="weibullZoomInfo"><span id="weibullZoomLevel">100%</span><span>· Con zoom activo, arrastrá para mover el gráfico.</span></div>
         <div class="legend" id="weibullLineLegend"></div>
       </section>
       <div class="weibullSide"><div class="weibullSideInner">
         <section class="panel cp weibullTablePanel">
-          <h3 class="ct">Puntos de Weibull</h3>
+          <h3 class="ct">Fallas del equipo</h3>
+          <div class="wCfg">
+            <label>Inicio de la medición<input id="wStart" type="datetime-local"></label>
+            <label>Turnos por día<select id="wTurnos"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
+            <label>Horas por turno<input id="wHorasTurno" type="number" min="0.5" max="24" step="0.1"></label>
+          </div>
+          <div class="wCfgNote" id="wHorasDia"></div>
           <div class="wPtAdd">
-            <input id="wAddT" type="number" min="0" step="any" placeholder="t (h)">
-            <input id="wAddF" type="number" min="1" max="99.9" step="any" placeholder="F(t) %">
-            <button id="wAddBtn" class="primary">➕ Agregar punto</button>
+            <label>Fecha y hora de la falla<input id="wAddDate" type="datetime-local"></label>
+            <button id="wAddBtn" class="primary">➕ Agregar falla</button>
           </div>
           <div class="wPtScroll"><table>
-            <thead><tr><th>N°</th><th>t [h]</th><th>F(t) [%]</th></tr></thead>
+            <thead><tr><th>N°</th><th>Fecha y hora de falla</th><th>TBF [días]</th><th>TBF [h op.]</th><th>F(t) [%]</th></tr></thead>
             <tbody id="weibullPointBody"></tbody>
           </table></div>
         </section>
@@ -596,6 +614,13 @@ const TBF_SEED = {
   "AC-725": {tbf:[360,432,5280,6336,16128], unit:"h", mode:"Correas de transmisión", share:"75% de las fallas"},
   "P-80A":  {tbf:[302.4,604.8,705.6,1932,3578.4], unit:"h", mode:"Sistema de sello", share:"66,7% de las fallas"}
 };
+// Fechas de las fallas del informe del TP (secciones 6.2 y 6.3). La 1ª falla de cada serie es el origen
+// (inicio de la medición) y las demás dan los 5 TBF de TBF_SEED. AC-725: 3 turnos x 8 h = 24 h/día (servicio continuo);
+// P-80A: 2 turnos x 8,4 h = 16,8 h/día (factor de utilización del 70 % informado en el TP).
+const WEIBULL_DATES_SEED = {
+  "AC-725": {start:"2022-12-11T00:00", turnos:3, horas:8,   failures:["2023-07-19T00:00","2024-04-08T00:00","2026-02-09T00:00","2026-02-27T00:00","2026-03-14T00:00"]},
+  "P-80A":  {start:"2025-03-14T00:00", turnos:2, horas:8.4, failures:["2025-10-13T00:00","2025-11-18T00:00","2025-12-06T00:00","2026-01-17T00:00","2026-05-12T00:00"]}
+};
 // Modos de falla del AMFE real del TP, con su NPR (antes/después de la acción) y la acción recomendada.
 // AMFE_SEED_VERSION: subir este número cuando se reemplacen/agreguen modos, para que
 // loadAmfe() descarte el localStorage viejo de los usuarios y cargue el set nuevo.
@@ -702,8 +727,7 @@ let data = [];
 let IMPORTED = [];
 let RELIAB = {};
 let WEIBULL_POINTS = {};
-let WEIBULL_UI = {mode:"draw",zoom:1,panX:0,panY:0,isPanning:false,dragged:false,panStartX:0,panStartY:0,panOriginX:0,panOriginY:0};
-let WEIBULL_PLOT = null;
+let WEIBULL_UI = {zoom:1,panX:0,panY:0,isPanning:false,panStartX:0,panStartY:0,panOriginX:0,panOriginY:0};
 let AMFE = {};
 let selectedEq = "P-80A";
 let SYS_TOPCONFIG = "serie";
@@ -1103,13 +1127,25 @@ function weibullFitPoints(inputPoints){
   return {beta,eta,r2,mtbf,n,points:pts.map((p,i)=>({...p,x:xs[i],y:ys[i]}))};
 }
 function weibullR(t,beta,eta){return Math.exp(-Math.pow(t/eta,beta));}
-function defaultWeibullPoints(eq){
-  const seed=RELIAB[eq];if(!seed||!Array.isArray(seed.tbf)||seed.tbf.length<2)return [];
-  const sorted=[...seed.tbf].sort((a,b)=>a-b),n=sorted.length;return sorted.map((t,i)=>({t:+t,f:(i+1-0.3)/(n+0.4)}));
+const wMs=s=>Date.parse(s+"Z");
+const wIso=ms=>new Date(Math.round(ms/60000)*60000).toISOString().slice(0,16);
+const weibullHorasDia=st=>st.turnos*st.horas;
+function defaultWeibullState(eq){
+  const s=WEIBULL_DATES_SEED[eq];
+  return s?{start:s.start,turnos:s.turnos,horas:s.horas,failures:[...s.failures],custom:false}
+          :{start:"",turnos:3,horas:8,failures:[],custom:false};
 }
-function ensureWeibullState(eq){if(!WEIBULL_POINTS[eq])WEIBULL_POINTS[eq]={points:defaultWeibullPoints(eq),custom:false};return WEIBULL_POINTS[eq];}
-function fitForEq(eq){return weibullFitPoints(ensureWeibullState(eq).points);}
-function resetWeibullPoints(eq=selectedEq){WEIBULL_POINTS[eq]={points:defaultWeibullPoints(eq),custom:false};resetWeibullView();}
+function ensureWeibullState(eq){if(!WEIBULL_POINTS[eq])WEIBULL_POINTS[eq]=defaultWeibullState(eq);return WEIBULL_POINTS[eq];}
+function weibullPointsOf(eq){
+  const st=ensureWeibullState(eq);if(!st.start)return [];
+  const k=weibullHorasDia(st)/24;let prev=wMs(st.start);
+  const rows=[...st.failures].sort().map((d,i)=>{const cur=wMs(d),calH=(cur-prev)/3600000;prev=cur;return {date:d,tbfDias:calH/24,t:calH*k,idx:i};});
+  const byT=[...rows].sort((a,b)=>a.t-b.t||a.idx-b.idx),n=byT.length;
+  byT.forEach((r,i)=>r.f=(i+1-0.3)/(n+0.4));
+  return rows;
+}
+function fitForEq(eq){return weibullFitPoints(weibullPointsOf(eq));}
+function resetWeibullPoints(eq=selectedEq){WEIBULL_POINTS[eq]=defaultWeibullState(eq);resetWeibullView();}
 function renderReliabKpis(fit,seed){
   if(!fit){["rBeta","rEta","rMtbf"].forEach(id=>document.getElementById(id).textContent="—");document.getElementById("rBetaNote").textContent="";document.getElementById("reliabSub").textContent="Tiempo entre fallas (TBF, horas de operación) · rango mediano de Bernard";return;}
   const {beta,eta,mtbf,n}=fit;document.getElementById("rBeta").textContent=beta.toFixed(2);document.getElementById("rEta").textContent=eta.toFixed(1);document.getElementById("rMtbf").textContent=mtbf.toFixed(1);
@@ -1122,12 +1158,11 @@ function weibullPlotGeometry(points,eta,w,h){
   const tVals=points.length?points.map(p=>p.t):[10,1000];let logMin=Math.floor(Math.log10(Math.max(.0001,Math.min(...tVals)))),logMax=Math.ceil(Math.log10(Math.max(...tVals)));
   if(Number.isFinite(eta)&&eta>0){logMin=Math.min(logMin,Math.floor(Math.log10(eta)));logMax=Math.max(logMax,Math.ceil(Math.log10(eta)));}if(logMax-logMin<2)logMax=logMin+2;
   const xFromT=t=>ML+(Math.log10(t)-logMin)/(logMax-logMin)*PW,yFromF=f=>MT+(yTop-ll(Math.min(fMax,Math.max(fMin,f))))/(yTop-yBot)*PH;
-  const tFromX=x=>Math.pow(10,logMin+(x-ML)/PW*(logMax-logMin)),fFromY=y=>{const v=yTop-(y-MT)/PH*(yTop-yBot);return 1-Math.exp(-Math.exp(v));};
-  return {ML,MR,MT,MB,PW,PH,ll,fMin,fMax,yBot,yTop,logMin,logMax,xFromT,yFromF,tFromX,fFromY,w,h};
+  return {ML,MR,MT,MB,PW,PH,ll,fMin,fMax,yBot,yTop,logMin,logMax,xFromT,yFromF,w,h};
 }
 function drawWeibull(fit){
-  const paper=setupCanvasHeight("weibullLineChart",600),st=ensureWeibullState(selectedEq),points=st.points,eta=fit?.eta||NaN,beta=fit?.beta||NaN;
-  const g=weibullPlotGeometry(points,eta,paper.w,paper.h);WEIBULL_PLOT=g;const {ctx,w,h}=paper,{ML,MT,PW,PH,logMin,logMax,xFromT,yFromF}=g;
+  const paper=setupCanvasHeight("weibullLineChart",600),points=weibullPointsOf(selectedEq),eta=fit?.eta||NaN,beta=fit?.beta||NaN;
+  const g=weibullPlotGeometry(points,eta,paper.w,paper.h);const {ctx,w,h}=paper,{ML,MT,PW,PH,logMin,logMax,xFromT,yFromF}=g;
   ctx.fillStyle="#0b1f36";ctx.fillRect(0,0,w,h);ctx.strokeStyle="#d7e8f8";ctx.lineWidth=1;ctx.strokeRect(ML,MT,PW,PH);
   ctx.save();ctx.beginPath();ctx.rect(ML,MT,PW,PH);ctx.clip();ctx.strokeStyle="rgba(122,220,154,.38)";ctx.lineWidth=.65;
   for(let d=logMin;d<=logMax;d++)for(let i=1;i<=9;i++){const t=i*Math.pow(10,d);if(t<Math.pow(10,logMin)||t>Math.pow(10,logMax))continue;const x=xFromT(t);ctx.beginPath();ctx.moveTo(x,MT);ctx.lineTo(x,MT+PH);ctx.stroke();}
@@ -1143,26 +1178,26 @@ function drawWeibull(fit){
   betaRefs.forEach(b=>{
     const end=fanEnd(b);
     ctx.beginPath();ctx.moveTo(bx0,by0);ctx.lineTo(end.x,end.y);ctx.stroke();
-    ctx.save();ctx.setLineDash([]);ctx.fillStyle="#d9e9ff";ctx.font="bold 10px Segoe UI";
+    ctx.save();ctx.setLineDash([]);ctx.fillStyle="#d9e9ff";ctx.font="bold 12px Segoe UI";
     if(end.edge==="top"){ctx.textAlign="center";ctx.textBaseline="bottom";ctx.fillText(String(b),end.x,MT-8);}
     else{ctx.textAlign="left";ctx.textBaseline="middle";ctx.fillText(String(b),ML+PW+7,end.y);}
     ctx.restore();
   });
-  ctx.setLineDash([]);ctx.fillStyle="#d9e9ff";ctx.font="bold 11px Segoe UI";ctx.textAlign="left";ctx.textBaseline="alphabetic";ctx.fillText("β",ML+4,MT-30);
+  ctx.setLineDash([]);ctx.fillStyle="#d9e9ff";ctx.font="bold 13px Segoe UI";ctx.textAlign="left";ctx.textBaseline="alphabetic";ctx.fillText("β",ML+4,MT-30);
   if(document.getElementById("wChkLine")?.checked&&points.length>1){const sorted=[...points].sort((a,b)=>a.t-b.t);ctx.save();ctx.beginPath();ctx.rect(ML,MT,PW,PH);ctx.clip();ctx.strokeStyle="#ff8f6b";ctx.lineWidth=1.4;ctx.beginPath();sorted.forEach((p,i)=>{const x=xFromT(p.t),y=yFromF(p.f);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();ctx.restore();}
   if(fit&&document.getElementById("wChkBestFit")?.checked){
     ctx.save();ctx.beginPath();ctx.rect(ML,MT,PW,PH);ctx.clip();const t0=Math.pow(10,logMin),t1=Math.pow(10,logMax),f0=1-Math.exp(-Math.pow(t0/eta,beta)),f1=1-Math.exp(-Math.pow(t1/eta,beta));ctx.strokeStyle="#4fb3ff";ctx.lineWidth=2.2;ctx.setLineDash([7,4]);ctx.beginPath();ctx.moveTo(xFromT(t0),yFromF(f0));ctx.lineTo(xFromT(t1),yFromF(f1));ctx.stroke();ctx.setLineDash([]);
     const xEta=xFromT(eta),yEta=yFromF(.6321);ctx.strokeStyle="#7fd0ff";ctx.lineWidth=1.1;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(xEta,yEta);ctx.lineTo(xEta,MT+PH);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="#7fd0ff";ctx.beginPath();ctx.arc(xEta,yEta,4,0,Math.PI*2);ctx.fill();
     const betaEnd=fanEnd(beta);ctx.strokeStyle="#ff9f43";ctx.lineWidth=2.6;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(bx0,by0);ctx.lineTo(betaEnd.x,betaEnd.y);ctx.stroke();
     ctx.restore();
-    ctx.fillStyle="#ffb56b";ctx.font="bold 10px Segoe UI";
+    ctx.fillStyle="#ffb56b";ctx.font="bold 12px Segoe UI";
     if(betaEnd.edge==="top"){ctx.textAlign="center";ctx.textBaseline="bottom";ctx.fillText(`β=${beta.toFixed(2)}`,betaEnd.x,MT-24);}
     else{ctx.textAlign="left";ctx.textBaseline="middle";ctx.fillText(`β=${beta.toFixed(2)}`,ML+PW+7,betaEnd.y);}
-    ctx.fillStyle="#eef6ff";ctx.font="bold 11px Segoe UI";ctx.textAlign="left";ctx.textBaseline="alphabetic";ctx.fillText(`β=${beta.toFixed(2)}  η=${eta.toFixed(1)} h`,ML+5,MT+18);
+    ctx.fillStyle="#eef6ff";ctx.font="bold 13px Segoe UI";ctx.textAlign="left";ctx.textBaseline="alphabetic";ctx.fillText(`β=${beta.toFixed(2)}  η=${eta.toFixed(1)} h`,ML+5,MT+18);
   }
   points.forEach(p=>{const x=xFromT(p.t),y=yFromF(p.f);ctx.fillStyle="#ff704f";ctx.strokeStyle="#ffd1c7";ctx.lineWidth=.8;ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();ctx.stroke();});
-  ctx.fillStyle="#eef6ff";ctx.font="10px Segoe UI";ctx.textAlign="right";ctx.textBaseline="middle";const fLabels=[[.01,"1"],[.02,"2"],[.03,"3"],[.05,"5"],[.10,"10"],[.20,"20"],[.30,"30"],[.40,"40"],[.50,"50"],[.60,"60"],[.70,"70"],[.80,"80"],[.90,"90"],[.95,"95"],[.99,"99"]];fLabels.forEach(([f,l])=>ctx.fillText(l,ML-6,yFromF(f)));ctx.save();ctx.translate(15,MT+PH/2);ctx.rotate(-Math.PI/2);ctx.font="bold 11px Segoe UI";ctx.textAlign="center";ctx.fillText("Infiabilidad, F(t) %",0,0);ctx.restore();ctx.textAlign="center";ctx.textBaseline="alphabetic";ctx.font="bold 10px Segoe UI";for(let d=logMin;d<=logMax;d++){const t=Math.pow(10,d);ctx.fillText(t.toLocaleString("es-AR"),xFromT(t),MT+PH+18);}ctx.font="bold 11px Segoe UI";ctx.fillText("Tiempo, t (h)",ML+PW/2,h-7);ctx.textAlign="left";ctx.fillStyle="#7fd0ff";ctx.fillText("η",ML+PW+3,yFromF(.6321)+4);
-  const fitTxt=fit?` · β=${fit.beta.toFixed(2)} · η=${fit.eta.toFixed(1)} h · R²=${fit.r2.toFixed(3)}`:"";document.getElementById("weibullLineLegend").textContent=`${points.length} puntos · clic para agregar · recta azul = mejor ajuste · rayo naranja = β calculado${fitTxt}`;updateWeibullPointList();applyWeibullTransform();
+  ctx.fillStyle="#eef6ff";ctx.font="12px Segoe UI";ctx.textAlign="right";ctx.textBaseline="middle";const fLabels=[[.01,"1"],[.02,"2"],[.03,"3"],[.05,"5"],[.10,"10"],[.20,"20"],[.30,"30"],[.40,"40"],[.50,"50"],[.60,"60"],[.70,"70"],[.80,"80"],[.90,"90"],[.95,"95"],[.99,"99"]];fLabels.forEach(([f,l])=>ctx.fillText(l,ML-6,yFromF(f)));ctx.save();ctx.translate(15,MT+PH/2);ctx.rotate(-Math.PI/2);ctx.font="bold 13px Segoe UI";ctx.textAlign="center";ctx.fillText("Infiabilidad, F(t) %",0,0);ctx.restore();ctx.textAlign="center";ctx.textBaseline="alphabetic";ctx.font="bold 12px Segoe UI";for(let d=logMin;d<=logMax;d++){const t=Math.pow(10,d);ctx.fillText(t.toLocaleString("es-AR"),xFromT(t),MT+PH+18);}ctx.font="bold 13px Segoe UI";ctx.fillText("Tiempo, t (h)",ML+PW/2,h-7);ctx.textAlign="left";ctx.fillStyle="#7fd0ff";ctx.fillText("η",ML+PW+3,yFromF(.6321)+4);
+  const fitTxt=fit?` · β=${fit.beta.toFixed(2)} · η=${fit.eta.toFixed(1)} h · R²=${fit.r2.toFixed(3)}`:"";document.getElementById("weibullLineLegend").textContent=`${points.length} puntos · recta azul = mejor ajuste · rayo naranja = β calculado${fitTxt}`;updateWeibullPointList();applyWeibullTransform();
 }
 function currentFit(){return fitForEq(selectedEq);}
 function rLabelFor(eq, t){
@@ -1172,17 +1207,20 @@ function rLabelFor(eq, t){
   if(!Number.isFinite(r)) return "ND";
   return `R=${(r*100).toFixed(1).replace(".",",")}%`;
 }
+function fmtWDate(s){const m=/^(\d{4})-(\d\d)-(\d\d)T(\d\d:\d\d)/.exec(s);return m?`${m[3]}/${m[2]}/${m[1]} ${m[4]}`:s;}
 function updateWeibullPointList(){
-  const body=document.getElementById("weibullPointBody");if(!body)return;
-  const pts=[...ensureWeibullState(selectedEq).points].sort((a,b)=>a.t-b.t);
+  const st=ensureWeibullState(selectedEq),body=document.getElementById("weibullPointBody");if(!body)return;
+  const pts=weibullPointsOf(selectedEq);
   body.innerHTML=pts.length
-    ? pts.map((p,i)=>`<tr><td>${i+1}</td><td>${p.t.toFixed(1)}</td><td>${(p.f*100).toFixed(1)}</td></tr>`).join("")
-    : `<tr><td colspan="3">Sin puntos. Agregá uno arriba, usá Dibujar o Restaurar equipo.</td></tr>`;
+    ? pts.map((p,i)=>`<tr><td>${i+1}</td><td>${fmtWDate(p.date)}</td><td>${p.tbfDias.toFixed(1)}</td><td>${p.t.toFixed(1)}</td><td>${(p.f*100).toFixed(1)}</td></tr>`).join("")
+    : `<tr><td colspan="5">${st.start?"Sin fallas. Agregá una fecha de falla arriba.":"Definí el inicio de la medición y agregá las fechas de falla."}</td></tr>`;
+  const setV=(id,v)=>{const el=document.getElementById(id);if(el&&el.value!==String(v))el.value=v;};
+  setV("wStart",st.start);setV("wTurnos",st.turnos);setV("wHorasTurno",st.horas);
+  const hd=document.getElementById("wHorasDia");if(hd)hd.textContent=`= ${+weibullHorasDia(st).toFixed(2)} h de operación por día`;
 }
-function resetWeibullView(){WEIBULL_UI.zoom=1;WEIBULL_UI.panX=0;WEIBULL_UI.panY=0;WEIBULL_UI.isPanning=false;WEIBULL_UI.dragged=false;applyWeibullTransform();}
+function resetWeibullView(){WEIBULL_UI.zoom=1;WEIBULL_UI.panX=0;WEIBULL_UI.panY=0;WEIBULL_UI.isPanning=false;applyWeibullTransform();}
 function applyWeibullTransform(){const c=document.getElementById("weibullLineChart");if(!c)return;c.style.transform=`translate(${WEIBULL_UI.panX}px,${WEIBULL_UI.panY}px) scale(${WEIBULL_UI.zoom})`;const z=document.getElementById("weibullZoomLevel");if(z)z.textContent=Math.round(WEIBULL_UI.zoom*100)+"%";}
 function clampWeibullPan(){const wrap=document.getElementById("weibullCanvasWrap"),c=document.getElementById("weibullLineChart");if(!wrap||!c)return;const z=WEIBULL_UI.zoom;if(z<=1){WEIBULL_UI.panX=0;WEIBULL_UI.panY=0;return;}const minX=wrap.clientWidth-c.clientWidth*z,minY=wrap.clientHeight-c.clientHeight*z;WEIBULL_UI.panX=Math.min(0,Math.max(minX,WEIBULL_UI.panX));WEIBULL_UI.panY=Math.min(0,Math.max(minY,WEIBULL_UI.panY));}
-function weibullCanvasXY(e){const wrap=document.getElementById("weibullCanvasWrap"),rect=wrap.getBoundingClientRect();return{x:(e.clientX-rect.left-WEIBULL_UI.panX)/WEIBULL_UI.zoom,y:(e.clientY-rect.top-WEIBULL_UI.panY)/WEIBULL_UI.zoom};}
 function reliabEqIds(){ return Object.keys(RELIAB); }
 function sysElementR(el, t){
   if(el.type === "weibull"){
@@ -1756,24 +1794,36 @@ document.getElementById("aiDiagBtn").onclick = async ()=>{
     btn.disabled = false; btn.textContent = prevText;
   }
 };
-// Interacción del papel de Weibull: dibujar/borrar puntos, zoom y mejor ajuste.
-function setWeibullMode(mode){WEIBULL_UI.mode=mode;document.getElementById("wBtnDraw")?.classList.toggle("active",mode==="draw");document.getElementById("wBtnErase")?.classList.toggle("active",mode==="erase");const wrap=document.getElementById("weibullCanvasWrap");if(wrap)wrap.style.cursor=mode==="draw"?"crosshair":"not-allowed";const info=document.getElementById("weibullInfo");if(info)info.textContent=mode==="draw"?"Hacé clic en el gráfico para agregar puntos · los puntos del equipo se cargan automáticamente.":"Hacé clic cerca de un punto para borrarlo.";}
-document.getElementById("wBtnDraw").onclick=()=>setWeibullMode("draw");document.getElementById("wBtnErase").onclick=()=>setWeibullMode("erase");document.getElementById("wChkLine").onchange=()=>drawWeibull(currentFit());document.getElementById("wChkBestFit").onchange=()=>drawWeibull(currentFit());
-document.getElementById("wRestoreEq").onclick=()=>{resetWeibullPoints(selectedEq);renderReliability();renderSystemReliability();};document.getElementById("wClearPts").onclick=()=>{WEIBULL_POINTS[selectedEq]={points:[],custom:true};renderReliability();renderSystemReliability();};
-function addWeibullPointFromTable(){
-  const tIn=document.getElementById("wAddT"),fIn=document.getElementById("wAddF");
-  const t=Number(tIn.value),fp=Number(fIn.value);
-  if(!Number.isFinite(t)||t<=0||!Number.isFinite(fp)||fp<1||fp>99.9){toast("Ingresá t > 0 y F(t) entre 1 y 99,9 %");return;}
-  const st=ensureWeibullState(selectedEq);st.points.push({t,f:fp/100});st.custom=true;
-  tIn.value="";fIn.value="";renderReliability();renderSystemReliability();
+// Interacción del papel de Weibull: zoom/arrastre, mejor ajuste, y carga de fallas por fecha + turnos.
+document.getElementById("wChkLine").onchange=()=>drawWeibull(currentFit());document.getElementById("wChkBestFit").onchange=()=>drawWeibull(currentFit());
+document.getElementById("wRestoreEq").onclick=()=>{resetWeibullPoints(selectedEq);renderReliability();renderSystemReliability();};
+document.getElementById("wClearPts").onclick=()=>{const st=ensureWeibullState(selectedEq);st.failures=[];st.custom=true;renderReliability();renderSystemReliability();};
+function weibullRevert(msg){toast(msg);updateWeibullPointList();}
+function addWeibullFailure(){
+  const st=ensureWeibullState(selectedEq),inp=document.getElementById("wAddDate"),v=inp.value;
+  if(!st.start){toast("Definí primero la fecha de inicio de la medición");return;}
+  if(!v){toast("Ingresá la fecha y hora de la falla");return;}
+  if(v<=st.start){toast("La falla debe ser posterior al inicio de la medición");return;}
+  if(st.failures.includes(v)){toast("Ya existe una falla con esa fecha y hora");return;}
+  st.failures.push(v);st.custom=true;inp.value="";renderReliability();renderSystemReliability();
 }
-document.getElementById("wAddBtn").onclick=addWeibullPointFromTable;
-["wAddT","wAddF"].forEach(id=>document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")addWeibullPointFromTable();}));
+document.getElementById("wAddBtn").onclick=addWeibullFailure;
+document.getElementById("wAddDate").addEventListener("keydown",e=>{if(e.key==="Enter")addWeibullFailure();});
+document.getElementById("wStart").onchange=()=>{
+  const st=ensureWeibullState(selectedEq),v=document.getElementById("wStart").value;
+  if(!v||st.failures.some(d=>d<=v)){weibullRevert("El inicio debe ser anterior a todas las fallas");return;}
+  st.start=v;st.custom=true;renderReliability();renderSystemReliability();
+};
+function setWeibullShifts(){
+  const st=ensureWeibullState(selectedEq),tn=Number(document.getElementById("wTurnos").value),hr=Number(document.getElementById("wHorasTurno").value);
+  if(!(tn>=1&&tn<=3)||!(hr>0)||tn*hr>24){weibullRevert("Turnos entre 1 y 3, horas por turno mayor a 0 y máximo 24 h de operación por día");return;}
+  st.turnos=tn;st.horas=hr;st.custom=true;renderReliability();renderSystemReliability();
+}
+document.getElementById("wTurnos").onchange=setWeibullShifts;document.getElementById("wHorasTurno").onchange=setWeibullShifts;
 const wWrap=document.getElementById("weibullCanvasWrap");wWrap.addEventListener("wheel",e=>{e.preventDefault();const rect=wWrap.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top,old=WEIBULL_UI.zoom,next=Math.min(4,Math.max(1,old*(e.deltaY<0?1.15:1/1.15)));WEIBULL_UI.panX=mx-(mx-WEIBULL_UI.panX)*next/old;WEIBULL_UI.panY=my-(my-WEIBULL_UI.panY)*next/old;WEIBULL_UI.zoom=next;clampWeibullPan();applyWeibullTransform();},{passive:false});
-wWrap.addEventListener("mousedown",e=>{if(WEIBULL_UI.zoom<=1)return;WEIBULL_UI.isPanning=true;WEIBULL_UI.dragged=false;WEIBULL_UI.panStartX=e.clientX;WEIBULL_UI.panStartY=e.clientY;WEIBULL_UI.panOriginX=WEIBULL_UI.panX;WEIBULL_UI.panOriginY=WEIBULL_UI.panY;wWrap.style.cursor="grabbing";});
-window.addEventListener("mousemove",e=>{if(!WEIBULL_UI.isPanning)return;const dx=e.clientX-WEIBULL_UI.panStartX,dy=e.clientY-WEIBULL_UI.panStartY;if(Math.abs(dx)+Math.abs(dy)>3)WEIBULL_UI.dragged=true;WEIBULL_UI.panX=WEIBULL_UI.panOriginX+dx;WEIBULL_UI.panY=WEIBULL_UI.panOriginY+dy;clampWeibullPan();applyWeibullTransform();});
-window.addEventListener("mouseup",()=>{if(WEIBULL_UI.isPanning){WEIBULL_UI.isPanning=false;wWrap.style.cursor=WEIBULL_UI.mode==="draw"?"crosshair":"not-allowed";}});
-wWrap.addEventListener("click",e=>{if(WEIBULL_UI.dragged){WEIBULL_UI.dragged=false;return;}if(!WEIBULL_PLOT)return;const p=weibullCanvasXY(e),g=WEIBULL_PLOT;if(p.x<g.ML||p.x>g.ML+g.PW||p.y<g.MT||p.y>g.MT+g.PH)return;const t=g.tFromX(p.x),f=g.fFromY(p.y);if(!Number.isFinite(t)||!Number.isFinite(f)||f<=.001||f>=.999)return;const st=ensureWeibullState(selectedEq);if(WEIBULL_UI.mode==="draw")st.points.push({t,f});else{let best=-1,dist=Infinity;st.points.forEach((q,i)=>{const d=Math.hypot(g.xFromT(q.t)-p.x,g.yFromF(q.f)-p.y);if(d<dist){dist=d;best=i;}});if(best>=0&&dist<18/WEIBULL_UI.zoom)st.points.splice(best,1);else return;}st.custom=true;renderReliability();renderSystemReliability();});
+wWrap.addEventListener("mousedown",e=>{if(WEIBULL_UI.zoom<=1)return;WEIBULL_UI.isPanning=true;WEIBULL_UI.panStartX=e.clientX;WEIBULL_UI.panStartY=e.clientY;WEIBULL_UI.panOriginX=WEIBULL_UI.panX;WEIBULL_UI.panOriginY=WEIBULL_UI.panY;wWrap.style.cursor="grabbing";});
+window.addEventListener("mousemove",e=>{if(!WEIBULL_UI.isPanning)return;const dx=e.clientX-WEIBULL_UI.panStartX,dy=e.clientY-WEIBULL_UI.panStartY;WEIBULL_UI.panX=WEIBULL_UI.panOriginX+dx;WEIBULL_UI.panY=WEIBULL_UI.panOriginY+dy;clampWeibullPan();applyWeibullTransform();});
+window.addEventListener("mouseup",()=>{if(WEIBULL_UI.isPanning){WEIBULL_UI.isPanning=false;wWrap.style.cursor="";}});
 
 window.addEventListener("resize", ()=>{ draw(); renderReliability(); });
 
