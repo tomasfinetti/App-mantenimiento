@@ -182,6 +182,45 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 [data-tab-panel="confiabilidad"] .kpi .t{font-size:11px}
 [data-tab-panel="confiabilidad"] table{font-size:12px}
 [data-tab-panel="confiabilidad"] th{font-size:11px}
+/* Criticidad: criterios (izquierda) + matriz general (derecha) */
+.critGrid{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:14px;align-items:start}
+.critBar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.critBar h2{margin:0;font-size:16px}
+.critRight{position:sticky;top:12px;padding-bottom:12px}
+.critCard{margin-bottom:12px;padding:12px}
+.critHead{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.critTitle{flex:1;min-width:0;background:#0f2a4d;color:#fff;font-weight:800;letter-spacing:.4px;border:1px solid #2f5b8a;border-radius:999px;padding:7px 14px;font-size:12px}
+.critTbl{width:100%;border-collapse:collapse}
+.critTbl th{background:#0f2a4d;color:#fff;font-size:11px;text-align:center}
+.critTbl td{padding:4px 6px}
+.critTbl td.cP{width:96px}
+.critTbl input{width:100%;padding:5px 7px;font-size:12px}
+.critTbl input.critP{text-align:center}
+.critAddRow{margin-top:8px;font-size:11px;padding:5px 10px}
+.critFilters,.critThr{display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:8px 14px;font-size:12px;color:var(--muted)}
+.critFilters label,.critThr label{display:flex;align-items:center;gap:6px;cursor:pointer;color:#e6f1ff}
+.critThr input{width:64px;padding:4px 6px;font-size:12px}
+.critScroll{overflow:auto;padding:0 14px}
+#critMatrix{font-size:12px}
+#critMatrix th,#critMatrix td{padding:7px 6px}
+#critMatrix th{white-space:normal;text-align:center;vertical-align:bottom;font-size:10px;min-width:54px}
+#critMatrix th:first-child{text-align:left;min-width:140px}
+#critMatrix td{text-align:center;vertical-align:middle}
+#critMatrix td:first-child{text-align:left;white-space:normal}
+#critMatrix tr.sel td{background:#102840}
+#critMatrix .critEq{display:flex;align-items:flex-start;gap:8px}
+#critMatrix .critEq b{display:block;font-size:12px}
+#critMatrix .critEq small{display:block;color:var(--muted);font-size:10px}
+#critMatrix input.critScore{width:46px;padding:4px 5px;font-size:12px;text-align:center}
+#critMatrix select.critSap{padding:4px 6px;font-size:12px}
+.critTotal{font-weight:800;font-size:13px}
+.critLvl{display:inline-block;padding:3px 9px;border-radius:999px;font-weight:800;font-size:11px;border:1px solid transparent}
+.critLvl.lv-alta{background:rgba(255,93,108,.15);color:#ffabb3;border-color:rgba(255,93,108,.4)}
+.critLvl.lv-media{background:rgba(242,201,76,.15);color:#ffe39a;border-color:rgba(242,201,76,.4)}
+.critLvl.lv-baja{background:rgba(53,208,127,.15);color:#91efbc;border-color:rgba(53,208,127,.4)}
+.critLvl.lv-muybaja{background:rgba(79,179,255,.15);color:#a9d4ff;border-color:rgba(79,179,255,.4)}
+.critLvl.lv-nd{background:rgba(125,143,167,.12);color:#c2cfdf;border-color:rgba(125,143,167,.3)}
+@media(max-width:1100px){.critGrid{grid-template-columns:1fr}.critRight{position:static}}
 
 /* AMFE tipo planilla */
 .amfeToolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
@@ -290,6 +329,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 
 <div class="tabBar">
   <button class="tabBtn sel" data-tab="mapa">🗺️ Mapa</button>
+  <button class="tabBtn" data-tab="criticidad">📊 Criticidad</button>
   <button class="tabBtn" data-tab="confiabilidad">🔧 Fiabilidad</button>
   <button class="tabBtn" data-tab="amfe">⚠️ AMFE</button>
   <button class="tabBtn" data-tab="plancontrol">🗒️ Plan de Control</button>
@@ -381,6 +421,30 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
     <div id="aiDiagResult" class="rec neutral" style="margin-top:8px;display:none"></div>
   </div>
 </aside>
+</div>
+</div>
+
+<div class="tabPanel" data-tab-panel="criticidad">
+<div class="critGrid">
+  <div>
+    <div class="critBar"><h2>Criterios</h2><button id="critNewBtn" class="primary">➕ Nuevo criterio</button></div>
+    <div id="critCards"></div>
+  </div>
+  <section class="panel critRight">
+    <div class="ph"><div><h2>Matriz de criticidad</h2><small>Puntaje = suma de los criterios · el nivel sale de los umbrales</small></div></div>
+    <div class="critFilters" id="critFilters">
+      <label><input type="radio" name="critFilter" value="todos" checked> Todos los equipos</label>
+      <label><input type="radio" name="critFilter" value="seleccionados"> Equipos seleccionados</label>
+      <label><input type="radio" name="critFilter" value="actual"> Equipo actual</label>
+    </div>
+    <div class="critThr">Nivel por puntaje:
+      <label>Alta desde <input id="critThrAlta" type="number" min="0" step="1"></label>
+      <label>Media desde <input id="critThrMedia" type="number" min="0" step="1"></label>
+      <label>Baja desde <input id="critThrBaja" type="number" min="0" step="1"></label>
+      <span>· Muy baja: menos que Baja</span>
+    </div>
+    <div class="critScroll"><table id="critMatrix"><thead id="critMatrixHead"></thead><tbody id="critMatrixBody"></tbody></table></div>
+  </section>
 </div>
 </div>
 
@@ -606,19 +670,19 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 <script>
 const BASE_META = {
   // ── Fraccionamiento ──
-  "T-1200": {name:"Torre de fraccionamiento de propano T-1200", displayName:"T-1200", family:"Columna de fraccionamiento", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, fallas:0, type:"Columna de fraccionamiento · Criticidad Alta", components:["Cuerpo / bandejas","Rehervidor","Condensador","Sistema de reflujo","Instrumentación"]},
-  "T-1300": {name:"Torre de fraccionamiento de butano T-1300", displayName:"T-1300", family:"Columna de fraccionamiento", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, fallas:0, type:"Columna de fraccionamiento · Criticidad Alta", components:["Cuerpo / bandejas","Rehervidor","Condensador","Sistema de reflujo","Instrumentación"]},
-  "V-270": {name:"Acumulador de propano V-270", displayName:"V-270", family:"Recipiente a presión", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, fallas:0, type:"Recipiente a presión · Criticidad Alta", components:["Cuerpo","Boquillas","Válvula de seguridad","Indicador de nivel"]},
-  "V-280": {name:"Acumulador de butano V-280", displayName:"V-280", family:"Recipiente a presión", sector:"Fraccionamiento", crit:"Alta", sap:"Sí", orders:0, fallas:0, type:"Recipiente a presión · Criticidad Alta", components:["Cuerpo","Boquillas","Válvula de seguridad","Indicador de nivel"]},
-  "E-505": {name:"Intercambiador fondo debutanizadora E-505", displayName:"E-505", family:"Intercambiador de calor", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:0, fallas:0, type:"Intercambiador de calor · Criticidad Media", components:["Haz de tubos","Carcasa","Cabezal","Instrumentación"]},
-  "E-515": {name:"Intercambiador fondo deetanizadora E-515", displayName:"E-515", family:"Intercambiador de calor", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:0, fallas:0, type:"Intercambiador de calor · Criticidad Media", components:["Haz de tubos","Carcasa","Cabezal","Instrumentación"]},
-  "AC-725": {name:"Aeroventilador de propano AC-725", displayName:"AC-725", family:"Aeroenfriador", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:25, fallas:8, type:"Aeroenfriador · Criticidad Media", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
-  "AC-720": {name:"Aeroenfriador de proceso AC-720", displayName:"AC-720", family:"Aeroenfriador", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:15, fallas:5, type:"Aeroenfriador · Criticidad Media", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
-  "AC-745": {name:"Aeroenfriador de proceso AC-745", displayName:"AC-745", family:"Aeroenfriador", sector:"Fraccionamiento", crit:"Media", sap:"Sí", orders:9, fallas:1, type:"Aeroenfriador · Criticidad Media", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
+  "T-1200": {name:"Torre de fraccionamiento de propano T-1200", displayName:"T-1200", family:"Columna de fraccionamiento", sector:"Fraccionamiento", sap:"No", orders:0, fallas:0, type:"Columna de fraccionamiento", components:["Cuerpo / bandejas","Rehervidor","Condensador","Sistema de reflujo","Instrumentación"]},
+  "T-1300": {name:"Torre de fraccionamiento de butano T-1300", displayName:"T-1300", family:"Columna de fraccionamiento", sector:"Fraccionamiento", sap:"No", orders:0, fallas:0, type:"Columna de fraccionamiento", components:["Cuerpo / bandejas","Rehervidor","Condensador","Sistema de reflujo","Instrumentación"]},
+  "V-270": {name:"Acumulador de propano V-270", displayName:"V-270", family:"Recipiente a presión", sector:"Fraccionamiento", sap:"No", orders:0, fallas:0, type:"Recipiente a presión", components:["Cuerpo","Boquillas","Válvula de seguridad","Indicador de nivel"]},
+  "V-280": {name:"Acumulador de butano V-280", displayName:"V-280", family:"Recipiente a presión", sector:"Fraccionamiento", sap:"No", orders:0, fallas:0, type:"Recipiente a presión", components:["Cuerpo","Boquillas","Válvula de seguridad","Indicador de nivel"]},
+  "E-505": {name:"Intercambiador fondo debutanizadora E-505", displayName:"E-505", family:"Intercambiador de calor", sector:"Fraccionamiento", sap:"No", orders:0, fallas:0, type:"Intercambiador de calor", components:["Haz de tubos","Carcasa","Cabezal","Instrumentación"]},
+  "E-515": {name:"Intercambiador fondo deetanizadora E-515", displayName:"E-515", family:"Intercambiador de calor", sector:"Fraccionamiento", sap:"No", orders:0, fallas:0, type:"Intercambiador de calor", components:["Haz de tubos","Carcasa","Cabezal","Instrumentación"]},
+  "AC-725": {name:"Aeroventilador de propano AC-725", displayName:"AC-725", family:"Aeroenfriador", sector:"Fraccionamiento", sap:"Sí", orders:25, fallas:8, type:"Aeroenfriador", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
+  "AC-720": {name:"Aeroenfriador de proceso AC-720", displayName:"AC-720", family:"Aeroenfriador", sector:"Fraccionamiento", sap:"Sí", orders:15, fallas:5, type:"Aeroenfriador", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
+  "AC-745": {name:"Aeroenfriador de proceso AC-745", displayName:"AC-745", family:"Aeroenfriador", sector:"Fraccionamiento", sap:"Sí", orders:9, fallas:1, type:"Aeroenfriador", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Acople","Correas","Ventilador"]},
   // ── Despacho ──
-  "P-80A": {name:"Bomba de cargadero de propano P-80A", displayName:"P-80A", family:"Bomba centrífuga vertical", sector:"Despacho", crit:"Alta", sap:"Sí", orders:16, fallas:6, type:"Bomba de cargadero · Criticidad Alta", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]},
-  "P-80B": {name:"Bomba de cargadero de propano P-80B", displayName:"P-80B", family:"Bomba centrífuga vertical", sector:"Despacho", crit:"Baja", sap:"Sí", orders:6, fallas:3, type:"Bomba de cargadero · Criticidad Baja", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]},
-  "P-80C": {name:"Bomba de cargadero de propano P-80C", displayName:"P-80C", family:"Bomba centrífuga vertical", sector:"Despacho", crit:"Baja", sap:"Sí", orders:0, fallas:0, type:"Bomba de cargadero · Criticidad Baja", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]}
+  "P-80A": {name:"Bomba de cargadero de propano P-80A", displayName:"P-80A", family:"Bomba centrífuga vertical", sector:"Despacho", sap:"Sí", orders:16, fallas:6, type:"Bomba de cargadero", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]},
+  "P-80B": {name:"Bomba de cargadero de propano P-80B", displayName:"P-80B", family:"Bomba centrífuga vertical", sector:"Despacho", sap:"Sí", orders:6, fallas:3, type:"Bomba de cargadero", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]},
+  "P-80C": {name:"Bomba de cargadero de propano P-80C", displayName:"P-80C", family:"Bomba centrífuga vertical", sector:"Despacho", sap:"No", orders:0, fallas:0, type:"Bomba de cargadero", components:["Motor eléctrico","Rodamiento LA","Rodamiento LOA","Sello mecánico","Acople","Cuerpo de bomba"]}
 };
 // TBF (horas de operación entre fallas) del historial real del TP, por modo dominante del AMFE.
 const TBF_SEED = {
@@ -732,6 +796,57 @@ const PLAN_CONTROL = [
    metodoControl:"Instrumentos del sello codificados en SAP PM con plan asociado; registro y seguimiento de la condición",
    planReaccion:"Sacar de servicio la bomba ante fuga, caída del nivel de aceite o alarma de presión de sello; intervenir el sello, registrar la intervención y verificar la condición posterior"}
 ];
+// Criticidad: criterios de la matriz de prioridad del TP (R03, 4.1.1) y puntajes por equipo (4.1.2).
+// Calidad queda vacía donde el TP usa 4 o 2: esos valores no existen en la escala 5/3/1 de ese criterio.
+// CRIT_SEED_VERSION: subir al cambiar este seed, para que loadCrit() descarte lo guardado en localStorage.
+const CRIT_SEED_VERSION = 1;
+const CRIT_SEED = {
+  criteria:[
+    {id:"uso", title:"USO", rows:[
+      {p:5, ref:">80% → uso continuo durante todo el turno"},
+      {p:3, ref:"50–80% → uso intermitente"},
+      {p:1, ref:"<50% → no todos los turnos, o posee equipos paralelos/reserva"}]},
+    {id:"seguridad", title:"SEGURIDAD", rows:[
+      {p:5, ref:"Daños graves a operarios/planta; lesiones severas o muerte"},
+      {p:3, ref:"Daños moderados"},
+      {p:1, ref:"Daño leve"}]},
+    {id:"ambiente", title:"MEDIO AMBIENTE", rows:[
+      {p:5, ref:"Gran contaminación o riesgo por encima de admisibles"},
+      {p:3, ref:"Contaminación considerable o residuos/emisiones a controlar"},
+      {p:1, ref:"Impacto bajo o controlado"}]},
+    {id:"alternativa", title:"INSTALACIÓN ALTERNATIVA", rows:[
+      {p:5, ref:"Sin resguardo ni alternativa; sin recurso externo"},
+      {p:4, ref:"Sin resguardo, pero se puede adquirir recurso externo"},
+      {p:2, ref:"Posee otra máquina/equipo de resguardo"},
+      {p:1, ref:"Equipo duplicado"}]},
+    {id:"calidad", title:"CALIDAD DEL PRODUCTO FINAL", rows:[
+      {p:5, ref:"Decisiva: afecta funcionalidad/especificación/seguridad del producto"},
+      {p:3, ref:"Afecta pero dentro de tolerancias"},
+      {p:1, ref:"Nula"}]},
+    {id:"influencia", title:"INFLUENCIA SOBRE EL RESTO DE LA PLANTA", rows:[
+      {p:5, ref:"Imprescindible; afecta todo el proceso"},
+      {p:4, ref:"Condiciona de forma importante; se continúa por tiempo limitado"},
+      {p:2, ref:"Condiciona parcialmente; margen considerable"},
+      {p:1, ref:"Nula; sólo condiciona al propio equipo"}]}
+  ],
+  thresholds:{alta:25, media:20, baja:15},
+  scores:{
+    "T-1200":{uso:5,seguridad:5,ambiente:5,alternativa:5,calidad:5,influencia:5},
+    "T-1300":{uso:5,seguridad:5,ambiente:5,alternativa:5,calidad:5,influencia:5},
+    "V-270": {uso:5,seguridad:5,ambiente:5,alternativa:5,influencia:4},
+    "V-280": {uso:5,seguridad:5,ambiente:5,alternativa:5,influencia:4},
+    "E-505": {uso:5,seguridad:3,ambiente:3,alternativa:5,influencia:4},
+    "E-515": {uso:5,seguridad:3,ambiente:3,alternativa:5,influencia:4},
+    "AC-725":{uso:5,seguridad:3,ambiente:3,alternativa:5,influencia:4},
+    "AC-720":{uso:5,seguridad:3,ambiente:3,alternativa:5,influencia:4},
+    "AC-745":{uso:5,seguridad:3,ambiente:3,alternativa:5,influencia:4},
+    "P-80A": {uso:3,seguridad:5,ambiente:5,alternativa:2,influencia:4},
+    "P-80B": {uso:1,seguridad:5,ambiente:5,alternativa:2,influencia:2},
+    "P-80C": {uso:1,seguridad:5,ambiente:5,alternativa:2,influencia:2}
+  }
+};
+let CRIT = {criteria:[], thresholds:{}, scores:{}, sap:{}};
+let CRIT_UI = {filter:"todos", checked:new Set()};
 let META = {};
 let CUSTOM = [];
 let data = [];
@@ -809,6 +924,80 @@ function loadAmfe(){
 function saveAmfe(){
   try{ localStorage.setItem("cv13amfe", JSON.stringify(AMFE)); }catch(e){}
 }
+function loadCrit(){
+  let st = null;
+  try{
+    const raw = JSON.parse(localStorage.getItem("cv13crit") || "null");
+    if(raw && raw.version >= CRIT_SEED_VERSION && Array.isArray(raw.criteria)) st = raw;
+  }catch(e){}
+  CRIT = st
+    ? {criteria:st.criteria, thresholds:st.thresholds || {...CRIT_SEED.thresholds}, scores:st.scores || {}, sap:st.sap || {}}
+    : {criteria:JSON.parse(JSON.stringify(CRIT_SEED.criteria)), thresholds:{...CRIT_SEED.thresholds}, scores:JSON.parse(JSON.stringify(CRIT_SEED.scores)), sap:{}};
+  applyCritToMeta();
+  saveCrit();
+}
+function saveCrit(){
+  try{ localStorage.setItem("cv13crit", JSON.stringify({version:CRIT_SEED_VERSION, ...CRIT})); }catch(e){}
+}
+function critTotal(eq){
+  const sc = CRIT.scores[eq] || {};
+  let sum = 0, complete = CRIT.criteria.length > 0;
+  CRIT.criteria.forEach(c=>{
+    const v = sc[c.id];
+    if(v===undefined || v===null || v==="" || !Number.isFinite(Number(v))) complete = false; else sum += Number(v);
+  });
+  return {sum, complete};
+}
+function critLevel(eq){
+  const {sum, complete} = critTotal(eq);
+  if(!complete) return "";
+  const t = CRIT.thresholds;
+  return sum>=t.alta ? "Alta" : sum>=t.media ? "Media" : sum>=t.baja ? "Baja" : "Muy baja";
+}
+function applyCritToMeta(){
+  Object.keys(META).forEach(id=>{ META[id].crit = critLevel(id); if(CRIT.sap[id]) META[id].sap = CRIT.sap[id]; });
+}
+function critLvlClass(l){ return l==="Alta" ? "lv-alta" : l==="Media" ? "lv-media" : l==="Baja" ? "lv-baja" : l==="Muy baja" ? "lv-muybaja" : "lv-nd"; }
+function refreshCritViews(){ renderLegend(); renderPlant(); renderSide(); renderShareAlert(); }
+function critEquipos(){
+  const ids = Object.keys(META);
+  if(CRIT_UI.filter==="seleccionados") return ids.filter(id=>CRIT_UI.checked.has(id));
+  if(CRIT_UI.filter==="actual") return ids.filter(id=>id===selectedEq);
+  return ids;
+}
+function renderCritCards(){
+  document.getElementById("critCards").innerHTML = CRIT.criteria.map(c=>`<section class="panel cp critCard" data-cid="${escHtml(c.id)}">
+    <div class="critHead"><input class="critTitle" type="text" value="${escHtml(c.title)}" aria-label="Título del criterio"><button class="danger critDelCard" title="Eliminar criterio">🗑</button></div>
+    <table class="critTbl"><thead><tr><th>Ponderación</th><th>Referencia</th><th></th></tr></thead><tbody>
+    ${c.rows.map((r,i)=>`<tr data-ri="${i}"><td class="cP"><input class="critP" type="number" step="1" min="0" value="${escHtml(r.p)}"></td><td><input class="critRef" type="text" value="${escHtml(r.ref)}"></td><td><button class="danger critDelRow" title="Eliminar fila">✕</button></td></tr>`).join("")}
+    </tbody></table><button class="critAddRow">➕ Fila</button></section>`).join("")
+    || `<div class="rec neutral">No hay criterios. Creá uno con "Nuevo criterio".</div>`;
+}
+function renderCritMatrix(){
+  const head = document.getElementById("critMatrixHead"), body = document.getElementById("critMatrixBody");
+  head.innerHTML = `<tr><th>Equipo</th>${CRIT.criteria.map(c=>`<th>${escHtml(c.title)}</th>`).join("")}<th>Puntaje</th><th>Nivel</th><th>Historial SAP</th></tr>`;
+  const ids = critEquipos();
+  if(!ids.length){
+    body.innerHTML = `<tr><td colspan="${CRIT.criteria.length+4}">${CRIT_UI.filter==="seleccionados" ? "Tildá al menos un equipo para verlo acá." : "No hay equipos."}</td></tr>`;
+    return;
+  }
+  body.innerHTML = ids.map(id=>{
+    const m = META[id], sc = CRIT.scores[id] || {}, {sum, complete} = critTotal(id), lvl = critLevel(id);
+    const sapOpts = (m.sap!=="Sí" && m.sap!=="No" ? `<option value="" selected>—</option>` : "") + `<option value="Sí"${m.sap==="Sí"?" selected":""}>Sí</option><option value="No"${m.sap==="No"?" selected":""}>No</option>`;
+    return `<tr data-eq="${escHtml(id)}" class="${id===selectedEq?"sel":""}">
+      <td><div class="critEq"><input type="checkbox" class="critChk" ${CRIT_UI.checked.has(id)?"checked":""} aria-label="Seleccionar ${escHtml(id)}"><div><b>${escHtml(m.displayName||id)}</b><small>${escHtml(m.name||"")}</small></div></div></td>
+      ${CRIT.criteria.map(c=>`<td><input class="critScore" type="number" step="1" min="0" data-cid="${escHtml(c.id)}" value="${sc[c.id]===undefined?"":escHtml(sc[c.id])}"></td>`).join("")}
+      <td class="critTotal">${complete?sum:"—"}</td><td><span class="critLvl ${critLvlClass(lvl)}">${lvl||"—"}</span></td>
+      <td><select class="critSap">${sapOpts}</select></td></tr>`;
+  }).join("");
+}
+function renderCriticidad(){
+  renderCritCards();
+  renderCritMatrix();
+  const t = CRIT.thresholds;
+  [["critThrAlta","alta"],["critThrMedia","media"],["critThrBaja","baja"]].forEach(([id,k])=>{ document.getElementById(id).value = t[k]; });
+  document.querySelectorAll('input[name="critFilter"]').forEach(r=>{ r.checked = r.value===CRIT_UI.filter; });
+}
 function rand(seed){ const x = Math.sin(seed) * 10000; return x - Math.floor(x); }
 function addSeries(arr, eq, comp, tech, param, unit, base, slope, noise, source, n=24, stepH=72){
   const start = new Date("2026-07-15T08:00:00");
@@ -872,7 +1061,7 @@ function demoData(){
   return arr;
 }
 function resetApp(){
-  cloneMeta(); loadCustom(); loadImported(); loadReliability(); loadAmfe();
+  cloneMeta(); loadCustom(); loadImported(); loadReliability(); loadAmfe(); loadCrit();
   data = demoData().concat(IMPORTED);
   selectedEq = "P-80A"; selectedComp = "Rodamiento LA"; selectedSeriesKey = "Vibración|Vibración RMS";
 }
@@ -914,7 +1103,7 @@ function eqStatus(eq){
   if(h===null) return "nodata";
   return h < 70 ? "bad" : h < 86 ? "warn" : "ok";
 }
-function critColor(crit){ return crit==="Alta" ? "#ff5d6c" : crit==="Media" ? "#f2c94c" : crit==="Baja" ? "#35d07f" : "#7d8fa7"; }
+function critColor(crit){ return crit==="Alta" ? "#ff5d6c" : crit==="Media" ? "#f2c94c" : crit==="Baja" ? "#35d07f" : crit==="Muy baja" ? "#4fb3ff" : "#7d8fa7"; }
 function prettyStatus(s){ return s==="bad" ? "Crítico" : s==="warn" ? "Atención" : s==="nodata" ? "Sin datos" : "Normal"; }
 function fmt(r){ return `${r.value.toFixed(r.unit==="bar"||r.unit==="A" ? 2 : 1)} ${r.unit}`; }
 function availableSeries(){
@@ -1025,7 +1214,7 @@ function renderSide(){
   const meta = META[selectedEq] || {name:selectedEq, family:"Equipo", sector:"-", sap:"-", orders:0, type:"Equipo importado"};
   const h = health(selectedEq), s = eqStatus(selectedEq);
   document.getElementById("eqTitle").textContent = meta.name;
-  document.getElementById("eqType").textContent = meta.type;
+  document.getElementById("eqType").textContent = meta.type + (meta.crit ? " · Criticidad " + meta.crit : "");
   document.getElementById("health").innerHTML = h===null ? '— <small>sin datos</small>' : `${h} <small>/100</small>`;
   const badge = document.getElementById("badge");
   badge.textContent = prettyStatus(s).toUpperCase();
@@ -1535,7 +1724,7 @@ function renderHistory(){
 function renderLegend(){
   const box = document.getElementById("mapLegend");
   box.innerHTML = mapView==="criticidad"
-    ? '<span><i class="dot bad"></i>Alta</span><span><i class="dot warn"></i>Media</span><span><i class="dot ok"></i>Baja</span><span><i class="dot nodata"></i>Sin definir</span>'
+    ? '<span><i class="dot bad"></i>Alta</span><span><i class="dot warn"></i>Media</span><span><i class="dot ok"></i>Baja</span><span><i class="dot" style="background:#4fb3ff"></i>Muy baja</span><span><i class="dot nodata"></i>Sin definir</span>'
     : '<span><i class="dot ok"></i>Normal</span><span><i class="dot warn"></i>Atención</span><span><i class="dot bad"></i>Crítico</span><span><i class="dot nodata"></i>Sin datos</span>';
 }
 function selectEquipo(id){
@@ -1553,7 +1742,7 @@ function renderEqSelect(){
   if(sel.innerHTML !== html) sel.innerHTML = html;
   sel.value = selectedEq;
 }
-function render(){ ensureSelection(); renderLegend(); renderPlant(); renderSide(); draw(); renderReliability(); renderSystemReliability(); renderAmfe(); renderPlanControl(); updateFilterBtn(); updatePlanFilterBtn(); renderEqSelect(); renderShareAlert(); document.getElementById("aiDiagResult").style.display="none"; renderHistory(); }
+function render(){ ensureSelection(); renderLegend(); renderPlant(); renderSide(); draw(); renderReliability(); renderSystemReliability(); renderAmfe(); renderPlanControl(); renderCriticidad(); updateFilterBtn(); updatePlanFilterBtn(); renderEqSelect(); renderShareAlert(); document.getElementById("aiDiagResult").style.display="none"; renderHistory(); }
 function paretoData(){
   return Object.keys(META)
     .map(id => ({id, name: META[id].displayName || id, fallas: META[id].fallas || 0}))
@@ -1736,6 +1925,7 @@ document.getElementById("resetBtn").onclick = ()=>{
   localStorage.removeItem("cv12custom");
   localStorage.removeItem("cv12imported");
   localStorage.removeItem("cv13amfe");
+  localStorage.removeItem("cv13crit");
   resetApp(); render(); toast("Demo restaurada");
 };
 document.getElementById("toggleMapView").onclick = ()=>{
@@ -1877,6 +2067,81 @@ const wWrap=document.getElementById("weibullCanvasWrap");wWrap.addEventListener(
 wWrap.addEventListener("mousedown",e=>{if(WEIBULL_UI.zoom<=1)return;WEIBULL_UI.isPanning=true;WEIBULL_UI.panStartX=e.clientX;WEIBULL_UI.panStartY=e.clientY;WEIBULL_UI.panOriginX=WEIBULL_UI.panX;WEIBULL_UI.panOriginY=WEIBULL_UI.panY;wWrap.style.cursor="grabbing";});
 window.addEventListener("mousemove",e=>{if(!WEIBULL_UI.isPanning)return;const dx=e.clientX-WEIBULL_UI.panStartX,dy=e.clientY-WEIBULL_UI.panStartY;WEIBULL_UI.panX=WEIBULL_UI.panOriginX+dx;WEIBULL_UI.panY=WEIBULL_UI.panOriginY+dy;clampWeibullPan();applyWeibullTransform();});
 window.addEventListener("mouseup",()=>{if(WEIBULL_UI.isPanning){WEIBULL_UI.isPanning=false;wWrap.style.cursor="";}});
+
+// Criticidad: edición de criterios (izquierda) y matriz general (derecha).
+const critCardsEl = document.getElementById("critCards");
+function critFind(el){ const card = el.closest(".critCard"); return card ? CRIT.criteria.find(c=>c.id===card.dataset.cid) : null; }
+critCardsEl.addEventListener("change", e=>{
+  const c = critFind(e.target); if(!c) return;
+  const tr = e.target.closest("tr");
+  if(e.target.classList.contains("critTitle")){
+    c.title = e.target.value.trim() || c.title; e.target.value = c.title; renderCritMatrix();
+  }else if(e.target.classList.contains("critP")){
+    c.rows[+tr.dataset.ri].p = e.target.value==="" ? "" : Number(e.target.value);
+  }else if(e.target.classList.contains("critRef")){
+    c.rows[+tr.dataset.ri].ref = e.target.value;
+  }else return;
+  saveCrit();
+});
+critCardsEl.addEventListener("click", e=>{
+  const c = critFind(e.target); if(!c) return;
+  if(e.target.closest(".critAddRow")){
+    c.rows.push({p:"", ref:""});
+  }else if(e.target.closest(".critDelRow")){
+    c.rows.splice(+e.target.closest("tr").dataset.ri, 1);
+  }else if(e.target.closest(".critDelCard")){
+    if(!confirm(`¿Eliminar el criterio “${c.title}”? Se pierden también los puntajes cargados en la matriz.`)) return;
+    CRIT.criteria = CRIT.criteria.filter(x=>x!==c);
+    Object.values(CRIT.scores).forEach(s=>{ delete s[c.id]; });
+  }else return;
+  saveCrit(); renderCritCards(); renderCritMatrix(); applyCritToMeta(); refreshCritViews();
+});
+document.getElementById("critNewBtn").onclick = ()=>{
+  let n = 1; while(CRIT.criteria.some(c=>c.id==="crit"+n)) n++;
+  CRIT.criteria.push({id:"crit"+n, title:"NUEVO CRITERIO", rows:[{p:"", ref:""}]});
+  saveCrit(); renderCritCards(); renderCritMatrix(); applyCritToMeta(); refreshCritViews();
+  const last = critCardsEl.querySelector(".critCard:last-child .critTitle");
+  if(last){ last.scrollIntoView({block:"center"}); last.focus(); last.select(); }
+};
+function updateCritRow(tr, id){
+  const {sum, complete} = critTotal(id), lvl = critLevel(id);
+  tr.querySelector(".critTotal").textContent = complete ? sum : "—";
+  const b = tr.querySelector(".critLvl"); b.textContent = lvl || "—"; b.className = "critLvl " + critLvlClass(lvl);
+}
+document.getElementById("critMatrixBody").addEventListener("change", e=>{
+  const tr = e.target.closest("tr"); if(!tr) return;
+  const id = tr.dataset.eq;
+  if(e.target.classList.contains("critChk")){
+    if(e.target.checked) CRIT_UI.checked.add(id); else CRIT_UI.checked.delete(id);
+    if(CRIT_UI.filter==="seleccionados") renderCritMatrix();
+    return;
+  }
+  if(e.target.classList.contains("critScore")){
+    (CRIT.scores[id] = CRIT.scores[id] || {})[e.target.dataset.cid] = e.target.value==="" ? "" : Number(e.target.value);
+    updateCritRow(tr, id);
+  }else if(e.target.classList.contains("critSap")){
+    if(!e.target.value) return;
+    CRIT.sap[id] = e.target.value; META[id].sap = e.target.value;
+  }else return;
+  saveCrit(); applyCritToMeta(); refreshCritViews();
+});
+["critThrAlta","critThrMedia","critThrBaja"].forEach(id=>{
+  document.getElementById(id).onchange = ()=>{
+    const a = Number(document.getElementById("critThrAlta").value), m = Number(document.getElementById("critThrMedia").value), b = Number(document.getElementById("critThrBaja").value);
+    if(![a,m,b].every(Number.isFinite) || !(a>m && m>b && b>=0)){
+      toast("Los umbrales deben cumplir Alta > Media > Baja ≥ 0");
+      const t = CRIT.thresholds;
+      document.getElementById("critThrAlta").value = t.alta; document.getElementById("critThrMedia").value = t.media; document.getElementById("critThrBaja").value = t.baja;
+      return;
+    }
+    CRIT.thresholds = {alta:a, media:m, baja:b};
+    saveCrit(); applyCritToMeta(); renderCritMatrix(); refreshCritViews();
+  };
+});
+document.getElementById("critFilters").addEventListener("change", e=>{
+  if(e.target.name!=="critFilter") return;
+  CRIT_UI.filter = e.target.value; renderCritMatrix();
+});
 
 window.addEventListener("resize", ()=>{ draw(); renderReliability(); });
 
