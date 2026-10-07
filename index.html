@@ -163,12 +163,18 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 .wPtAdd label{flex:1}
 .wPtAdd button{white-space:nowrap;font-size:12px;padding:7px 10px}
 .wPtScroll{flex:1 1 0;min-height:0;overflow-y:auto;border:1px solid var(--line);border-radius:11px}
-.wPtScroll th{position:sticky;top:0;background:#0d1b2d}
+.wPtScroll th{position:sticky;top:0;background:#0d1b2d;white-space:normal}
+.wPtScroll td{padding:6px 8px}
+.wSort{cursor:pointer;user-select:none}.wSort.asc::after{content:" ▲"}.wSort.desc::after{content:" ▼"}
+.wDate{width:100%;min-width:130px;padding:4px 6px;font-size:12px}
+.wDel{padding:3px 7px;font-size:12px}
+.wMission{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.wMission input{width:90px;padding:6px 8px;font-size:13px}
 .weibullSideInner .kpis{margin-top:0;flex:0 0 auto}
 @media(max-width:1100px){.weibullSide{min-height:760px}}
 /* Fiabilidad: tipografía +2 px (solo esta pestaña) */
-[data-tab-panel="confiabilidad"] .ph h2{font-size:16px}
-[data-tab-panel="confiabilidad"] .ph small{font-size:12px}
+#reliabPanel>.ph{padding:12px 16px}
+[data-tab-panel="confiabilidad"] .ph h2{font-size:18px}
 [data-tab-panel="confiabilidad"] .ct{font-size:14px}
 [data-tab-panel="confiabilidad"] .legend{font-size:11px}
 [data-tab-panel="confiabilidad"] .card b{font-size:12px}
@@ -381,7 +387,8 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 <div class="tabPanel" data-tab-panel="confiabilidad">
 <div class="panel" id="reliabPanel">
   <div class="ph">
-    <div><h2>Fiabilidad (Weibull)</h2><small id="reliabSub">Tiempo entre fallas (TBF, horas de operación) · rango mediano de Bernard</small></div>
+    <h2>Fiabilidad (Weibull)</h2>
+    <label class="wMission">Tiempo de misión <input id="wMissionT" type="number" min="1" step="1" value="2000"> h</label>
   </div>
   <div class="side" id="reliabBody">
     <div class="charts2">
@@ -400,24 +407,28 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
         <section class="panel cp weibullTablePanel">
           <h3 class="ct">Fallas del equipo</h3>
           <div class="wCfg">
-            <label>Inicio de la medición<input id="wStart" type="datetime-local"></label>
+            <label>Inicio de la medición<input id="wStart" type="text" placeholder="dd/mm/aaaa hh:mm" maxlength="16"></label>
             <label>Turnos por día<select id="wTurnos"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
             <label>Horas por turno<input id="wHorasTurno" type="number" min="0.5" max="24" step="0.1"></label>
           </div>
           <div class="wCfgNote" id="wHorasDia"></div>
           <div class="wPtAdd">
-            <label>Fecha y hora de la falla<input id="wAddDate" type="datetime-local"></label>
+            <label>Fecha y hora de la falla<input id="wAddDate" type="text" placeholder="dd/mm/aaaa hh:mm" maxlength="16"></label>
             <button id="wAddBtn" class="primary">➕ Agregar falla</button>
           </div>
           <div class="wPtScroll"><table>
-            <thead><tr><th>N°</th><th>Fecha y hora de falla</th><th>TBF [días]</th><th>TBF [h op.]</th><th>F(t) [%]</th></tr></thead>
+            <thead id="weibullPointHead"><tr>
+              <th class="wSort" data-sort="n">N°</th><th class="wSort" data-sort="date">Fecha y hora de falla</th>
+              <th class="wSort" data-sort="tbfDias">TBF [días]</th><th class="wSort" data-sort="t">TBF [h op.]</th>
+              <th class="wSort" data-sort="i">Orden de falla (i)</th><th class="wSort" data-sort="f">F(t) [%]</th><th></th>
+            </tr></thead>
             <tbody id="weibullPointBody"></tbody>
           </table></div>
         </section>
         <div class="kpis" id="reliabKpis">
           <div class="card kpi"><b>β (forma)</b><div class="v" id="rBeta">—</div><div class="t" id="rBetaNote"></div></div>
           <div class="card kpi"><b>η (escala)</b><div class="v" id="rEta">—</div><div class="t">h</div></div>
-          <div class="card kpi"><b>MTBF</b><div class="v" id="rMtbf">—</div><div class="t">h · η·Γ(1+1/β)</div></div>
+          <div class="card kpi"><b>R(t)</b><div class="v" id="rRt">—</div><div class="t" id="rRtNote"></div></div>
         </div>
       </div></div>
     </div>
@@ -1132,8 +1143,8 @@ const wIso=ms=>new Date(Math.round(ms/60000)*60000).toISOString().slice(0,16);
 const weibullHorasDia=st=>st.turnos*st.horas;
 function defaultWeibullState(eq){
   const s=WEIBULL_DATES_SEED[eq];
-  return s?{start:s.start,turnos:s.turnos,horas:s.horas,failures:[...s.failures],custom:false}
-          :{start:"",turnos:3,horas:8,failures:[],custom:false};
+  return s?{start:s.start,turnos:s.turnos,horas:s.horas,failures:[...s.failures]}
+          :{start:"",turnos:3,horas:8,failures:[]};
 }
 function ensureWeibullState(eq){if(!WEIBULL_POINTS[eq])WEIBULL_POINTS[eq]=defaultWeibullState(eq);return WEIBULL_POINTS[eq];}
 function weibullPointsOf(eq){
@@ -1141,20 +1152,31 @@ function weibullPointsOf(eq){
   const k=weibullHorasDia(st)/24;let prev=wMs(st.start);
   const rows=[...st.failures].sort().map((d,i)=>{const cur=wMs(d),calH=(cur-prev)/3600000;prev=cur;return {date:d,tbfDias:calH/24,t:calH*k,idx:i};});
   const byT=[...rows].sort((a,b)=>a.t-b.t||a.idx-b.idx),n=byT.length;
-  byT.forEach((r,i)=>r.f=(i+1-0.3)/(n+0.4));
+  byT.forEach((r,k)=>{r.i=k+1;r.f=(r.i-0.3)/(n+0.4);});
   return rows;
+}
+function parseWDate(s){
+  const m=/^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?\s*$/.exec(s||"");
+  if(!m)return null;
+  const d=+m[1],mo=+m[2],y=+m[3],h=m[4]===undefined?0:+m[4],mi=m[4]===undefined?0:+m[5];
+  if(h>23||mi>59)return null;
+  const dt=new Date(Date.UTC(y,mo-1,d,h,mi));
+  if(dt.getUTCFullYear()!==y||dt.getUTCMonth()!==mo-1||dt.getUTCDate()!==d)return null;
+  const p=(v,n=2)=>String(v).padStart(n,"0");
+  return `${p(y,4)}-${p(mo)}-${p(d)}T${p(h)}:${p(mi)}`;
 }
 function fitForEq(eq){return weibullFitPoints(weibullPointsOf(eq));}
 function resetWeibullPoints(eq=selectedEq){WEIBULL_POINTS[eq]=defaultWeibullState(eq);resetWeibullView();}
-function renderReliabKpis(fit,seed){
-  if(!fit){["rBeta","rEta","rMtbf"].forEach(id=>document.getElementById(id).textContent="—");document.getElementById("rBetaNote").textContent="";document.getElementById("reliabSub").textContent="Tiempo entre fallas (TBF, horas de operación) · rango mediano de Bernard";return;}
-  const {beta,eta,mtbf,n}=fit;document.getElementById("rBeta").textContent=beta.toFixed(2);document.getElementById("rEta").textContent=eta.toFixed(1);document.getElementById("rMtbf").textContent=mtbf.toFixed(1);
-  document.getElementById("rBetaNote").textContent=beta<0.95?"mortalidad infantil":beta<=1.15?"tasa constante":"desgaste";
-  const manual=ensureWeibullState(selectedEq).custom,base=seed?`${seed.mode} · modo dominante (${seed.share})`:"Puntos manuales";
-  document.getElementById("reliabSub").textContent=`${base} · ${n} puntos${manual?" · edición manual activa":""}`;
+function renderReliabKpis(fit){
+  const set=(id,v)=>{document.getElementById(id).textContent=v;};
+  if(!fit){["rBeta","rEta","rRt"].forEach(id=>set(id,"—"));set("rBetaNote","");set("rRtNote","");return;}
+  const {beta,eta}=fit;
+  set("rBeta",beta.toFixed(2));set("rEta",eta.toFixed(1));
+  set("rBetaNote",beta<0.95?"mortalidad infantil":beta<=1.15?"tasa constante":"desgaste");
+  set("rRt",`${(weibullR(mapMissionT,beta,eta)*100).toFixed(1).replace(".",",")}%`);set("rRtNote",`t = ${mapMissionT} h`);
 }
 function weibullPlotGeometry(points,eta,w,h){
-  const ML=58,MR=34,MT=92,MB=58,PW=w-ML-MR,PH=h-MT-MB,ll=v=>Math.log(-Math.log(1-v)),fMin=.01,fMax=.999,yBot=ll(fMin),yTop=ll(fMax);
+  const ML=58,MR=34,MT=92,MB=68,PW=w-ML-MR,PH=h-MT-MB,ll=v=>Math.log(-Math.log(1-v)),fMin=.01,fMax=.999,yBot=ll(fMin),yTop=ll(fMax);
   const tVals=points.length?points.map(p=>p.t):[10,1000];let logMin=Math.floor(Math.log10(Math.max(.0001,Math.min(...tVals)))),logMax=Math.ceil(Math.log10(Math.max(...tVals)));
   if(Number.isFinite(eta)&&eta>0){logMin=Math.min(logMin,Math.floor(Math.log10(eta)));logMax=Math.max(logMax,Math.ceil(Math.log10(eta)));}if(logMax-logMin<2)logMax=logMin+2;
   const xFromT=t=>ML+(Math.log10(t)-logMin)/(logMax-logMin)*PW,yFromF=f=>MT+(yTop-ll(Math.min(fMax,Math.max(fMin,f))))/(yTop-yBot)*PH;
@@ -1190,6 +1212,9 @@ function drawWeibull(fit){
     const xEta=xFromT(eta),yEta=yFromF(.6321);ctx.strokeStyle="#7fd0ff";ctx.lineWidth=1.1;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(xEta,yEta);ctx.lineTo(xEta,MT+PH);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="#7fd0ff";ctx.beginPath();ctx.arc(xEta,yEta,4,0,Math.PI*2);ctx.fill();
     const betaEnd=fanEnd(beta);ctx.strokeStyle="#ff9f43";ctx.lineWidth=2.6;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(bx0,by0);ctx.lineTo(betaEnd.x,betaEnd.y);ctx.stroke();
     ctx.restore();
+    ctx.fillStyle="#7fd0ff";ctx.font="bold 12px Segoe UI";ctx.textAlign="center";ctx.textBaseline="alphabetic";
+    const etaTxt=`η=${eta.toFixed(1)} h`,etaHalf=ctx.measureText(etaTxt).width/2;
+    ctx.fillText(etaTxt,Math.min(ML+PW-etaHalf,Math.max(ML+etaHalf,xEta)),MT+PH+36);
     ctx.fillStyle="#ffb56b";ctx.font="bold 12px Segoe UI";
     if(betaEnd.edge==="top"){ctx.textAlign="center";ctx.textBaseline="bottom";ctx.fillText(`β=${beta.toFixed(2)}`,betaEnd.x,MT-24);}
     else{ctx.textAlign="left";ctx.textBaseline="middle";ctx.fillText(`β=${beta.toFixed(2)}`,ML+PW+7,betaEnd.y);}
@@ -1208,14 +1233,17 @@ function rLabelFor(eq, t){
   return `R=${(r*100).toFixed(1).replace(".",",")}%`;
 }
 function fmtWDate(s){const m=/^(\d{4})-(\d\d)-(\d\d)T(\d\d:\d\d)/.exec(s);return m?`${m[3]}/${m[2]}/${m[1]} ${m[4]}`:s;}
+let WEIBULL_SORT={key:"n",dir:1};
 function updateWeibullPointList(){
   const st=ensureWeibullState(selectedEq),body=document.getElementById("weibullPointBody");if(!body)return;
-  const pts=weibullPointsOf(selectedEq);
+  const {key,dir}=WEIBULL_SORT;
+  const pts=weibullPointsOf(selectedEq).map((p,k)=>({...p,n:k+1})).sort((a,b)=>(a[key]<b[key]?-1:a[key]>b[key]?1:0)*dir||a.n-b.n);
   body.innerHTML=pts.length
-    ? pts.map((p,i)=>`<tr><td>${i+1}</td><td>${fmtWDate(p.date)}</td><td>${p.tbfDias.toFixed(1)}</td><td>${p.t.toFixed(1)}</td><td>${(p.f*100).toFixed(1)}</td></tr>`).join("")
-    : `<tr><td colspan="5">${st.start?"Sin fallas. Agregá una fecha de falla arriba.":"Definí el inicio de la medición y agregá las fechas de falla."}</td></tr>`;
+    ? pts.map(p=>`<tr><td>${p.n}</td><td><input class="wDate" type="text" maxlength="16" value="${fmtWDate(p.date)}" data-date="${p.date}" aria-label="Fecha y hora de la falla ${p.n}"></td><td>${p.tbfDias.toFixed(1)}</td><td>${p.t.toFixed(1)}</td><td>${p.i}</td><td>${(p.f*100).toFixed(1)}</td><td><button class="wDel danger" data-date="${p.date}" title="Eliminar falla" aria-label="Eliminar falla ${p.n}">🗑</button></td></tr>`).join("")
+    : `<tr><td colspan="7">${st.start?"Sin fallas. Agregá una fecha de falla arriba.":"Definí el inicio de la medición y agregá las fechas de falla."}</td></tr>`;
+  document.querySelectorAll("#weibullPointHead .wSort").forEach(th=>{th.classList.toggle("asc",th.dataset.sort===key&&dir>0);th.classList.toggle("desc",th.dataset.sort===key&&dir<0);});
   const setV=(id,v)=>{const el=document.getElementById(id);if(el&&el.value!==String(v))el.value=v;};
-  setV("wStart",st.start);setV("wTurnos",st.turnos);setV("wHorasTurno",st.horas);
+  setV("wStart",st.start?fmtWDate(st.start):"");setV("wTurnos",st.turnos);setV("wHorasTurno",st.horas);
   const hd=document.getElementById("wHorasDia");if(hd)hd.textContent=`= ${+weibullHorasDia(st).toFixed(2)} h de operación por día`;
 }
 function resetWeibullView(){WEIBULL_UI.zoom=1;WEIBULL_UI.panX=0;WEIBULL_UI.panY=0;WEIBULL_UI.isPanning=false;applyWeibullTransform();}
@@ -1324,10 +1352,9 @@ function renderSystemReliability(){
   result.innerHTML = `<div style="font-size:22px;font-weight:850">${(rSys*100).toFixed(2)}%</div><div style="margin-top:6px">${topFormula}</div><div class="sub" style="margin-top:4px">Grupos combinados en: ${SYS_TOPCONFIG==="serie"?"Serie":"Paralelo"} · t = ${t} h</div>`;
 }
 function renderReliability(){
-  const seed = RELIAB[selectedEq];
   ensureWeibullState(selectedEq);
   const fit = currentFit();
-  renderReliabKpis(fit, seed);
+  renderReliabKpis(fit);
   drawWeibull(fit);
 }
 function amfeActionFor(eq, comp){
@@ -1717,11 +1744,14 @@ document.getElementById("toggleMapView").onclick = ()=>{
   render();
 };
 document.getElementById("eqSelect").onchange = (e)=> selectEquipo(e.target.value);
-document.getElementById("mapMissionT").oninput = ()=>{
-  mapMissionT = Math.max(1, Number(document.getElementById("mapMissionT").value) || 2000);
+function setMissionT(v){
+  mapMissionT = Math.max(1, Number(v) || 2000);
+  ["mapMissionT","wMissionT"].forEach(id=>{ const el=document.getElementById(id); if(el!==document.activeElement) el.value=mapMissionT; });
   renderPlant();
   renderSystemReliability();
-};
+  renderReliabKpis(currentFit());
+}
+["mapMissionT","wMissionT"].forEach(id=>{ const el=document.getElementById(id); el.oninput=()=>setMissionT(el.value); });
 document.getElementById("sysAddGroup").onclick = ()=>{
   SYS_GROUPS.push({name:`Grupo ${SYS_GROUPS.length+1}`, config:"serie", elements:[{type:"weibull", eq:null, manualR:0.9}]});
   renderSystemReliability();
@@ -1797,29 +1827,52 @@ document.getElementById("aiDiagBtn").onclick = async ()=>{
 // Interacción del papel de Weibull: zoom/arrastre, mejor ajuste, y carga de fallas por fecha + turnos.
 document.getElementById("wChkLine").onchange=()=>drawWeibull(currentFit());document.getElementById("wChkBestFit").onchange=()=>drawWeibull(currentFit());
 document.getElementById("wRestoreEq").onclick=()=>{resetWeibullPoints(selectedEq);renderReliability();renderSystemReliability();};
-document.getElementById("wClearPts").onclick=()=>{const st=ensureWeibullState(selectedEq);st.failures=[];st.custom=true;renderReliability();renderSystemReliability();};
+document.getElementById("wClearPts").onclick=()=>{ensureWeibullState(selectedEq).failures=[];renderReliability();renderSystemReliability();};
 function weibullRevert(msg){toast(msg);updateWeibullPointList();}
+const W_DATE_HINT="Fecha inválida. Usá dd/mm/aaaa hh:mm";
 function addWeibullFailure(){
-  const st=ensureWeibullState(selectedEq),inp=document.getElementById("wAddDate"),v=inp.value;
+  const st=ensureWeibullState(selectedEq),inp=document.getElementById("wAddDate"),v=parseWDate(inp.value);
   if(!st.start){toast("Definí primero la fecha de inicio de la medición");return;}
-  if(!v){toast("Ingresá la fecha y hora de la falla");return;}
+  if(!v){toast(inp.value.trim()?W_DATE_HINT:"Ingresá la fecha y hora de la falla");return;}
   if(v<=st.start){toast("La falla debe ser posterior al inicio de la medición");return;}
   if(st.failures.includes(v)){toast("Ya existe una falla con esa fecha y hora");return;}
-  st.failures.push(v);st.custom=true;inp.value="";renderReliability();renderSystemReliability();
+  st.failures.push(v);inp.value="";renderReliability();renderSystemReliability();
 }
 document.getElementById("wAddBtn").onclick=addWeibullFailure;
 document.getElementById("wAddDate").addEventListener("keydown",e=>{if(e.key==="Enter")addWeibullFailure();});
 document.getElementById("wStart").onchange=()=>{
-  const st=ensureWeibullState(selectedEq),v=document.getElementById("wStart").value;
-  if(!v||st.failures.some(d=>d<=v)){weibullRevert("El inicio debe ser anterior a todas las fallas");return;}
-  st.start=v;st.custom=true;renderReliability();renderSystemReliability();
+  const st=ensureWeibullState(selectedEq),v=parseWDate(document.getElementById("wStart").value);
+  if(!v){weibullRevert(W_DATE_HINT);return;}
+  if(st.failures.some(d=>d<=v)){weibullRevert("El inicio debe ser anterior a todas las fallas");return;}
+  st.start=v;renderReliability();renderSystemReliability();
 };
 function setWeibullShifts(){
   const st=ensureWeibullState(selectedEq),tn=Number(document.getElementById("wTurnos").value),hr=Number(document.getElementById("wHorasTurno").value);
   if(!(tn>=1&&tn<=3)||!(hr>0)||tn*hr>24){weibullRevert("Turnos entre 1 y 3, horas por turno mayor a 0 y máximo 24 h de operación por día");return;}
-  st.turnos=tn;st.horas=hr;st.custom=true;renderReliability();renderSystemReliability();
+  st.turnos=tn;st.horas=hr;renderReliability();renderSystemReliability();
 }
 document.getElementById("wTurnos").onchange=setWeibullShifts;document.getElementById("wHorasTurno").onchange=setWeibullShifts;
+document.getElementById("weibullPointHead").addEventListener("click",e=>{
+  const th=e.target.closest("[data-sort]");if(!th)return;
+  const k=th.dataset.sort;WEIBULL_SORT=WEIBULL_SORT.key===k?{key:k,dir:-WEIBULL_SORT.dir}:{key:k,dir:1};
+  updateWeibullPointList();
+});
+const wBody=document.getElementById("weibullPointBody");
+wBody.addEventListener("click",e=>{
+  const b=e.target.closest(".wDel");if(!b)return;
+  const st=ensureWeibullState(selectedEq),ix=st.failures.indexOf(b.dataset.date);if(ix<0)return;
+  if(!confirm(`¿Eliminar la falla del ${fmtWDate(b.dataset.date)}?`))return;
+  st.failures.splice(ix,1);renderReliability();renderSystemReliability();
+});
+wBody.addEventListener("change",e=>{
+  const inp=e.target.closest(".wDate");if(!inp)return;
+  const st=ensureWeibullState(selectedEq),old=inp.dataset.date,nv=parseWDate(inp.value);
+  if(!nv){weibullRevert(W_DATE_HINT);return;}
+  if(nv<=st.start){weibullRevert("La falla debe ser posterior al inicio de la medición");return;}
+  if(nv!==old&&st.failures.includes(nv)){weibullRevert("Ya existe una falla con esa fecha y hora");return;}
+  const ix=st.failures.indexOf(old);if(ix<0)return;
+  st.failures[ix]=nv;renderReliability();renderSystemReliability();
+});
 const wWrap=document.getElementById("weibullCanvasWrap");wWrap.addEventListener("wheel",e=>{e.preventDefault();const rect=wWrap.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top,old=WEIBULL_UI.zoom,next=Math.min(4,Math.max(1,old*(e.deltaY<0?1.15:1/1.15)));WEIBULL_UI.panX=mx-(mx-WEIBULL_UI.panX)*next/old;WEIBULL_UI.panY=my-(my-WEIBULL_UI.panY)*next/old;WEIBULL_UI.zoom=next;clampWeibullPan();applyWeibullTransform();},{passive:false});
 wWrap.addEventListener("mousedown",e=>{if(WEIBULL_UI.zoom<=1)return;WEIBULL_UI.isPanning=true;WEIBULL_UI.panStartX=e.clientX;WEIBULL_UI.panStartY=e.clientY;WEIBULL_UI.panOriginX=WEIBULL_UI.panX;WEIBULL_UI.panOriginY=WEIBULL_UI.panY;wWrap.style.cursor="grabbing";});
 window.addEventListener("mousemove",e=>{if(!WEIBULL_UI.isPanning)return;const dx=e.clientX-WEIBULL_UI.panStartX,dy=e.clientY-WEIBULL_UI.panStartY;WEIBULL_UI.panX=WEIBULL_UI.panOriginX+dx;WEIBULL_UI.panY=WEIBULL_UI.panOriginY+dy;clampWeibullPan();applyWeibullTransform();});
