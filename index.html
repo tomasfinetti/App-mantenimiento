@@ -148,9 +148,20 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 .weibullControls button{padding:6px 9px;border:1px solid #35679d;border-radius:8px;background:#163559;color:#fff;cursor:pointer;font-size:10px;font-weight:700}
 .weibullControls button:hover{background:#1d4675}.weibullControls button.active{background:#b53a32;border-color:#e56f63}
 .weibullControls label{font-size:10px;color:#e6f1ff;display:flex;align-items:center;gap:4px;cursor:pointer}
-#weibullInfo,#weibullPointList,#weibullZoomInfo{font-size:10px;color:#a9c3e6;line-height:1.4}
+#weibullInfo,#weibullZoomInfo{font-size:10px;color:#a9c3e6;line-height:1.4}
 #weibullCanvasWrap{height:600px;overflow:hidden;position:relative;background:#0b1f36;border:1px solid #2f5b8a;border-radius:11px;cursor:crosshair}
-#weibullZoomInfo{display:flex;gap:8px;align-items:center;margin-top:6px}#weibullZoomLevel{min-width:35px;color:#eef6ff;font-weight:800}#weibullPointList{margin-top:5px;min-height:14px}
+#weibullZoomInfo{display:flex;gap:8px;align-items:center;margin-top:6px}#weibullZoomLevel{min-width:35px;color:#eef6ff;font-weight:800}
+/* Columna derecha de Fiabilidad: tabla de puntos (con scroll) + KPIs, de la misma altura que la sección Weibull */
+.weibullSide{position:relative;min-height:460px}
+.weibullSideInner{position:absolute;inset:0;display:flex;flex-direction:column;gap:14px}
+.weibullTablePanel{flex:1 1 0;min-height:0;display:flex;flex-direction:column}
+.wPtAdd{display:flex;gap:6px;margin-bottom:8px}
+.wPtAdd input{flex:1;min-width:0;padding:7px 9px;font-size:11px}
+.wPtAdd button{white-space:nowrap;font-size:10px;padding:7px 9px}
+.wPtScroll{flex:1 1 0;min-height:0;overflow-y:auto;border:1px solid var(--line);border-radius:11px}
+.wPtScroll th{position:sticky;top:0;background:#0d1b2d}
+.weibullSideInner .kpis{margin-top:0;flex:0 0 auto}
+@media(max-width:1100px){.weibullSide{min-height:640px}}
 
 /* AMFE tipo planilla */
 .amfeToolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
@@ -364,23 +375,33 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
         <h3 class="ct">Weibull</h3>
         <div class="weibullControls" id="weibullControls">
           <button id="wBtnDraw" class="active">✏️ Dibujar</button><button id="wBtnErase">🗑 Borrar</button>
-          <button id="wZoomIn">🔍+</button><button id="wZoomOut">🔍−</button><button id="wResetZoom">⟳ Reset zoom</button>
           <label><input type="checkbox" id="wChkLine"> Unir con línea</label><label><input type="checkbox" id="wChkBestFit" checked> Mejor ajuste</label>
-          <button id="wRestoreEq">↩ Restaurar equipo</button><button id="wClearPts">Limpiar puntos</button><button id="wCopyPts">📋 Copiar puntos</button>
+          <button id="wRestoreEq">↩ Restaurar equipo</button><button id="wClearPts">Limpiar puntos</button>
         </div>
         <div id="weibullInfo">Hacé clic en el gráfico para agregar puntos · los puntos del equipo se cargan automáticamente.</div>
         <div id="weibullCanvasWrap"><canvas id="weibullLineChart" role="img" aria-label="Papel de probabilidad de Weibull interactivo"></canvas></div>
         <div id="weibullZoomInfo"><span id="weibullZoomLevel">100%</span><span>· Con zoom activo, arrastrá para mover el gráfico.</span></div>
-        <div id="weibullPointList"></div><div class="legend" id="weibullLineLegend"></div>
+        <div class="legend" id="weibullLineLegend"></div>
       </section>
-      <div>
-        <section class="panel cp"><h3 class="ct">Curva de fiabilidad R(t)</h3><canvas id="weibullRChart"></canvas><div class="legend" id="weibullRLegend"></div></section>
-        <div class="kpis" id="reliabKpis" style="margin-top:14px">
+      <div class="weibullSide"><div class="weibullSideInner">
+        <section class="panel cp weibullTablePanel">
+          <h3 class="ct">Puntos de Weibull</h3>
+          <div class="wPtAdd">
+            <input id="wAddT" type="number" min="0" step="any" placeholder="t (h)">
+            <input id="wAddF" type="number" min="1" max="99.9" step="any" placeholder="F(t) %">
+            <button id="wAddBtn" class="primary">➕ Agregar punto</button>
+          </div>
+          <div class="wPtScroll"><table>
+            <thead><tr><th>N°</th><th>t [h]</th><th>F(t) [%]</th></tr></thead>
+            <tbody id="weibullPointBody"></tbody>
+          </table></div>
+        </section>
+        <div class="kpis" id="reliabKpis">
           <div class="card kpi"><b>β (forma)</b><div class="v" id="rBeta">—</div><div class="t" id="rBetaNote"></div></div>
           <div class="card kpi"><b>η (escala)</b><div class="v" id="rEta">—</div><div class="t">h</div></div>
           <div class="card kpi"><b>MTBF</b><div class="v" id="rMtbf">—</div><div class="t">h · η·Γ(1+1/β)</div></div>
         </div>
-      </div>
+      </div></div>
     </div>
   </div>
 </div>
@@ -1105,7 +1126,7 @@ function weibullPlotGeometry(points,eta,w,h){
   return {ML,MR,MT,MB,PW,PH,ll,fMin,fMax,yBot,yTop,logMin,logMax,xFromT,yFromF,tFromX,fFromY,w,h};
 }
 function drawWeibull(fit){
-  const paper=setupCanvasHeight("weibullLineChart",600),rcanvas=setupCanvas("weibullRChart"),st=ensureWeibullState(selectedEq),points=st.points,eta=fit?.eta||NaN,beta=fit?.beta||NaN;
+  const paper=setupCanvasHeight("weibullLineChart",600),st=ensureWeibullState(selectedEq),points=st.points,eta=fit?.eta||NaN,beta=fit?.beta||NaN;
   const g=weibullPlotGeometry(points,eta,paper.w,paper.h);WEIBULL_PLOT=g;const {ctx,w,h}=paper,{ML,MT,PW,PH,logMin,logMax,xFromT,yFromF}=g;
   ctx.fillStyle="#0b1f36";ctx.fillRect(0,0,w,h);ctx.strokeStyle="#d7e8f8";ctx.lineWidth=1;ctx.strokeRect(ML,MT,PW,PH);
   ctx.save();ctx.beginPath();ctx.rect(ML,MT,PW,PH);ctx.clip();ctx.strokeStyle="rgba(122,220,154,.38)";ctx.lineWidth=.65;
@@ -1140,10 +1161,8 @@ function drawWeibull(fit){
     ctx.fillStyle="#eef6ff";ctx.font="bold 11px Segoe UI";ctx.textAlign="left";ctx.textBaseline="alphabetic";ctx.fillText(`β=${beta.toFixed(2)}  η=${eta.toFixed(1)} h`,ML+5,MT+18);
   }
   points.forEach(p=>{const x=xFromT(p.t),y=yFromF(p.f);ctx.fillStyle="#ff704f";ctx.strokeStyle="#ffd1c7";ctx.lineWidth=.8;ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();ctx.stroke();});
-  ctx.fillStyle="#eef6ff";ctx.font="10px Segoe UI";ctx.textAlign="right";ctx.textBaseline="middle";const fLabels=[[.01,"1"],[.02,"2"],[.03,"3"],[.05,"5"],[.10,"10"],[.20,"20"],[.30,"30"],[.40,"40"],[.50,"50"],[.60,"60"],[.70,"70"],[.80,"80"],[.90,"90"],[.95,"95"],[.99,"99"]];fLabels.forEach(([f,l])=>ctx.fillText(l,ML-6,yFromF(f)));ctx.save();ctx.translate(15,MT+PH/2);ctx.rotate(-Math.PI/2);ctx.font="bold 11px Segoe UI";ctx.textAlign="center";ctx.fillText("No fiabilidad, F(t) %",0,0);ctx.restore();ctx.textAlign="center";ctx.textBaseline="alphabetic";ctx.font="bold 10px Segoe UI";for(let d=logMin;d<=logMax;d++){const t=Math.pow(10,d);ctx.fillText(t.toLocaleString("es-AR"),xFromT(t),MT+PH+18);}ctx.font="bold 11px Segoe UI";ctx.fillText("Tiempo, t (h)",ML+PW/2,h-7);ctx.textAlign="left";ctx.fillStyle="#7fd0ff";ctx.fillText("η",ML+PW+3,yFromF(.6321)+4);
+  ctx.fillStyle="#eef6ff";ctx.font="10px Segoe UI";ctx.textAlign="right";ctx.textBaseline="middle";const fLabels=[[.01,"1"],[.02,"2"],[.03,"3"],[.05,"5"],[.10,"10"],[.20,"20"],[.30,"30"],[.40,"40"],[.50,"50"],[.60,"60"],[.70,"70"],[.80,"80"],[.90,"90"],[.95,"95"],[.99,"99"]];fLabels.forEach(([f,l])=>ctx.fillText(l,ML-6,yFromF(f)));ctx.save();ctx.translate(15,MT+PH/2);ctx.rotate(-Math.PI/2);ctx.font="bold 11px Segoe UI";ctx.textAlign="center";ctx.fillText("Infiabilidad, F(t) %",0,0);ctx.restore();ctx.textAlign="center";ctx.textBaseline="alphabetic";ctx.font="bold 10px Segoe UI";for(let d=logMin;d<=logMax;d++){const t=Math.pow(10,d);ctx.fillText(t.toLocaleString("es-AR"),xFromT(t),MT+PH+18);}ctx.font="bold 11px Segoe UI";ctx.fillText("Tiempo, t (h)",ML+PW/2,h-7);ctx.textAlign="left";ctx.fillStyle="#7fd0ff";ctx.fillText("η",ML+PW+3,yFromF(.6321)+4);
   const fitTxt=fit?` · β=${fit.beta.toFixed(2)} · η=${fit.eta.toFixed(1)} h · R²=${fit.r2.toFixed(3)}`:"";document.getElementById("weibullLineLegend").textContent=`${points.length} puntos · clic para agregar · recta azul = mejor ajuste · rayo naranja = β calculado${fitTxt}`;updateWeibullPointList();applyWeibullTransform();
-  if(!fit){rcanvas.ctx.fillStyle="#0b1f36";rcanvas.ctx.fillRect(0,0,rcanvas.w,rcanvas.h);rcanvas.ctx.fillStyle="#8298b4";rcanvas.ctx.font="12px Segoe UI";rcanvas.ctx.fillText("Agregá al menos dos puntos válidos para obtener el ajuste",20,35);document.getElementById("weibullRLegend").textContent="";return;}
-  const tmax=Math.max(...points.map(p=>p.t))*1.3,b=rcanvas,bx=axes(b.ctx,b.w,b.h,0,1,"R(t)"),txTo=t=>bx.ml+bx.pw*(t/tmax);b.ctx.strokeStyle="#35d07f";b.ctx.lineWidth=2;b.ctx.beginPath();for(let i=0;i<=60;i++){const t=tmax*i/60,r=weibullR(t,beta,eta),x=txTo(t),y=bx.mt+bx.ph*(1-r);i?b.ctx.lineTo(x,y):b.ctx.moveTo(x,y);}b.ctx.stroke();b.ctx.strokeStyle="#8298b4";b.ctx.setLineDash([4,4]);b.ctx.beginPath();b.ctx.moveTo(txTo(eta),bx.mt);b.ctx.lineTo(txTo(eta),bx.mt+bx.ph);b.ctx.stroke();b.ctx.setLineDash([]);document.getElementById("weibullRLegend").textContent=`η = ${eta.toFixed(1)} h (t donde R(t) ≈ 36,8%)`;
 }
 function currentFit(){return fitForEq(selectedEq);}
 function rLabelFor(eq, t){
@@ -1153,7 +1172,13 @@ function rLabelFor(eq, t){
   if(!Number.isFinite(r)) return "ND";
   return `R=${(r*100).toFixed(1).replace(".",",")}%`;
 }
-function updateWeibullPointList(){const el=document.getElementById("weibullPointList");if(!el)return;const pts=[...ensureWeibullState(selectedEq).points].sort((a,b)=>a.t-b.t);el.innerHTML=pts.length?`<b>Puntos:</b> ${pts.map((p,i)=>`#${i+1} t=${p.t.toFixed(1)} h, F=${(p.f*100).toFixed(1)}%`).join(" &nbsp;|&nbsp; ")}`:"Sin puntos. Usá Dibujar para agregarlos o Restaurar equipo para recuperar los TBF del activo.";}
+function updateWeibullPointList(){
+  const body=document.getElementById("weibullPointBody");if(!body)return;
+  const pts=[...ensureWeibullState(selectedEq).points].sort((a,b)=>a.t-b.t);
+  body.innerHTML=pts.length
+    ? pts.map((p,i)=>`<tr><td>${i+1}</td><td>${p.t.toFixed(1)}</td><td>${(p.f*100).toFixed(1)}</td></tr>`).join("")
+    : `<tr><td colspan="3">Sin puntos. Agregá uno arriba, usá Dibujar o Restaurar equipo.</td></tr>`;
+}
 function resetWeibullView(){WEIBULL_UI.zoom=1;WEIBULL_UI.panX=0;WEIBULL_UI.panY=0;WEIBULL_UI.isPanning=false;WEIBULL_UI.dragged=false;applyWeibullTransform();}
 function applyWeibullTransform(){const c=document.getElementById("weibullLineChart");if(!c)return;c.style.transform=`translate(${WEIBULL_UI.panX}px,${WEIBULL_UI.panY}px) scale(${WEIBULL_UI.zoom})`;const z=document.getElementById("weibullZoomLevel");if(z)z.textContent=Math.round(WEIBULL_UI.zoom*100)+"%";}
 function clampWeibullPan(){const wrap=document.getElementById("weibullCanvasWrap"),c=document.getElementById("weibullLineChart");if(!wrap||!c)return;const z=WEIBULL_UI.zoom;if(z<=1){WEIBULL_UI.panX=0;WEIBULL_UI.panY=0;return;}const minX=wrap.clientWidth-c.clientWidth*z,minY=wrap.clientHeight-c.clientHeight*z;WEIBULL_UI.panX=Math.min(0,Math.max(minX,WEIBULL_UI.panX));WEIBULL_UI.panY=Math.min(0,Math.max(minY,WEIBULL_UI.panY));}
@@ -1735,8 +1760,15 @@ document.getElementById("aiDiagBtn").onclick = async ()=>{
 function setWeibullMode(mode){WEIBULL_UI.mode=mode;document.getElementById("wBtnDraw")?.classList.toggle("active",mode==="draw");document.getElementById("wBtnErase")?.classList.toggle("active",mode==="erase");const wrap=document.getElementById("weibullCanvasWrap");if(wrap)wrap.style.cursor=mode==="draw"?"crosshair":"not-allowed";const info=document.getElementById("weibullInfo");if(info)info.textContent=mode==="draw"?"Hacé clic en el gráfico para agregar puntos · los puntos del equipo se cargan automáticamente.":"Hacé clic cerca de un punto para borrarlo.";}
 document.getElementById("wBtnDraw").onclick=()=>setWeibullMode("draw");document.getElementById("wBtnErase").onclick=()=>setWeibullMode("erase");document.getElementById("wChkLine").onchange=()=>drawWeibull(currentFit());document.getElementById("wChkBestFit").onchange=()=>drawWeibull(currentFit());
 document.getElementById("wRestoreEq").onclick=()=>{resetWeibullPoints(selectedEq);renderReliability();renderSystemReliability();};document.getElementById("wClearPts").onclick=()=>{WEIBULL_POINTS[selectedEq]={points:[],custom:true};renderReliability();renderSystemReliability();};
-document.getElementById("wCopyPts").onclick=()=>{const pts=ensureWeibullState(selectedEq).points;if(!pts.length){toast("No hay puntos para copiar.");return;}const txt=["N\tt [h]\tF(t)",...([...pts].sort((a,b)=>a.t-b.t).map((p,i)=>`${i+1}\t${p.t.toFixed(2)}\t${(p.f*100).toFixed(2)}%`))].join("\n");navigator.clipboard?.writeText(txt).then(()=>toast("Puntos Weibull copiados."));};
-document.getElementById("wZoomIn").onclick=()=>{WEIBULL_UI.zoom=Math.min(4,WEIBULL_UI.zoom*1.25);clampWeibullPan();applyWeibullTransform();};document.getElementById("wZoomOut").onclick=()=>{WEIBULL_UI.zoom=Math.max(1,WEIBULL_UI.zoom/1.25);clampWeibullPan();applyWeibullTransform();};document.getElementById("wResetZoom").onclick=resetWeibullView;
+function addWeibullPointFromTable(){
+  const tIn=document.getElementById("wAddT"),fIn=document.getElementById("wAddF");
+  const t=Number(tIn.value),fp=Number(fIn.value);
+  if(!Number.isFinite(t)||t<=0||!Number.isFinite(fp)||fp<1||fp>99.9){toast("Ingresá t > 0 y F(t) entre 1 y 99,9 %");return;}
+  const st=ensureWeibullState(selectedEq);st.points.push({t,f:fp/100});st.custom=true;
+  tIn.value="";fIn.value="";renderReliability();renderSystemReliability();
+}
+document.getElementById("wAddBtn").onclick=addWeibullPointFromTable;
+["wAddT","wAddF"].forEach(id=>document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")addWeibullPointFromTable();}));
 const wWrap=document.getElementById("weibullCanvasWrap");wWrap.addEventListener("wheel",e=>{e.preventDefault();const rect=wWrap.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top,old=WEIBULL_UI.zoom,next=Math.min(4,Math.max(1,old*(e.deltaY<0?1.15:1/1.15)));WEIBULL_UI.panX=mx-(mx-WEIBULL_UI.panX)*next/old;WEIBULL_UI.panY=my-(my-WEIBULL_UI.panY)*next/old;WEIBULL_UI.zoom=next;clampWeibullPan();applyWeibullTransform();},{passive:false});
 wWrap.addEventListener("mousedown",e=>{if(WEIBULL_UI.zoom<=1)return;WEIBULL_UI.isPanning=true;WEIBULL_UI.dragged=false;WEIBULL_UI.panStartX=e.clientX;WEIBULL_UI.panStartY=e.clientY;WEIBULL_UI.panOriginX=WEIBULL_UI.panX;WEIBULL_UI.panOriginY=WEIBULL_UI.panY;wWrap.style.cursor="grabbing";});
 window.addEventListener("mousemove",e=>{if(!WEIBULL_UI.isPanning)return;const dx=e.clientX-WEIBULL_UI.panStartX,dy=e.clientY-WEIBULL_UI.panStartY;if(Math.abs(dx)+Math.abs(dy)>3)WEIBULL_UI.dragged=true;WEIBULL_UI.panX=WEIBULL_UI.panOriginX+dx;WEIBULL_UI.panY=WEIBULL_UI.panOriginY+dy;clampWeibullPan();applyWeibullTransform();});
