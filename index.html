@@ -116,9 +116,6 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 .planWrap tr.sel td{background:#102840}
 .info{padding:13px 16px;font-size:10px;color:var(--muted);line-height:1.55}
 .info b{color:var(--text)}
-.sourceCards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
-.src{border:1px solid var(--line);border-radius:11px;padding:10px;background:#0b1828}
-.src b{display:block;color:var(--text);font-size:11px;margin-bottom:3px}
 
 .modalBack{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:20;align-items:center;justify-content:center;padding:20px}
 .modal{width:min(720px,95vw);max-height:90vh;overflow:auto;background:#0e1b2e;border:1px solid #314c70;border-radius:16px;box-shadow:var(--shadow)}
@@ -137,7 +134,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 
 @media(max-width:1100px){
   .grid,.mapGrid,.charts,.charts2,.bottom{grid-template-columns:1fr}
-  .kpis,.infoGrid,.formGrid,.sourceCards,.componentList{grid-template-columns:1fr}
+  .kpis,.infoGrid,.formGrid,.componentList{grid-template-columns:1fr}
 }
 
 /* Papel de probabilidad de Weibull interactivo, integrado al tablero. */
@@ -550,7 +547,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 <div class="tabPanel" data-tab-panel="historial">
 <div class="bottom">
   <section class="panel">
-    <div class="ph"><div><h2>Historial de condición</h2><small>Equipo → componente → técnica → parámetro</small></div></div>
+    <div class="ph"><div><h2>Historial de condición</h2><small id="histSub">Equipo → componente → técnica → parámetro</small></div></div>
     <div class="tableWrap">
       <table>
         <thead><tr><th>Fecha</th><th>Equipo</th><th>Componente</th><th>Técnica</th><th>Parámetro</th><th>Valor</th><th>Estado</th></tr></thead>
@@ -559,18 +556,11 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
     </div>
   </section>
   <section class="panel">
-    <div class="ph"><div><h2>Visión general</h2><small>Equipos críticos y su información de condición</small></div></div>
-    <div class="info">
-      <b>Este tablero reúne los equipos críticos del proceso.</b> La visualización permite identificar rápidamente el comportamiento de cada activo, sus componentes inspeccionados y la información asociada al mantenimiento.
-      <div class="sourceCards">
-        <div class="src"><b>T-1200 / T-1300</b>Torres de fraccionamiento (propano / butano) · Fraccionamiento</div>
-        <div class="src"><b>V-270 / V-280</b>Acumuladores de propano / butano · Fraccionamiento</div>
-        <div class="src"><b>E-505 / E-515</b>Intercambiadores de calor · Fraccionamiento</div>
-        <div class="src"><b>AC-725</b>Aeroventilador de propano · Fraccionamiento · 25 órdenes</div>
-        <div class="src"><b>AC-720 / AC-745</b>Aeroenfriadores de proceso · Fraccionamiento</div>
-        <div class="src"><b>P-80A / P-80B / P-80C</b>Bombas de cargadero de propano · Despacho</div>
-      </div>
+    <div class="ph">
+      <div><h2>Componentes</h2><small id="histCompSub"></small></div>
+      <button id="histClearBtn" class="metric">Quitar filtro</button>
     </div>
+    <div class="side"><div class="componentList" id="histComponents"></div></div>
   </section>
 </div>
 </div>
@@ -1711,16 +1701,35 @@ function renderShareAlert(){
       <a class="fileBtn" href="${mailHref}">✉️ Email</a>
     </div>`;
 }
+// Filtro por componente del Historial: propio de esta pestaña (no toca selectedComp) y se reinicia al cambiar de equipo.
+let HIST_FILTER = {eq:"", comps:new Set()};
+function histComps(eq){ return [...new Set([...(META[eq]?.components||[]), ...allEq(eq).map(r=>r.component)])]; }
 function renderHistory(){
   const tb = document.getElementById("history");
-  tb.innerHTML = "";
-  allEq(selectedEq).sort((a,b)=>b.timestamp-a.timestamp).slice(0,45).forEach(r=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${r.timestamp.toLocaleString("es-AR",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"})}</td>
-                    <td>${r.equipment}</td><td>${r.component}</td><td>${r.technique}</td><td>${r.parameter}</td><td>${fmt(r)}</td><td>${prettyStatus(rowStatus(r))}</td>`;
-    tb.appendChild(tr);
-  });
+  if(HIST_FILTER.eq!==selectedEq) HIST_FILTER = {eq:selectedEq, comps:new Set()};
+  const all = allEq(selectedEq).sort((a,b)=>b.timestamp-a.timestamp);
+  const comps = histComps(selectedEq), active = HIST_FILTER.comps;
+  const rows = active.size ? all.filter(r=>active.has(r.component)) : all;
+  tb.innerHTML = rows.length
+    ? rows.slice(0,45).map(r=>`<tr><td>${r.timestamp.toLocaleString("es-AR",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"})}</td>
+                    <td>${r.equipment}</td><td>${r.component}</td><td>${r.technique}</td><td>${r.parameter}</td><td>${fmt(r)}</td><td>${prettyStatus(rowStatus(r))}</td></tr>`).join("")
+    : `<tr><td colspan="7">${active.size ? "Sin registros para los componentes elegidos." : "Sin registros para este equipo."}</td></tr>`;
+  const nombre = META[selectedEq]?.displayName || selectedEq;
+  document.getElementById("histSub").textContent = `${nombre} · ${active.size ? [...active].join(", ") : "todos los componentes"} · ${Math.min(45,rows.length)} de ${rows.length} registros`;
+  document.getElementById("histCompSub").textContent = `${nombre} · ${active.size ? active.size+" elegido"+(active.size>1?"s":"") : "clic para filtrar el historial"}`;
+  document.getElementById("histClearBtn").style.display = active.size ? "" : "none";
+  document.getElementById("histComponents").innerHTML = comps.map(c=>{
+    const n = all.filter(r=>r.component===c).length;
+    return `<div class="comp${active.has(c)?" sel":""}" data-comp="${escHtml(c)}"><b>${escHtml(c)}</b><small>${n ? n+" registros" : "sin datos"}</small></div>`;
+  }).join("") || `<div class="sub">Este equipo no tiene componentes cargados.</div>`;
 }
+document.getElementById("histComponents").addEventListener("click", e=>{
+  const card = e.target.closest(".comp"); if(!card) return;
+  const k = card.dataset.comp;
+  if(HIST_FILTER.comps.has(k)) HIST_FILTER.comps.delete(k); else HIST_FILTER.comps.add(k);
+  renderHistory();
+});
+document.getElementById("histClearBtn").onclick = ()=>{ HIST_FILTER = {eq:selectedEq, comps:new Set()}; renderHistory(); };
 function renderLegend(){
   const box = document.getElementById("mapLegend");
   box.innerHTML = mapView==="criticidad"
