@@ -796,10 +796,10 @@ const PLAN_CONTROL = [
    metodoControl:"Instrumentos del sello codificados en SAP PM con plan asociado; registro y seguimiento de la condición",
    planReaccion:"Sacar de servicio la bomba ante fuga, caída del nivel de aceite o alarma de presión de sello; intervenir el sello, registrar la intervención y verificar la condición posterior"}
 ];
-// Criticidad: criterios de la matriz de prioridad del TP (R03, 4.1.1) y puntajes por equipo (4.1.2).
-// Calidad queda vacía donde el TP usa 4 o 2: esos valores no existen en la escala 5/3/1 de ese criterio.
+// Criticidad: criterios de la matriz de prioridad del TP (4.1.1) y puntajes por equipo de la planilla
+// "TP-Matriz de Prioridad-R01.xlsx" (12 equipos del mapa, todos los criterios completos y dentro de escala).
 // CRIT_SEED_VERSION: subir al cambiar este seed, para que loadCrit() descarte lo guardado en localStorage.
-const CRIT_SEED_VERSION = 1;
+const CRIT_SEED_VERSION = 2;
 const CRIT_SEED = {
   criteria:[
     {id:"uso", title:"USO", rows:[
@@ -833,16 +833,16 @@ const CRIT_SEED = {
   scores:{
     "T-1200":{uso:5,seguridad:5,ambiente:5,alternativa:5,calidad:5,influencia:5},
     "T-1300":{uso:5,seguridad:5,ambiente:5,alternativa:5,calidad:5,influencia:5},
-    "V-270": {uso:5,seguridad:5,ambiente:5,alternativa:5,influencia:4},
-    "V-280": {uso:5,seguridad:5,ambiente:5,alternativa:5,influencia:4},
-    "E-505": {uso:5,seguridad:3,ambiente:3,alternativa:5,influencia:4},
-    "E-515": {uso:5,seguridad:3,ambiente:3,alternativa:5,influencia:4},
-    "AC-725":{uso:5,seguridad:3,ambiente:3,alternativa:5,influencia:4},
-    "AC-720":{uso:5,seguridad:3,ambiente:3,alternativa:5,influencia:4},
-    "AC-745":{uso:5,seguridad:3,ambiente:3,alternativa:5,influencia:4},
-    "P-80A": {uso:3,seguridad:5,ambiente:5,alternativa:2,influencia:4},
-    "P-80B": {uso:1,seguridad:5,ambiente:5,alternativa:2,influencia:2},
-    "P-80C": {uso:1,seguridad:5,ambiente:5,alternativa:2,influencia:2}
+    "V-270": {uso:5,seguridad:5,ambiente:5,alternativa:5,calidad:3,influencia:4},
+    "V-280": {uso:5,seguridad:5,ambiente:5,alternativa:5,calidad:3,influencia:4},
+    "E-505": {uso:5,seguridad:3,ambiente:3,alternativa:5,calidad:3,influencia:4},
+    "E-515": {uso:5,seguridad:3,ambiente:3,alternativa:5,calidad:3,influencia:4},
+    "AC-725":{uso:5,seguridad:3,ambiente:3,alternativa:5,calidad:3,influencia:4},
+    "AC-720":{uso:5,seguridad:3,ambiente:3,alternativa:5,calidad:3,influencia:4},
+    "AC-745":{uso:5,seguridad:3,ambiente:3,alternativa:5,calidad:3,influencia:4},
+    "P-80A": {uso:3,seguridad:5,ambiente:5,alternativa:4,calidad:3,influencia:4},
+    "P-80B": {uso:1,seguridad:5,ambiente:5,alternativa:2,calidad:3,influencia:2},
+    "P-80C": {uso:1,seguridad:5,ambiente:5,alternativa:2,calidad:3,influencia:2}
   }
 };
 let CRIT = {criteria:[], thresholds:{}, scores:{}, sap:{}};
