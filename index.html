@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tablero de control Mantenimiento</title>
+<title>Sistema de Gestión de Mantenimiento</title>
 <style>
 :root{
   --bg:#08111e; --panel:#0f1b2d; --line:#28405f; --text:#edf4ff; --muted:#8ea4c1;
@@ -179,6 +179,41 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 [data-tab-panel="confiabilidad"] .kpi .t{font-size:11px}
 [data-tab-panel="confiabilidad"] table{font-size:12px}
 [data-tab-panel="confiabilidad"] th{font-size:11px}
+
+/* Estado de condición + tablero de comando */
+.conditionWord{font-size:26px;font-weight:850;margin-top:2px}
+.conditionExplain{font-size:10px;color:var(--muted);max-width:270px;line-height:1.4;margin-top:4px}
+.demoTag{display:inline-block;background:rgba(242,201,76,.15);color:#ffe39a;border:1px solid rgba(242,201,76,.4);border-radius:999px;padding:1px 7px;font-size:9px;font-weight:800;margin-left:4px;vertical-align:middle;white-space:nowrap}
+.demoNote{font-size:11px;color:var(--muted);margin-bottom:10px}
+.cmdStrategy{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px}
+.cmdStrategy>div{background:#0d1b2d;border:1px solid var(--line);border-radius:11px;padding:10px;font-size:12px;line-height:1.45}
+.cmdStrategy b{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.cmdGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.cmdGrid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cmdCard{background:#0d1b2d;border:1px solid #29496f;border-top:4px solid #7d8fa7;border-radius:14px;padding:13px;display:flex;flex-direction:column;gap:7px;min-width:0}
+.cmdCard.st-ok{border-top-color:var(--green)}.cmdCard.st-warn{border-top-color:var(--yellow)}.cmdCard.st-bad{border-top-color:var(--red)}.cmdCard.st-info{border-top-color:#4fb3ff}
+.cmdHead{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.cmdHead b{font-size:13px;line-height:1.3}
+.cmdOrigin{font-size:8px;font-weight:900;padding:2px 7px;border-radius:999px;white-space:nowrap;border:1px solid}
+.o-tp{color:#91efbc;border-color:rgba(53,208,127,.4);background:rgba(53,208,127,.1)}
+.o-demo{color:#ffe39a;border-color:rgba(242,201,76,.4);background:rgba(242,201,76,.1)}
+.o-nd{color:#c2cfdf;border-color:rgba(125,143,167,.4);background:rgba(125,143,167,.1)}
+.cmdFormula{font-size:10px;color:var(--muted);line-height:1.35}
+.cmdValue{font-size:28px;font-weight:900;letter-spacing:-.4px}
+.cmdState{font-size:11px;font-weight:800;color:var(--gray)}
+.st-ok .cmdState{color:var(--green)}.st-warn .cmdState{color:var(--yellow)}.st-bad .cmdState{color:var(--red)}.st-info .cmdState{color:#4fb3ff}
+.cmdLimit{font-size:12px;color:#e6f1ff;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.cmdLimit input{width:70px;padding:4px 6px;font-size:12px}
+.cmdDet{font-size:11px;color:#a9c3e6;line-height:1.45}
+.cmdAct{font-size:11px;line-height:1.45;background:#211d13;border:1px solid #665323;color:#ffe7a6;border-radius:9px;padding:8px}
+.cmdAct.info{background:#111c2a;border-color:#32465f;color:#b9c7d9}
+.cmdSpark{display:block;width:100%;height:60px;background:#0b1f36;border-radius:8px}
+.cmdSpark.nd{height:auto;padding:8px;font-size:10px;color:var(--muted)}
+.cmdTrend{font-size:11px;color:var(--muted)}.cmdTrend.good{color:var(--green)}.cmdTrend.worse{color:var(--red)}
+.cmdTbl{width:100%;font-size:11px}.cmdTbl th{font-size:9px;white-space:normal}.cmdTbl td,.cmdTbl th{padding:3px 4px}
+.cmdTbl input{width:100%;min-width:0;padding:3px 5px;font-size:11px}
+.cmdDelRow{padding:2px 6px;font-size:11px}.cmdAddRow{align-self:flex-start}
+@media(max-width:1100px){.cmdGrid,.cmdGrid.two,.cmdStrategy{grid-template-columns:1fr}}
 /* Criticidad: criterios (izquierda) + matriz general (derecha) */
 .critGrid{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:14px;align-items:start}
 .critBar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
@@ -307,8 +342,8 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
   <div class="brand">
     <div class="ypfLogo"><span>YPF</span></div>
     <div>
-      <h1>Tablero de control Mantenimiento</h1>
-      <div class="sub">YPF Midstream Gas · Monitoreo de condición de activos críticos</div>
+      <h1>Sistema de Gestión de Mantenimiento</h1>
+      <div class="sub">YPF Midstream Gas · Planta GLP-ELP · Gestión del mantenimiento de activos críticos</div>
     </div>
   </div>
   <div class="actions">
@@ -325,7 +360,8 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 </header>
 
 <div class="tabBar">
-  <button class="tabBtn sel" data-tab="mapa">🗺️ Mapa</button>
+  <button class="tabBtn sel" data-tab="comando">📊 Tablero de comando</button>
+  <button class="tabBtn" data-tab="mapa">🗺️ Mapa</button>
   <button class="tabBtn" data-tab="criticidad">📊 Criticidad</button>
   <button class="tabBtn" data-tab="confiabilidad">🔧 Fiabilidad</button>
   <button class="tabBtn" data-tab="amfe">⚠️ AMFE</button>
@@ -335,19 +371,28 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
   <button class="tabBtn" data-tab="condicion">📈 Condición</button>
 </div>
 
-<div class="tabPanel active" data-tab-panel="mapa">
+<div class="tabPanel active" data-tab-panel="comando">
+<section class="panel">
+  <div class="ph"><div><h2 id="cmdTitle">Tablero de comando</h2><small id="cmdSub"></small></div></div>
+  <div class="side">
+    <div class="cmdStrategy" id="cmdStrategy"></div>
+    <div class="sectionLabel">Fiabilidad y riesgo · equipo seleccionado</div>
+    <div class="cmdGrid" id="cmdEqCards"></div>
+    <div class="sectionLabel">Costos y mano de obra · gestión del servicio de mantenimiento (planta)</div>
+    <div class="sub" style="margin:0 0 10px">El TP no registra horas-hombre, costos ni horas de paro, por eso estos indicadores muestran «sin dato» hasta que se carguen. Cada indicador es un ratio: se carga numerador y denominador por período.</div>
+    <div class="cmdGrid two" id="cmdCostCards"></div>
+  </div>
+</section>
+</div>
+
+<div class="tabPanel" data-tab-panel="mapa">
 <div class="grid mapGrid">
 <div>
 <section class="panel">
   <div class="ph">
     <div><h2>Mapa general de planta</h2><small>Torres, aeroenfriadores, tanques y bombas</small></div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <button id="toggleMapView">🎯 Ver criticidad</button>
-      <div class="field" style="margin:0">
-        <label>Tiempo de misión t</label>
-        <input id="mapMissionT" type="number" min="1" step="1" value="2000" style="width:90px">
-        <small class="sub">horas de operación</small>
-      </div>
+      <button id="toggleMapView">🎯 Ver criticidad</button>
       <div class="legendRow" id="mapLegend">
         <span><i class="dot ok"></i>Normal</span>
         <span><i class="dot warn"></i>Atención</span>
@@ -359,31 +404,13 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
   <div class="plantWrap"><div class="plant"><svg id="plantSvg" width="1560" height="600" viewBox="0 0 1560 600"></svg></div></div>
 </section>
 
-<div class="panel" id="sysRelPanel" style="margin-top:14px">
-  <div class="ph">
-    <div><h2>Fiabilidad de sistemas (serie / paralelo)</h2><small>Sistema mixto por grupos — Unidad 2 · usa el t del mapa</small></div>
-  </div>
-  <div class="side" id="sysRelBody">
-    <div class="field" style="max-width:260px">
-      <label>Grupos en:</label>
-      <div style="display:flex;gap:8px">
-        <button id="sysTopSerie" class="metric sel">Serie</button>
-        <button id="sysTopParalelo" class="metric">Paralelo</button>
-      </div>
-    </div>
-    <div class="sectionLabel">Grupos</div>
-    <div id="sysGroups"></div>
-    <button id="sysAddGroup" style="margin-top:4px">+ Agregar grupo</button>
-    <div id="sysResult" class="rec neutral" style="margin-top:12px"></div>
-  </div>
-</div>
 </div>
 
 <aside class="panel">
   <div class="ph"><div><h2 id="eqTitle">Bomba cargadero propano islas 1/2 P-80A</h2><small id="eqType">Bomba de cargadero · Criticidad Alta</small></div></div>
   <div class="side">
     <div class="titleRow">
-      <div><div class="sub">Índice global de salud</div><div class="score" id="health">61 <small>/100</small></div></div>
+      <div><div class="sub">Estado de condición</div><div class="conditionWord" id="conditionSummary">—</div><div class="conditionExplain">Se toma el peor estado entre las últimas lecturas de cada variable monitoreada. No se usa un índice sintético: cada lectura se compara con sus límites. <span class="demoTag">DATOS DE DEMOSTRACIÓN</span></div></div>
       <div id="badge" class="badge red">CRÍTICO</div>
     </div>
 
@@ -547,7 +574,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 <div class="tabPanel" data-tab-panel="historial">
 <div class="bottom">
   <section class="panel">
-    <div class="ph"><div><h2>Historial de condición</h2><small id="histSub">Equipo → componente → técnica → parámetro</small></div></div>
+    <div class="ph"><div><h2>Historial de condición <span class="demoTag">DATOS DE DEMOSTRACIÓN</span></h2><small id="histSub">Equipo → componente → técnica → parámetro</small></div></div>
     <div class="tableWrap">
       <table>
         <thead><tr><th>Fecha</th><th>Equipo</th><th>Componente</th><th>Técnica</th><th>Parámetro</th><th>Valor</th><th>Estado</th></tr></thead>
@@ -581,6 +608,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 </div>
 
 <div class="tabPanel" data-tab-panel="condicion">
+<div class="demoNote"><span class="demoTag">DATOS DE DEMOSTRACIÓN</span> Series generadas para ilustrar el flujo de gestión por condición; no son mediciones de campo.</div>
 <div class="charts">
   <section class="panel cp"><h3 class="ct">Tendencia temporal</h3><canvas id="trendChart"></canvas><div class="legend" id="trendLegend"></div></section>
   <section class="panel cp"><h3 class="ct">Histograma</h3><canvas id="histChart"></canvas><div class="legend">Distribución de mediciones del punto seleccionado.</div></section>
@@ -846,16 +874,11 @@ let WEIBULL_POINTS = {};
 let WEIBULL_UI = {zoom:1,panX:0,panY:0,isPanning:false,panStartX:0,panStartY:0,panOriginX:0,panOriginY:0};
 let AMFE = {};
 let selectedEq = "P-80A";
-let SYS_TOPCONFIG = "serie";
-let SYS_GROUPS = [
-  {name:"Grupo 1", config:"serie", elements:[{type:"weibull", eq:"AC-725", manualR:0.9}]},
-  {name:"Grupo 2", config:"serie", elements:[{type:"weibull", eq:"P-80A", manualR:0.9}]}
-];
 let selectedComp = "Rodamiento LA";
 let selectedSeriesKey = "Vibración|Vibración RMS";
 let mapView = "condicion";
 let mapMissionT = 2000;
-let activeTab = "mapa";
+let activeTab = "comando";
 let filterMachine = false;
 let amfeMinNpr = 0;
 let planFilterMachine = false;
@@ -1051,7 +1074,7 @@ function demoData(){
   return arr;
 }
 function resetApp(){
-  cloneMeta(); loadCustom(); loadImported(); loadReliability(); loadAmfe(); loadCrit();
+  cloneMeta(); loadCustom(); loadImported(); loadReliability(); loadAmfe(); loadCrit(); loadCmd();
   data = demoData().concat(IMPORTED);
   selectedEq = "P-80A"; selectedComp = "Rodamiento LA"; selectedSeriesKey = "Vibración|Vibración RMS";
 }
@@ -1076,22 +1099,16 @@ function rowStatus(r){
   const t = thresholds(r.technique, r.parameter);
   return r.value >= t.bad ? "bad" : r.value >= t.warn ? "warn" : "ok";
 }
-// Índice de salud: arranca en 98 (equipo prácticamente nuevo) y descuenta por cada
-// medición histórica fuera de umbral — 1,25 pts por lectura "crítica" y 0,45 por
-// "atención" (ver thresholds() por técnica) — así un equipo con muchos desvíos
-// acumulados baja más que uno con un pico aislado. Piso en 28 para que nunca
-// llegue a 0 ni dé una falsa sensación de "equipo muerto".
-function health(eq){
-  const rows = allEq(eq);
-  if(!rows.length) return null;
-  let score = 98;
-  rows.forEach(r => { const s = rowStatus(r); if(s==="bad") score -= 1.25; else if(s==="warn") score -= .45; });
-  return Math.max(28, Math.round(score));
-}
+// Estado de condición: se toma el peor estado entre las ÚLTIMAS lecturas de cada variable monitoreada
+// (componente|técnica|parámetro), comparadas con sus límites (thresholds). No hay índice sintético.
 function eqStatus(eq){
-  const h = health(eq);
-  if(h===null) return "nodata";
-  return h < 70 ? "bad" : h < 86 ? "warn" : "ok";
+  const rows = allEq(eq);
+  if(!rows.length) return "nodata";
+  const latest = new Map();
+  rows.forEach(r=>{ const k = r.component+"|"+r.technique+"|"+r.parameter, p = latest.get(k); if(!p || r.timestamp > p.timestamp) latest.set(k,r); });
+  let state = "ok";
+  for(const r of latest.values()){ const st = rowStatus(r); if(st==="bad") return "bad"; if(st==="warn") state = "warn"; }
+  return state;
 }
 function critColor(crit){ return crit==="Alta" ? "#ff5d6c" : crit==="Media" ? "#f2c94c" : crit==="Baja" ? "#35d07f" : crit==="Muy baja" ? "#4fb3ff" : "#7d8fa7"; }
 function prettyStatus(s){ return s==="bad" ? "Crítico" : s==="warn" ? "Atención" : s==="nodata" ? "Sin datos" : "Normal"; }
@@ -1202,10 +1219,10 @@ function renderMetricBtns(){
 function renderSide(){
   ensureSelection();
   const meta = META[selectedEq] || {name:selectedEq, family:"Equipo", sector:"-", sap:"-", orders:0, type:"Equipo importado"};
-  const h = health(selectedEq), s = eqStatus(selectedEq);
+  const s = eqStatus(selectedEq);
   document.getElementById("eqTitle").textContent = meta.name;
   document.getElementById("eqType").textContent = meta.type + (meta.crit ? " · Criticidad " + meta.crit : "");
-  document.getElementById("health").innerHTML = h===null ? '— <small>sin datos</small>' : `${h} <small>/100</small>`;
+  const cw = document.getElementById("conditionSummary"); cw.textContent = prettyStatus(s); cw.style.color = s==="ok"?"var(--green)":s==="warn"?"var(--yellow)":s==="bad"?"var(--red)":"var(--gray)";
   const badge = document.getElementById("badge");
   badge.textContent = prettyStatus(s).toUpperCase();
   badge.className = "badge " + (s==="ok" ? "green" : s==="warn" ? "yellow" : s==="bad" ? "red" : "gray");
@@ -1428,108 +1445,6 @@ function updateWeibullPointList(){
 function resetWeibullView(){WEIBULL_UI.zoom=1;WEIBULL_UI.panX=0;WEIBULL_UI.panY=0;WEIBULL_UI.isPanning=false;applyWeibullTransform();}
 function applyWeibullTransform(){const c=document.getElementById("weibullLineChart");if(!c)return;c.style.transform=`translate(${WEIBULL_UI.panX}px,${WEIBULL_UI.panY}px) scale(${WEIBULL_UI.zoom})`;const z=document.getElementById("weibullZoomLevel");if(z)z.textContent=Math.round(WEIBULL_UI.zoom*100)+"%";}
 function clampWeibullPan(){const wrap=document.getElementById("weibullCanvasWrap"),c=document.getElementById("weibullLineChart");if(!wrap||!c)return;const z=WEIBULL_UI.zoom;if(z<=1){WEIBULL_UI.panX=0;WEIBULL_UI.panY=0;return;}const minX=wrap.clientWidth-c.clientWidth*z,minY=wrap.clientHeight-c.clientHeight*z;WEIBULL_UI.panX=Math.min(0,Math.max(minX,WEIBULL_UI.panX));WEIBULL_UI.panY=Math.min(0,Math.max(minY,WEIBULL_UI.panY));}
-function reliabEqIds(){ return Object.keys(RELIAB); }
-function sysElementR(el, t){
-  if(el.type === "weibull"){
-    const ids = reliabEqIds();
-    const eq = (el.eq && ids.includes(el.eq)) ? el.eq : ids[0];
-    if(!eq) return null;
-    const fit = fitForEq(eq);
-    if(!fit) return null;
-    return weibullR(t, fit.beta, fit.eta);
-  }
-  const r = Number(el.manualR);
-  if(!Number.isFinite(r)) return null;
-  return Math.min(1, Math.max(0, r));
-}
-function combineR(rs, config){
-  if(!rs.length) return null;
-  if(config === "serie") return rs.reduce((a,b)=>a*b, 1);
-  return 1 - rs.reduce((a,b)=>a*(1-b), 1);
-}
-function groupFormula(rs, config){
-  if(config === "serie") return `R = ${rs.map(r=>r.toFixed(3)).join(" · ")} = ${combineR(rs,config).toFixed(4)}`;
-  const prodFail = rs.reduce((a,b)=>a*(1-b), 1);
-  return `R = 1 − [${rs.map(r=>(1-r).toFixed(3)).join(" · ")}] = 1 − ${prodFail.toFixed(4)} = ${(1-prodFail).toFixed(4)}`;
-}
-function groupR(group, t){
-  const rs = group.elements.map(el=>sysElementR(el,t)).filter(r=>r!=null);
-  if(!rs.length) return null;
-  return combineR(rs, group.config);
-}
-function renderSystemReliability(){
-  const ids = reliabEqIds();
-  const t = Math.max(0, Number(mapMissionT) || 0);
-  const box = document.getElementById("sysGroups");
-
-  box.innerHTML = SYS_GROUPS.map((g, gi)=>{
-    const elsHtml = g.elements.map((el, ei)=>{
-      if(el.type === "weibull" && (!el.eq || !ids.includes(el.eq))) el.eq = ids[0] || null;
-      const r = sysElementR(el, t);
-      const rTxt = r==null ? "—" : (r*100).toFixed(1)+"%";
-      const eqOptions = ids.map(id => `<option value="${id}" ${id===el.eq?"selected":""}>${META[id]?.displayName||id}</option>`).join("");
-      return `<div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-        <select class="sysElType" data-g="${gi}" data-e="${ei}">
-          <option value="weibull" ${el.type==="weibull"?"selected":""}>Equipo con Weibull</option>
-          <option value="manual" ${el.type==="manual"?"selected":""}>Manual</option>
-        </select>
-        ${el.type==="weibull"
-          ? (ids.length ? `<select class="sysElEq" data-g="${gi}" data-e="${ei}">${eqOptions}</select>` : `<span class="sub">No hay equipos con Weibull cargado</span>`)
-          : `<input class="sysElManual" data-g="${gi}" data-e="${ei}" type="number" min="0" max="1" step="0.01" value="${el.manualR}">`}
-        <span style="margin-left:auto;font-weight:800">${rTxt}</span>
-        <button class="sysElRemove danger" data-g="${gi}" data-e="${ei}">✕</button>
-      </div>`;
-    }).join("") || `<div class="sub">Este grupo no tiene elementos. Agregá al menos uno.</div>`;
-
-    const rs = g.elements.map(el=>sysElementR(el,t)).filter(r=>r!=null);
-    const gR = rs.length ? combineR(rs, g.config) : null;
-    const gFormula = rs.length ? groupFormula(rs, g.config) : "Sin elementos válidos.";
-
-    return `<div class="panel cp" style="margin-bottom:12px">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-        <input class="sysGroupName" data-g="${gi}" value="${g.name}" style="flex:1;min-width:120px">
-        <div style="display:flex;gap:6px">
-          <button class="sysGroupCfg metric ${g.config==="serie"?"sel":""}" data-g="${gi}" data-cfg="serie">Serie</button>
-          <button class="sysGroupCfg metric ${g.config==="paralelo"?"sel":""}" data-g="${gi}" data-cfg="paralelo">Paralelo</button>
-        </div>
-        <button class="sysGroupRemove danger" data-g="${gi}">✕ grupo</button>
-      </div>
-      ${elsHtml}
-      <button class="sysAddElement" data-g="${gi}">+ Agregar elemento</button>
-      <div class="sub" style="margin-top:8px">${gFormula}</div>
-      <div style="font-weight:800;margin-top:2px">R equivalente: ${gR==null ? "—" : (gR*100).toFixed(2)+"%"}</div>
-    </div>`;
-  }).join("") || `<div class="sub">Todavía no hay grupos. Agregá al menos uno.</div>`;
-
-  [...box.querySelectorAll(".sysGroupName")].forEach(inp=> inp.oninput = ()=>{ SYS_GROUPS[+inp.dataset.g].name = inp.value; });
-  [...box.querySelectorAll(".sysGroupCfg")].forEach(btn=> btn.onclick = ()=>{ SYS_GROUPS[+btn.dataset.g].config = btn.dataset.cfg; renderSystemReliability(); });
-  [...box.querySelectorAll(".sysGroupRemove")].forEach(btn=> btn.onclick = ()=>{ SYS_GROUPS.splice(+btn.dataset.g,1); renderSystemReliability(); });
-  [...box.querySelectorAll(".sysAddElement")].forEach(btn=> btn.onclick = ()=>{ SYS_GROUPS[+btn.dataset.g].elements.push({type:"weibull", eq:null, manualR:0.9}); renderSystemReliability(); });
-  [...box.querySelectorAll(".sysElType")].forEach(s=> s.onchange = ()=>{ SYS_GROUPS[+s.dataset.g].elements[+s.dataset.e].type = s.value; renderSystemReliability(); });
-  [...box.querySelectorAll(".sysElEq")].forEach(s=> s.onchange = ()=>{ SYS_GROUPS[+s.dataset.g].elements[+s.dataset.e].eq = s.value; renderSystemReliability(); });
-  [...box.querySelectorAll(".sysElManual")].forEach(inp=> inp.oninput = ()=>{ SYS_GROUPS[+inp.dataset.g].elements[+inp.dataset.e].manualR = inp.value; renderSystemReliability(); });
-  [...box.querySelectorAll(".sysElRemove")].forEach(btn=> btn.onclick = ()=>{ SYS_GROUPS[+btn.dataset.g].elements.splice(+btn.dataset.e,1); renderSystemReliability(); });
-
-  const groupRs = SYS_GROUPS.map(g=>groupR(g,t)).filter(r=>r!=null);
-  const result = document.getElementById("sysResult");
-  if(groupRs.length === 0){
-    result.className = "rec neutral";
-    result.textContent = "Agregá al menos dos grupos para calcular el sistema mixto.";
-    return;
-  }
-  if(groupRs.length === 1){
-    result.className = "rec good";
-    result.innerHTML = `<div style="font-size:22px;font-weight:850">${(groupRs[0]*100).toFixed(2)}%</div><div class="sub" style="margin-top:4px">Un solo grupo válido: el R del sistema es el R equivalente de ese grupo · t = ${t} h</div>`;
-    return;
-  }
-  const rSys = combineR(groupRs, SYS_TOPCONFIG);
-  const labels = groupRs.map((_,i)=>`R_G${i+1}`);
-  const topFormula = SYS_TOPCONFIG === "serie"
-    ? `Rs = ${labels.join(" · ")} = ${groupRs.map(r=>r.toFixed(3)).join(" · ")} = ${rSys.toFixed(4)}`
-    : `Rp = 1 − [${labels.map(l=>"(1−"+l+")").join("·")}] = 1 − [${groupRs.map(r=>(1-r).toFixed(3)).join("·")}] = ${rSys.toFixed(4)}`;
-  result.className = "rec good";
-  result.innerHTML = `<div style="font-size:22px;font-weight:850">${(rSys*100).toFixed(2)}%</div><div style="margin-top:6px">${topFormula}</div><div class="sub" style="margin-top:4px">Grupos combinados en: ${SYS_TOPCONFIG==="serie"?"Serie":"Paralelo"} · t = ${t} h</div>`;
-}
 function renderReliability(){
   ensureWeibullState(selectedEq);
   const fit = currentFit();
@@ -1751,7 +1666,191 @@ function renderEqSelect(){
   if(sel.innerHTML !== html) sel.innerHTML = html;
   sel.value = selectedEq;
 }
-function render(){ ensureSelection(); renderLegend(); renderPlant(); renderSide(); draw(); renderReliability(); renderSystemReliability(); renderAmfe(); renderPlanControl(); renderCriticidad(); updateFilterBtn(); updatePlanFilterBtn(); renderEqSelect(); renderShareAlert(); document.getElementById("aiDiagResult").style.display="none"; renderHistory(); }
+// ── Tablero de comando ──────────────────────────────────────────────────────────────
+// Indicadores = ratios con fórmula visible, objetivo/límites editables, semáforo (fortaleza/debilidad),
+// sentido de la tendencia y origen del dato (TP real / demostración / sin dato).
+const CMD_VERSION = 1;
+// Órdenes por tipo (TP R03, punto 3.5) y planes vigentes con su intervalo en días calendario (TP 3.4 y 6.4).
+const CMD_ORDERS = {
+  "AC-725":{corr:9,prev:10,pred:6,fallas:8}, "AC-720":{corr:7,prev:6,pred:2,fallas:5}, "AC-745":{corr:2,prev:4,pred:3,fallas:1},
+  "P-80A":{corr:7,prev:3,pred:6,fallas:6}, "P-80B":{corr:3,prev:1,pred:2,fallas:3}
+};
+const CMD_PLANS = {
+  "AC-725":[{n:"Predictivo (vibraciones)",d:180}],
+  "P-80A":[{n:"Preventivo",d:180},{n:"Predictivo (vibraciones)",d:90}]
+};
+// Indicadores de costos y mano de obra de la cátedra (Unidad 5). ref = referencia de la cátedra (si la da).
+const CMD_COST = [
+  {k:"HPHP", name:"HPHP · Horas de paro por horas realizadas", f:"horas de paro por avería / horas de producción realizadas", a:"Horas de paro", b:"Horas realizadas", ref:[1,3], note:"Referencia de la cátedra: 1 a 3 %."},
+  {k:"TBMP", name:"TBMP · Trabajo en mantenimiento preventivo", f:"HH en preventivo programado / HH disponibles (HHDP)", a:"HH preventivas", b:"HH disponibles", ref:null, note:"La cátedra no da valor de referencia."},
+  {k:"TBMC", name:"TBMC · Trabajo en mantenimiento correctivo", f:"HH en reparaciones correctivas / HH disponibles (HHDP)", a:"HH correctivas", b:"HH disponibles", ref:null, note:"La cátedra no da valor de referencia."},
+  {k:"CPCT", name:"CPCT · Costo preventivo por mantenimiento total", f:"costo preventivo / (costo preventivo + costo correctivo)", a:"Costo preventivo", b:"Costo total (prev. + corr.)", ref:[15,25], note:"Cátedra: ≈ 20 %. La banda 15–25 % la propone el equipo."},
+  {k:"CMPP", name:"CMPP · Costo de mantenimiento por producción", f:"costo de mantenimiento / costo de producción", a:"Costo de mantenimiento", b:"Costo de producción", ref:[5,6], note:"Referencia de la cátedra: 5 a 6 %."},
+  {k:"CMPV", name:"CMPV · Costo de mantenimiento por valor inmovilizado", f:"costo de mantenimiento / valor inmovilizado", a:"Costo de mantenimiento", b:"Valor inmovilizado", ref:[4,5], note:"Referencia de la cátedra: 4 a 5 %."},
+  {k:"CMFT", name:"CMFT · Costo de mantenimiento por facturación", f:"costo total de mantenimiento / facturación (FETP)", a:"Costo total de mant.", b:"Facturación", ref:null, note:"La cátedra no da valor de referencia."},
+  {k:"CMOE", name:"CMOE · Mano de obra externa", f:"costo MO externa / (MO externa + MO propia)", a:"Costo MO externa", b:"Costo MO total", ref:null, note:"La cátedra no da valor de referencia."}
+];
+const CMD_DEFAULT_LIMITS = {corr:20, r:80, eta:1, npr:200};
+let CMD = {limits:{...CMD_DEFAULT_LIMITS}, cost:{}};
+function cmdFreshCost(){ const c = {}; CMD_COST.forEach(i=>{ c[i.k] = {min:i.ref?i.ref[0]:null, max:i.ref?i.ref[1]:null, rows:[]}; }); return c; }
+function loadCmd(){
+  let st = null;
+  try{ const raw = JSON.parse(localStorage.getItem("cv13cmd") || "null"); if(raw && raw.version >= CMD_VERSION) st = raw; }catch(e){}
+  CMD = st ? {limits:{...CMD_DEFAULT_LIMITS, ...st.limits}, cost:{...cmdFreshCost(), ...st.cost}} : {limits:{...CMD_DEFAULT_LIMITS}, cost:cmdFreshCost()};
+}
+function saveCmd(){ try{ localStorage.setItem("cv13cmd", JSON.stringify({version:CMD_VERSION, ...CMD})); }catch(e){} }
+
+const cmdPct = v => v.toFixed(1).replace(".",",") + " %";
+const cmdNum = (v,d=2) => v.toFixed(d).replace(".",",");
+const cmdStLabel = {ok:"Fortaleza", warn:"Atención", bad:"Debilidad", nodata:"Sin dato", info:"Informativo"};
+const cmdOriginCls = {"TP REAL":"o-tp", "DEMOSTRACIÓN":"o-demo", "SIN DATO":"o-nd", "DATO CARGADO":"o-tp"};
+function cmdHorasDia(eq){ const st = ensureWeibullState(eq); return st.turnos * st.horas; }
+function cmdState(v, cmp, lim){ if(v===null || !Number.isFinite(lim)) return "nodata"; return (cmp==="≤" ? v<=lim : v>=lim) ? "ok" : "bad"; }
+function cmdTopAction(eq){
+  const m = (AMFE[eq]||[]).slice().sort((a,b)=>b.npr-a.npr)[0];
+  if(!m) return "Cargar los modos de falla del equipo en el AMFE.";
+  return m.action && m.action!=="Sin acción"
+    ? `acción del AMFE para el modo de mayor NPR (${m.mode}, NPR ${m.npr}): ${m.action}`
+    : `definir una acción en el AMFE para «${m.mode}» (NPR ${m.npr}).`;
+}
+function cmdCondDetail(eq){
+  const m = new Map();
+  allEq(eq).forEach(r=>{ const k = r.component+" · "+r.parameter, p = m.get(k); if(!p || r.timestamp > p.timestamp) m.set(k,r); });
+  const out = [...m].filter(([k,r])=>rowStatus(r)!=="ok").map(([k,r])=>`${k} (${fmt(r)})`);
+  return `${m.size} variables monitoreadas · fuera de límite: ${out.length ? out.join(", ") : "ninguna"}`;
+}
+function cmdEqIndicators(eq){
+  const L = CMD.limits, out = [], fit = fitForEq(eq), plans = CMD_PLANS[eq], o = CMD_ORDERS[eq], hd = cmdHorasDia(eq);
+  const nd = (name, formula, why)=>({name, formula, value:"—", state:"nodata", origin:"SIN DATO", detail:why});
+  // 1. Proporción de correctivas (ratio de dos magnitudes; referencia del TP: menor al 20 %)
+  if(o){
+    const tot = o.corr+o.prev+o.pred, v = o.corr/tot*100;
+    out.push({name:"% de órdenes correctivas", formula:"órdenes correctivas / total de órdenes", value:cmdPct(v), state:cmdState(v,"≤",L.corr), origin:"TP REAL", lim:{k:"corr",cmp:"≤",u:"%"},
+      detail:`${o.corr} de ${tot} órdenes · ${o.fallas} fallas funcionales · planta: 28 de 71 (39,4 %)`});
+  }else out.push(nd("% de órdenes correctivas","órdenes correctivas / total de órdenes","El TP relevó órdenes solo de AC-725, AC-720, AC-745, P-80A y P-80B."));
+  // 2. Fiabilidad al intervalo de los planes vigentes (peor caso)
+  if(fit && plans){
+    const rows = plans.map(p=>{ const t = p.d*hd; return {n:p.n, d:p.d, t, r:weibullR(t,fit.beta,fit.eta)*100}; }), w = Math.min(...rows.map(x=>x.r));
+    out.push({name:"Fiabilidad al intervalo del plan (peor caso)", formula:"R(t) = e^−(t/η)^β, con t = intervalo del plan × horas de operación por día", value:cmdPct(w), state:cmdState(w,"≥",L.r), origin:"TP REAL", lim:{k:"r",cmp:"≥",u:"%"},
+      detail:rows.map(x=>`${x.n}, ${x.d} días (${Math.round(x.t).toLocaleString("es-AR")} h de operación): R = ${cmdPct(x.r)}`).join("<br>")});
+  }else out.push(nd("Fiabilidad al intervalo del plan (peor caso)","R(t) = e^−(t/η)^β","Requiere ajuste de Weibull y planes vigentes (el TP los tiene para AC-725 y P-80A)."));
+  // 3. η respecto del intervalo del plan (la cátedra pide al menos un control para t = η)
+  if(fit && plans){
+    const etaD = fit.eta/hd, v = etaD/plans[0].d;
+    out.push({name:"η respecto del intervalo del plan", formula:"η (en días calendario) / intervalo del plan", value:cmdNum(v), state:cmdState(v,"≥",L.eta), origin:"TP REAL", lim:{k:"eta",cmp:"≥",u:""},
+      detail:`η = ${Math.round(etaD)} días calendario · plan ${plans[0].n.toLowerCase()} cada ${plans[0].d} días`});
+  }else out.push(nd("η respecto del intervalo del plan","η (días calendario) / intervalo del plan","Requiere ajuste de Weibull y planes vigentes."));
+  // 4. Comportamiento de falla: sentido de la tendencia de la tasa de fallas
+  if(fit){
+    const b = fit.beta, tr = b<0.95 ? {a:"↓", t:"tasa de fallas decreciente (mortalidad infantil)", s:"eliminar la causa raíz; acortar el intervalo no reduce las fallas."}
+      : b<=1.15 ? {a:"→", t:"tasa de fallas constante", s:"el reemplazo por calendario no reduce el riesgo: corresponde el control por condición."}
+      : {a:"↑", t:"tasa de fallas creciente (desgaste)", s:"el reemplazo programado por tiempo es efectivo."};
+    out.push({name:"Comportamiento de falla (β)", formula:"β = pendiente de la recta de Weibull (rango mediano de Bernard)", value:`${tr.a} β = ${cmdNum(b)}`, state:"info", origin:"TP REAL",
+      detail:`${tr.t} · MTBF ${Math.round(fit.mtbf).toLocaleString("es-AR")} h de operación (${Math.round(fit.mtbf/hd)} días)`, extra:`Estrategia indicada: ${tr.s}`});
+  }else out.push(nd("Comportamiento de falla (β)","β = pendiente de la recta de Weibull","Requiere al menos dos fallas con fecha en la pestaña Fiabilidad."));
+  // 5. Riesgo del AMFE
+  const modes = AMFE[eq] || [];
+  if(modes.length){
+    const mx = Math.max(...modes.map(m=>m.npr)), af = Math.max(...modes.map(m=>m.nprAfter ?? m.npr));
+    out.push({name:"NPR máximo del AMFE", formula:"NPR = G × O × D (máximo entre los modos de falla)", value:af<mx ? `${mx} → ${af}` : `${mx}`, state:cmdState(mx,"≤",L.npr), origin:"TP REAL", lim:{k:"npr",cmp:"≤",u:""},
+      detail:`Actual → con las acciones previstas${af<mx ? "" : " (sin reducción prevista)"} · ${modes.length} modos de falla`});
+  }else out.push(nd("NPR máximo del AMFE","NPR = G × O × D","El equipo no tiene modos de falla cargados en el AMFE."));
+  // 6. Condición (series de demostración)
+  const st = eqStatus(eq);
+  out.push({name:"Estado de condición", formula:"peor estado entre las últimas lecturas de cada variable, comparadas con sus límites", value:prettyStatus(st), state:st==="ok"?"ok":st==="warn"?"warn":st==="bad"?"bad":"nodata", origin:"DEMOSTRACIÓN", detail:cmdCondDetail(eq)});
+  out.forEach(i=>{ i.action = i.name==="Estado de condición" ? "revisar las lecturas fuera de límite en Historial y generar la intervención con «Generar intervención»." : cmdTopAction(eq); });
+  return out;
+}
+function cmdCardHtml(i){
+  const lim = i.lim ? `<div class="cmdLimit">Objetivo ${i.lim.cmp} <input type="number" step="any" data-lim="${i.lim.k}" value="${CMD.limits[i.lim.k]}"> ${i.lim.u}</div>` : "";
+  const act = (i.state==="bad"||i.state==="warn") ? `<div class="cmdAct"><b>Acción sugerida:</b> ${escHtml(i.action)}</div>` : (i.extra ? `<div class="cmdAct info">${escHtml(i.extra)}</div>` : "");
+  return `<div class="cmdCard st-${i.state}"><div class="cmdHead"><b>${escHtml(i.name)}</b><span class="cmdOrigin ${cmdOriginCls[i.origin]}">${i.origin}</span></div>
+    <div class="cmdFormula">${escHtml(i.formula)}</div><div class="cmdValue">${escHtml(i.value)}</div><div class="cmdState">● ${cmdStLabel[i.state]}</div>${lim}<div class="cmdDet">${i.detail}</div>${act}</div>`;
+}
+// Indicadores de costos y mano de obra: el usuario carga numerador y denominador por período.
+function cmdParse(x){ const n = parseFloat(String(x).replace(",",".")); return Number.isFinite(n) ? n : null; }
+function cmdVals(k){ return CMD.cost[k].rows.map(r=>{ const a = cmdParse(r.a), b = cmdParse(r.b); return {p:r.p, v:(a!==null && b!==null && b!==0) ? a/b*100 : null}; }); }
+function cmdSpark(vals, min, max){
+  const v = vals.filter(x=>x!==null);
+  if(v.length<2) return `<div class="cmdSpark nd">Cargá al menos 2 períodos para ver la tendencia y el gráfico de control.</div>`;
+  const W = 240, H = 60, pad = 6, all = [...v, ...[min,max].filter(Number.isFinite)], lo = Math.min(...all), hi = Math.max(...all), rg = (hi-lo) || 1;
+  const y = x=>H-pad-(x-lo)/rg*(H-2*pad), xs = i=>pad+i*(W-2*pad)/(vals.length-1);
+  const band = (Number.isFinite(min) && Number.isFinite(max)) ? `<rect x="0" y="${y(max)}" width="${W}" height="${Math.max(1,y(min)-y(max))}" fill="rgba(53,208,127,.15)"/>` : "";
+  const lines = [min,max].filter(Number.isFinite).map(l=>`<line x1="0" x2="${W}" y1="${y(l)}" y2="${y(l)}" stroke="#35d07f" stroke-dasharray="4 3" stroke-width="1"/>`).join("");
+  const pts = vals.map((x,i)=>x===null ? null : [xs(i), y(x)]).filter(Boolean);
+  return `<svg class="cmdSpark" viewBox="0 0 ${W} ${H}">${band}${lines}<polyline fill="none" stroke="#4fd1ff" stroke-width="2" points="${pts.map(p=>p.join(",")).join(" ")}"/>${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#4fd1ff"/>`).join("")}</svg>`;
+}
+function cmdCostInfo(k){
+  const c = CMD.cost[k], vs = cmdVals(k), valid = vs.filter(x=>x.v!==null), last = valid[valid.length-1], prev = valid[valid.length-2];
+  const hasLim = Number.isFinite(c.min) || Number.isFinite(c.max);
+  const inBand = v=>(!Number.isFinite(c.min) || v>=c.min) && (!Number.isFinite(c.max) || v<=c.max);
+  const state = !last ? "nodata" : !hasLim ? "info" : inBand(last.v) ? "ok" : "bad";
+  return {c, vs, valid, last, prev, hasLim, state};
+}
+function cmdSumHtml(k){
+  const {c, vs, last, prev, hasLim, state} = cmdCostInfo(k);
+  const dist = v=>Number.isFinite(c.min) && v<c.min ? c.min-v : Number.isFinite(c.max) && v>c.max ? v-c.max : 0;
+  let trend = "";
+  if(last && prev){
+    const d = last.v-prev.v, arrow = Math.abs(d)<1e-9 ? "→" : d>0 ? "↑" : "↓", good = hasLim ? (dist(last.v)<dist(prev.v) ? "good" : dist(last.v)>dist(prev.v) ? "worse" : "") : "";
+    trend = `<div class="cmdTrend ${good}">${arrow} ${d>=0?"+":""}${cmdNum(d)} pp respecto del período anterior${hasLim && good ? (good==="good" ? " (se acerca al rango)" : " (se aleja del rango)") : ""}</div>`;
+  }
+  const act = state==="bad" ? `<div class="cmdAct"><b>Acción sugerida:</b> el indicador está fuera de sus límites: revisar el plan de mantenimiento y los desvíos del período (Plan de Control y AMFE).</div>` : "";
+  return `<div class="cmdValue">${last ? cmdPct(last.v) : "—"}</div><div class="cmdState">● ${cmdStLabel[state]}${last ? ` · ${escHtml(last.p||"último período")}` : ""}</div>${trend}${cmdSpark(vs.map(x=>x.v), c.min, c.max)}${act}`;
+}
+function cmdCostCard(i){
+  const {c, state} = cmdCostInfo(i.k), vs = cmdVals(i.k), has = vs.some(x=>x.v!==null);
+  const fv = x=>x===null||x===undefined ? "" : String(x).replace(".",",");
+  const rows = c.rows.map((r,ix)=>`<tr><td><input data-ck="${i.k}" data-ri="${ix}" data-f="p" value="${escHtml(r.p)}" placeholder="ej. 2026-03"></td><td><input data-ck="${i.k}" data-ri="${ix}" data-f="a" value="${escHtml(r.a)}" inputmode="decimal"></td><td><input data-ck="${i.k}" data-ri="${ix}" data-f="b" value="${escHtml(r.b)}" inputmode="decimal"></td><td class="cmdRowV">${vs[ix].v===null ? "—" : cmdPct(vs[ix].v)}</td><td><button class="danger cmdDelRow" data-del="${i.k}" data-ri="${ix}" title="Eliminar período">✕</button></td></tr>`).join("");
+  return `<div class="cmdCard st-${state}" data-card="${i.k}"><div class="cmdHead"><b>${escHtml(i.name)}</b><span class="cmdOrigin ${has ? "o-tp" : "o-nd"}" data-origin>${has ? "DATO CARGADO" : "SIN DATO"}</span></div>
+    <div class="cmdFormula">${escHtml(i.f)}</div><div class="cmdSum">${cmdSumHtml(i.k)}</div>
+    <div class="cmdLimit">Límites: de <input type="text" data-ck="${i.k}" data-lm="min" value="${fv(c.min)}" inputmode="decimal"> a <input type="text" data-ck="${i.k}" data-lm="max" value="${fv(c.max)}" inputmode="decimal"> %</div>
+    <div class="cmdDet">${escHtml(i.note)}</div>
+    <table class="cmdTbl"><thead><tr><th>Período</th><th>${escHtml(i.a)}</th><th>${escHtml(i.b)}</th><th>Valor</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+    <button class="metric cmdAddRow" data-add="${i.k}">➕ Agregar período</button></div>`;
+}
+function cmdRefreshCard(k){
+  const card = document.querySelector(`.cmdCard[data-card="${k}"]`); if(!card) return;
+  const {state} = cmdCostInfo(k), vs = cmdVals(k), has = vs.some(x=>x.v!==null);
+  card.className = `cmdCard st-${state}`;
+  card.querySelector(".cmdSum").innerHTML = cmdSumHtml(k);
+  const og = card.querySelector("[data-origin]"); og.textContent = has ? "DATO CARGADO" : "SIN DATO"; og.className = `cmdOrigin ${has ? "o-tp" : "o-nd"}`;
+  card.querySelectorAll(".cmdRowV").forEach((td,ix)=>{ td.textContent = vs[ix].v===null ? "—" : cmdPct(vs[ix].v); });
+}
+function renderComando(){
+  const eq = selectedEq, m = META[eq] || {}, L = CMD.limits, cs = critTotal(eq);
+  document.getElementById("cmdTitle").textContent = `Tablero de comando — ${m.displayName || eq}`;
+  document.getElementById("cmdSub").textContent = `${m.name || ""} · Criticidad ${m.crit || "sin definir"}${cs.complete ? ` (${cs.sum} puntos)` : ""} · el equipo se elige en el encabezado`;
+  document.getElementById("cmdStrategy").innerHTML =
+    `<div><b>Estrategia</b>Pasar del mantenimiento preventivo por calendario al mantenimiento por condición, controlando la condición real de los equipos (TP, conclusiones).</div>
+     <div><b>Objetivos operativos</b>Órdenes correctivas ≤ ${L.corr} % · intervenir antes de que la fiabilidad caiga de ${L.r} % · NPR del AMFE ≤ ${L.npr} · η ≥ ${L.eta} veces el intervalo del plan.</div>
+     <div><b>Control de gestión</b>Cada indicador se compara con su objetivo (fortaleza o debilidad); si hay debilidad, se sugiere la acción del AMFE. Los objetivos son editables y los propone el equipo.</div>`;
+  document.getElementById("cmdEqCards").innerHTML = cmdEqIndicators(eq).map(cmdCardHtml).join("");
+  const sc = document.getElementById("cmdCostCards");
+  const focus = document.activeElement && sc.contains(document.activeElement) ? document.activeElement : null;
+  if(!focus) sc.innerHTML = CMD_COST.map(cmdCostCard).join("");
+}
+document.getElementById("cmdEqCards").addEventListener("change", e=>{
+  const k = e.target.dataset.lim; if(!k) return;
+  const v = Number(e.target.value);
+  if(Number.isFinite(v) && v>0){ CMD.limits[k] = v; saveCmd(); }
+  renderComando();
+});
+document.getElementById("cmdCostCards").addEventListener("change", e=>{
+  const t = e.target, k = t.dataset.ck; if(!k) return;
+  const c = CMD.cost[k];
+  if(t.dataset.f) c.rows[+t.dataset.ri][t.dataset.f] = t.value;
+  else if(t.dataset.lm) c[t.dataset.lm] = cmdParse(t.value);
+  else return;
+  saveCmd(); cmdRefreshCard(k);
+});
+document.getElementById("cmdCostCards").addEventListener("click", e=>{
+  const b = e.target.closest("[data-add],[data-del]"); if(!b) return;
+  if(b.dataset.add) CMD.cost[b.dataset.add].rows.push({p:"", a:"", b:""});
+  else CMD.cost[b.dataset.del].rows.splice(+b.dataset.ri, 1);
+  saveCmd(); document.getElementById("cmdCostCards").innerHTML = CMD_COST.map(cmdCostCard).join("");
+});
+function render(){ ensureSelection(); renderLegend(); renderPlant(); renderSide(); draw(); renderReliability(); renderAmfe(); renderPlanControl(); renderCriticidad(); renderComando(); updateFilterBtn(); updatePlanFilterBtn(); renderEqSelect(); renderShareAlert(); document.getElementById("aiDiagResult").style.display="none"; renderHistory(); }
 function paretoData(){
   return Object.keys(META)
     .map(id => ({id, name: META[id].displayName || id, fallas: META[id].fallas || 0}))
@@ -1821,6 +1920,7 @@ function drawPareto(){
 }
 function showTab(tab){
   activeTab = tab;
+  if(tab==="comando") renderComando();
   document.querySelectorAll(".tabPanel").forEach(p=>p.classList.toggle("active", p.dataset.tabPanel===tab));
   document.querySelectorAll(".tabBtn").forEach(b=>b.classList.toggle("sel", b.dataset.tab===tab));
   // Los canvas miden su contenedor al dibujar: si la pestaña estaba oculta, hay que
@@ -1935,6 +2035,7 @@ document.getElementById("resetBtn").onclick = ()=>{
   localStorage.removeItem("cv12imported");
   localStorage.removeItem("cv13amfe");
   localStorage.removeItem("cv13crit");
+  localStorage.removeItem("cv13cmd");
   resetApp(); render(); toast("Demo restaurada");
 };
 document.getElementById("toggleMapView").onclick = ()=>{
@@ -1945,28 +2046,12 @@ document.getElementById("toggleMapView").onclick = ()=>{
 document.getElementById("eqSelect").onchange = (e)=> selectEquipo(e.target.value);
 function setMissionT(v){
   mapMissionT = Math.max(1, Number(v) || 2000);
-  ["mapMissionT","wMissionT"].forEach(id=>{ const el=document.getElementById(id); if(el!==document.activeElement) el.value=mapMissionT; });
+  { const el=document.getElementById("wMissionT"); if(el!==document.activeElement) el.value=mapMissionT; }
   renderPlant();
-  renderSystemReliability();
+ 
   renderReliabKpis(currentFit());
 }
-["mapMissionT","wMissionT"].forEach(id=>{ const el=document.getElementById(id); el.oninput=()=>setMissionT(el.value); });
-document.getElementById("sysAddGroup").onclick = ()=>{
-  SYS_GROUPS.push({name:`Grupo ${SYS_GROUPS.length+1}`, config:"serie", elements:[{type:"weibull", eq:null, manualR:0.9}]});
-  renderSystemReliability();
-};
-document.getElementById("sysTopSerie").onclick = ()=>{
-  SYS_TOPCONFIG = "serie";
-  document.getElementById("sysTopSerie").classList.add("sel");
-  document.getElementById("sysTopParalelo").classList.remove("sel");
-  renderSystemReliability();
-};
-document.getElementById("sysTopParalelo").onclick = ()=>{
-  SYS_TOPCONFIG = "paralelo";
-  document.getElementById("sysTopParalelo").classList.add("sel");
-  document.getElementById("sysTopSerie").classList.remove("sel");
-  renderSystemReliability();
-};
+document.getElementById("wMissionT").oninput=()=>setMissionT(document.getElementById("wMissionT").value);
 document.getElementById("filterMachineBtn").onclick = ()=>{
   filterMachine = !filterMachine;
   updateFilterBtn();
@@ -2025,8 +2110,8 @@ document.getElementById("aiDiagBtn").onclick = async ()=>{
 };
 // Interacción del papel de Weibull: zoom/arrastre, mejor ajuste, y carga de fallas por fecha + turnos.
 document.getElementById("wChkLine").onchange=()=>drawWeibull(currentFit());document.getElementById("wChkBestFit").onchange=()=>drawWeibull(currentFit());
-document.getElementById("wRestoreEq").onclick=()=>{resetWeibullPoints(selectedEq);renderReliability();renderSystemReliability();};
-document.getElementById("wClearPts").onclick=()=>{ensureWeibullState(selectedEq).failures=[];renderReliability();renderSystemReliability();};
+document.getElementById("wRestoreEq").onclick=()=>{resetWeibullPoints(selectedEq);renderReliability();};
+document.getElementById("wClearPts").onclick=()=>{ensureWeibullState(selectedEq).failures=[];renderReliability();};
 function weibullRevert(msg){toast(msg);updateWeibullPointList();}
 const W_DATE_HINT="Fecha inválida. Usá dd/mm/aaaa hh:mm";
 function addWeibullFailure(){
@@ -2035,7 +2120,7 @@ function addWeibullFailure(){
   if(!v){toast(inp.value.trim()?W_DATE_HINT:"Ingresá la fecha y hora de la falla");return;}
   if(v<=st.start){toast("La falla debe ser posterior al inicio de la medición");return;}
   if(st.failures.includes(v)){toast("Ya existe una falla con esa fecha y hora");return;}
-  st.failures.push(v);inp.value="";renderReliability();renderSystemReliability();
+  st.failures.push(v);inp.value="";renderReliability();
 }
 document.getElementById("wAddBtn").onclick=addWeibullFailure;
 document.getElementById("wAddDate").addEventListener("keydown",e=>{if(e.key==="Enter")addWeibullFailure();});
@@ -2043,12 +2128,12 @@ document.getElementById("wStart").onchange=()=>{
   const st=ensureWeibullState(selectedEq),v=parseWDate(document.getElementById("wStart").value);
   if(!v){weibullRevert(W_DATE_HINT);return;}
   if(st.failures.some(d=>d<=v)){weibullRevert("El inicio debe ser anterior a todas las fallas");return;}
-  st.start=v;renderReliability();renderSystemReliability();
+  st.start=v;renderReliability();
 };
 function setWeibullShifts(){
   const st=ensureWeibullState(selectedEq),tn=Number(document.getElementById("wTurnos").value),hr=Number(document.getElementById("wHorasTurno").value);
   if(!(tn>=1&&tn<=3)||!(hr>0)||tn*hr>24){weibullRevert("Turnos entre 1 y 3, horas por turno mayor a 0 y máximo 24 h de operación por día");return;}
-  st.turnos=tn;st.horas=hr;renderReliability();renderSystemReliability();
+  st.turnos=tn;st.horas=hr;renderReliability();
 }
 document.getElementById("wTurnos").onchange=setWeibullShifts;document.getElementById("wHorasTurno").onchange=setWeibullShifts;
 document.getElementById("weibullPointHead").addEventListener("click",e=>{
@@ -2061,7 +2146,7 @@ wBody.addEventListener("click",e=>{
   const b=e.target.closest(".wDel");if(!b)return;
   const st=ensureWeibullState(selectedEq),ix=st.failures.indexOf(b.dataset.date);if(ix<0)return;
   if(!confirm(`¿Eliminar la falla del ${fmtWDate(b.dataset.date)}?`))return;
-  st.failures.splice(ix,1);renderReliability();renderSystemReliability();
+  st.failures.splice(ix,1);renderReliability();
 });
 wBody.addEventListener("change",e=>{
   const inp=e.target.closest(".wDate");if(!inp)return;
@@ -2070,7 +2155,7 @@ wBody.addEventListener("change",e=>{
   if(nv<=st.start){weibullRevert("La falla debe ser posterior al inicio de la medición");return;}
   if(nv!==old&&st.failures.includes(nv)){weibullRevert("Ya existe una falla con esa fecha y hora");return;}
   const ix=st.failures.indexOf(old);if(ix<0)return;
-  st.failures[ix]=nv;renderReliability();renderSystemReliability();
+  st.failures[ix]=nv;renderReliability();
 });
 const wWrap=document.getElementById("weibullCanvasWrap");wWrap.addEventListener("wheel",e=>{e.preventDefault();const rect=wWrap.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top,old=WEIBULL_UI.zoom,next=Math.min(4,Math.max(1,old*(e.deltaY<0?1.15:1/1.15)));WEIBULL_UI.panX=mx-(mx-WEIBULL_UI.panX)*next/old;WEIBULL_UI.panY=my-(my-WEIBULL_UI.panY)*next/old;WEIBULL_UI.zoom=next;clampWeibullPan();applyWeibullTransform();},{passive:false});
 wWrap.addEventListener("mousedown",e=>{if(WEIBULL_UI.zoom<=1)return;WEIBULL_UI.isPanning=true;WEIBULL_UI.panStartX=e.clientX;WEIBULL_UI.panStartY=e.clientY;WEIBULL_UI.panOriginX=WEIBULL_UI.panX;WEIBULL_UI.panOriginY=WEIBULL_UI.panY;wWrap.style.cursor="grabbing";});
