@@ -214,6 +214,18 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
 .cmdTbl input{width:100%;min-width:0;padding:3px 5px;font-size:11px}
 .cmdDelRow{padding:2px 6px;font-size:11px}.cmdAddRow{align-self:flex-start}
 @media(max-width:1100px){.cmdGrid,.cmdGrid.two,.cmdStrategy{grid-template-columns:1fr}}
+/* Parámetros */
+.parGrid{display:grid;grid-template-columns:minmax(260px,.55fr) minmax(0,1.45fr);gap:14px;align-items:start}
+.parEqList{display:grid;gap:7px}
+.parComp{margin-bottom:16px}.parComp h3{margin:0 0 8px;font-size:13px}
+.parWrap{overflow-x:auto}
+.parTbl{width:100%;font-size:11px}.parTbl th{font-size:9px;white-space:normal}
+.parTbl td{white-space:normal;vertical-align:middle;padding:6px 5px}
+.parTbl small{display:block;color:var(--muted);font-size:10px;margin-top:2px;line-height:1.35}
+.parTbl input{width:72px;padding:4px 6px;font-size:12px}
+.parTbl .metric{margin-top:4px}
+.parChip .badge{display:inline-block}
+@media(max-width:1100px){.parGrid{grid-template-columns:1fr}}
 /* Criticidad: criterios (izquierda) + matriz general (derecha) */
 .critGrid{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:14px;align-items:start}
 .critBar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
@@ -363,6 +375,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
   <button class="tabBtn sel" data-tab="comando">📊 Tablero de comando</button>
   <button class="tabBtn" data-tab="mapa">🗺️ Mapa</button>
   <button class="tabBtn" data-tab="criticidad">📊 Criticidad</button>
+  <button class="tabBtn" data-tab="parametros">⚙️ Parámetros</button>
   <button class="tabBtn" data-tab="confiabilidad">🔧 Fiabilidad</button>
   <button class="tabBtn" data-tab="amfe">⚠️ AMFE</button>
   <button class="tabBtn" data-tab="plancontrol">🗒️ Plan de Control</button>
@@ -378,8 +391,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
     <div class="cmdStrategy" id="cmdStrategy"></div>
     <div class="sectionLabel">Fiabilidad y riesgo · equipo seleccionado</div>
     <div class="cmdGrid" id="cmdEqCards"></div>
-    <div class="sectionLabel">Límites de condición · comparan cada lectura para definir el Estado de condición</div>
-    <div id="cmdCondLimits"></div>
+    <div class="sub" style="margin:10px 0 0">Los límites de condición (por equipo, componente y variable) se configuran en la pestaña Parámetros.</div>
     <div class="sectionLabel">Costos y mano de obra · gestión del servicio de mantenimiento (planta)</div>
     <div class="sub" style="margin:0 0 10px">El TP no registra horas-hombre, costos ni horas de paro, por eso estos indicadores muestran «sin dato» hasta que se carguen. Cada indicador es un ratio: se carga numerador y denominador por período.</div>
     <div class="cmdGrid two" id="cmdCostCards"></div>
@@ -412,7 +424,7 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
   <div class="ph"><div><h2 id="eqTitle">Bomba cargadero propano islas 1/2 P-80A</h2><small id="eqType">Bomba de cargadero · Criticidad Alta</small></div></div>
   <div class="side">
     <div class="titleRow">
-      <div><div class="sub">Estado de condición</div><div class="conditionWord" id="conditionSummary">—</div><div class="conditionExplain">Se toma el peor estado entre las últimas lecturas de cada variable monitoreada. No se usa un índice sintético: cada lectura se compara con sus límites, que se ven y editan en el Tablero de comando. <span class="demoTag">DATOS DE DEMOSTRACIÓN</span></div></div>
+      <div><div class="sub">Estado de condición</div><div class="conditionWord" id="conditionSummary">—</div><div class="conditionExplain">Se toma el peor estado entre las últimas lecturas de cada variable monitoreada. No se usa un índice sintético: cada lectura se compara con sus límites, que se ven y editan en la pestaña Parámetros. <span class="demoTag">DATOS DE DEMOSTRACIÓN</span></div></div>
       <div id="badge" class="badge red">CRÍTICO</div>
     </div>
 
@@ -470,6 +482,25 @@ th{font-size:9px;color:var(--muted);text-transform:uppercase}
       <span>· Muy baja: menos que Baja</span>
     </div>
     <div class="critScroll"><table id="critMatrix"><thead id="critMatrixHead"></thead><tbody id="critMatrixBody"></tbody></table></div>
+  </section>
+</div>
+</div>
+
+<div class="tabPanel" data-tab-panel="parametros">
+<div class="parGrid">
+  <div>
+    <section class="panel">
+      <div class="ph"><div><h2>Equipos</h2><small>Elegí el equipo para ver sus componentes y variables</small></div></div>
+      <div class="side"><div class="parEqList" id="parEquipos"></div></div>
+    </section>
+    <section class="panel" style="margin-top:14px">
+      <div class="ph"><div><h2>Límites por defecto por técnica</h2><small>Valen para todas las series de esa técnica que no tengan un límite propio</small></div></div>
+      <div class="side" id="parDefaults"></div>
+    </section>
+  </div>
+  <section class="panel">
+    <div class="ph"><div><h2 id="parTitle">Parámetros</h2><small id="parSub"></small></div></div>
+    <div class="side" id="parBody"></div>
   </section>
 </div>
 </div>
@@ -1090,16 +1121,22 @@ function rowsFor(eq=selectedEq, comp=selectedComp, key=selectedSeriesKey){
 function mean(a){ return a.reduce((s,x)=>s+x,0)/(a.length||1); }
 function sd(a){ const m = mean(a); return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/Math.max(1,a.length-1)); }
 function last(a){ return a[a.length-1]; }
-function thresholds(tech, param){
-  const C = (typeof CMD !== "undefined" && CMD.cond) ? CMD.cond : CMD_DEFAULT_COND;
+function parKey(eq, comp, tech, param){ return [eq, comp, tech, param].join("|"); }
+function parTechDefault(tech, param, factory){
+  const C = (!factory && typeof CMD !== "undefined" && CMD.cond) ? CMD.cond : CMD_DEFAULT_COND;
   if(tech==="Vibración") return C.vib;
   if(tech==="Termografía") return C.ter;
   if(tech==="Ultrasonido") return C.ult;
   if(param==="Hierro") return C.fe;
-  return {warn:9999, bad:99999};
+  return null;
+}
+// Límite propio de la serie (Parámetros) > límite por defecto de la técnica > sin límite.
+function thresholds(tech, param, eq, comp){
+  const P = (typeof CMD !== "undefined" && CMD.par) ? CMD.par : {};
+  return (eq && P[parKey(eq, comp, tech, param)]) || parTechDefault(tech, param) || {warn:9999, bad:99999};
 }
 function rowStatus(r){
-  const t = thresholds(r.technique, r.parameter);
+  const t = thresholds(r.technique, r.parameter, r.equipment, r.component);
   return r.value >= t.bad ? "bad" : r.value >= t.warn ? "warn" : "ok";
 }
 // Estado de condición: se toma el peor estado entre las ÚLTIMAS lecturas de cada variable monitoreada
@@ -1703,14 +1740,16 @@ const CMD_COND_ROWS = [
   {k:"fe",  name:"Análisis de aceite · Hierro", u:"ppm"}
 ];
 function cmdFreshCond(){ return JSON.parse(JSON.stringify(CMD_DEFAULT_COND)); }
-let CMD = {limits:{...CMD_DEFAULT_LIMITS}, cost:{}, cond:cmdFreshCond()};
+let CMD = {limits:{...CMD_DEFAULT_LIMITS}, cost:{}, cond:cmdFreshCond(), par:{}};
 function cmdFreshCost(){ const c = {}; CMD_COST.forEach(i=>{ c[i.k] = {min:i.ref?i.ref[0]:null, max:i.ref?i.ref[1]:null, rows:[]}; }); return c; }
 function loadCmd(){
   let st = null;
   try{ const raw = JSON.parse(localStorage.getItem("cv13cmd") || "null"); if(raw && raw.version >= CMD_VERSION) st = raw; }catch(e){}
   const cond = cmdFreshCond();
   if(st && st.cond) Object.keys(cond).forEach(k=>{ const c = st.cond[k]; if(c && c.warn>0 && c.bad>c.warn) cond[k] = {warn:c.warn, bad:c.bad}; });
-  CMD = st ? {limits:{...CMD_DEFAULT_LIMITS, ...st.limits}, cost:{...cmdFreshCost(), ...st.cost}, cond} : {limits:{...CMD_DEFAULT_LIMITS}, cost:cmdFreshCost(), cond};
+  const par = {};
+  if(st && st.par) Object.keys(st.par).forEach(k=>{ const c = st.par[k]; if(c && c.warn>0 && c.bad>c.warn) par[k] = {warn:c.warn, bad:c.bad}; });
+  CMD = st ? {limits:{...CMD_DEFAULT_LIMITS, ...st.limits}, cost:{...cmdFreshCost(), ...st.cost}, cond, par} : {limits:{...CMD_DEFAULT_LIMITS}, cost:cmdFreshCost(), cond, par};
 }
 function saveCmd(){ try{ localStorage.setItem("cv13cmd", JSON.stringify({version:CMD_VERSION, ...CMD})); }catch(e){} }
 
@@ -1771,7 +1810,7 @@ function cmdEqIndicators(eq){
   }else out.push(nd("NPR máximo del AMFE","NPR = G × O × D","El equipo no tiene modos de falla cargados en el AMFE."));
   // 6. Condición (series de demostración)
   const st = eqStatus(eq);
-  out.push({name:"Estado de condición", formula:"peor estado entre las últimas lecturas de cada variable, comparadas con sus límites", value:prettyStatus(st), state:st==="ok"?"ok":st==="warn"?"warn":st==="bad"?"bad":"nodata", origin:"DEMOSTRACIÓN", detail:cmdCondDetail(eq)});
+  out.push({name:"Estado de condición", formula:"peor estado entre las últimas lecturas de cada variable, comparadas con sus límites (pestaña Parámetros)", value:prettyStatus(st), state:st==="ok"?"ok":st==="warn"?"warn":st==="bad"?"bad":"nodata", origin:"DEMOSTRACIÓN", detail:cmdCondDetail(eq)});
   out.forEach(i=>{ i.action = i.name==="Estado de condición" ? "revisar las lecturas fuera de límite en Historial y generar la intervención con «Generar intervención»." : cmdTopAction(eq); });
   return out;
 }
@@ -1832,9 +1871,9 @@ function cmdRefreshCard(k){
   card.querySelectorAll(".cmdRowV").forEach((td,ix)=>{ td.textContent = vs[ix].v===null ? "—" : cmdPct(vs[ix].v); });
 }
 function renderCondLimits(){
-  const box = document.getElementById("cmdCondLimits");
+  const box = document.getElementById("parDefaults");
   if(box.contains(document.activeElement) && document.activeElement.tagName==="INPUT") return;
-  box.innerHTML = `<div class="cmdCard st-info"><div class="cmdFormula">Una lectura es «Atención» al alcanzar el primer límite y «Crítico» al alcanzar el segundo. El estado del equipo es el peor entre las últimas lecturas de cada variable. Corriente y presión no tienen límite, por eso no generan estado. Son un supuesto del equipo, sin fuente normativa: validar antes de usarlos en campo. Se aplican a todos los equipos.</div>
+  box.innerHTML = `<div class="cmdCard st-info"><div class="cmdFormula">Una lectura es «Atención» al alcanzar el primer límite y «Crítico» al alcanzar el segundo. El estado del equipo es el peor entre las últimas lecturas de cada variable. Valen para todas las series de la técnica que no tengan un límite propio (se define por equipo y componente a la derecha). Son un supuesto del equipo, sin fuente normativa: validar antes de usarlos en campo.</div>
     <table class="cmdTbl"><thead><tr><th>Variable</th><th>Atención desde</th><th>Crítico desde</th><th></th></tr></thead><tbody>${CMD_COND_ROWS.map(r=>`<tr><td>${escHtml(r.name)}</td><td><input type="text" inputmode="decimal" data-cl="${r.k}" data-cf="warn" value="${String(CMD.cond[r.k].warn).replace(".",",")}"></td><td><input type="text" inputmode="decimal" data-cl="${r.k}" data-cf="bad" value="${String(CMD.cond[r.k].bad).replace(".",",")}"></td><td>${r.u}</td></tr>`).join("")}</tbody></table>
     <button class="metric cmdAddRow" id="cmdCondReset">Restaurar límites por defecto</button></div>`;
 }
@@ -1847,21 +1886,20 @@ function renderComando(){
      <div><b>Objetivos operativos</b>Órdenes correctivas ≤ ${L.corr} % · intervenir antes de que la fiabilidad caiga de ${L.r} % · NPR del AMFE ≤ ${L.npr} · η ≥ ${L.eta} veces el intervalo del plan.</div>
      <div><b>Control de gestión</b>Cada indicador se compara con su objetivo (fortaleza o debilidad); si hay debilidad, se sugiere la acción del AMFE. Los objetivos son editables y los propone el equipo.</div>`;
   document.getElementById("cmdEqCards").innerHTML = cmdEqIndicators(eq).map(cmdCardHtml).join("");
-  renderCondLimits();
   const sc = document.getElementById("cmdCostCards");
   const focus = document.activeElement && sc.contains(document.activeElement) ? document.activeElement : null;
   if(!focus) sc.innerHTML = CMD_COST.map(cmdCostCard).join("");
 }
-document.getElementById("cmdCondLimits").addEventListener("change", e=>{
+document.getElementById("parDefaults").addEventListener("change", e=>{
   const t = e.target, k = t.dataset.cl; if(!k) return;
   const c = CMD.cond[k], f = t.dataset.cf, v = cmdParse(t.value);
   const w = f==="warn" ? v : c.warn, b = f==="bad" ? v : c.bad;
   if(v===null || !(w>0) || !(b>w)){ toast("Los límites deben cumplir 0 < Atención < Crítico"); t.value = String(c[f]).replace(".",","); return; }
   c[f] = v; saveCmd(); render();
 });
-document.getElementById("cmdCondLimits").addEventListener("click", e=>{
+document.getElementById("parDefaults").addEventListener("click", e=>{
   if(!e.target.closest("#cmdCondReset")) return;
-  CMD.cond = cmdFreshCond(); saveCmd(); document.getElementById("cmdCondLimits").innerHTML = ""; render();
+  CMD.cond = cmdFreshCond(); saveCmd(); document.getElementById("parDefaults").innerHTML = ""; render();
 });
 document.getElementById("cmdEqCards").addEventListener("change", e=>{
   const k = e.target.dataset.lim; if(!k) return;
@@ -1883,7 +1921,94 @@ document.getElementById("cmdCostCards").addEventListener("click", e=>{
   else CMD.cost[b.dataset.del].rows.splice(+b.dataset.ri, 1);
   saveCmd(); document.getElementById("cmdCostCards").innerHTML = CMD_COST.map(cmdCostCard).join("");
 });
-function render(){ ensureSelection(); renderLegend(); renderPlant(); renderSide(); draw(); renderReliability(); renderAmfe(); renderPlanControl(); renderCriticidad(); renderComando(); updateFilterBtn(); updatePlanFilterBtn(); renderEqSelect(); renderShareAlert(); document.getElementById("aiDiagResult").style.display="none"; renderHistory(); }
+// ── Parámetros: límites aceptados por equipo, componente y variable ─────────────────────
+// Orden de resolución: límite propio de la serie > límite por defecto de la técnica > sin límite.
+// Una lectura es «Atención» al alcanzar el primer límite y «Crítico» al alcanzar el segundo.
+let PAR_UI = {eq:""};
+function parEq(){ return META[PAR_UI.eq] ? PAR_UI.eq : selectedEq; }
+function parSeries(eq){
+  const m = new Map();
+  allEq(eq).forEach(r=>{
+    const k = parKey(eq, r.component, r.technique, r.parameter);
+    let s = m.get(k); if(!s){ s = {key:k, comp:r.component, tech:r.technique, param:r.parameter, unit:r.unit, rows:[]}; m.set(k,s); }
+    s.rows.push(r);
+  });
+  m.forEach(s=>s.rows.sort((a,b)=>a.timestamp-b.timestamp));
+  return [...m.values()];
+}
+// Sugerido: el límite por defecto de la técnica si existe; si no, media + 2σ (atención) y + 3σ (crítico)
+// de las lecturas de demostración de esa serie.
+function parSuggest(s){
+  const d = parTechDefault(s.tech, s.param, true);
+  if(d) return {warn:d.warn, bad:d.bad, why:"límite por defecto de la técnica"};
+  const v = s.rows.map(r=>r.value), mu = mean(v), sg = sd(v), dec = (s.unit==="bar"||s.unit==="A") ? 2 : 1, rd = x=>+x.toFixed(dec);
+  return {warn:rd(mu+2*sg), bad:rd(mu+3*sg), why:"media + 2σ y + 3σ de los datos de demostración"};
+}
+function parEff(s){ return CMD.par[s.key] || parTechDefault(s.tech, s.param) || null; }
+const parNum = v => String(v).replace(".", ",");
+function parDyn(s){
+  const o = CMD.par[s.key], t = parTechDefault(s.tech, s.param), eff = o || t, last = s.rows[s.rows.length-1], st = rowStatus(last);
+  const chip = `<span class="badge ${st==="ok"?"green":st==="warn"?"yellow":"red"}">${prettyStatus(st)}</span> <small>${escHtml(fmt(last))}</small>`;
+  const origin = o ? `<span class="cmdOrigin o-tp">LÍMITE PROPIO</span>` : t ? `<span class="cmdOrigin o-nd">POR TÉCNICA</span>` : `<span class="cmdOrigin o-nd">SIN LÍMITE</span>`;
+  return {chip, origin, del:!!o, eff};
+}
+function parRowHtml(s){
+  const d = parDyn(s), sg = parSuggest(s), v = s.rows.map(r=>r.value), dec = (s.unit==="bar"||s.unit==="A") ? 2 : 1, f = x=>x.toFixed(dec).replace(".",",");
+  return `<tr data-key="${escHtml(s.key)}"><td><b>${escHtml(s.tech)} · ${escHtml(s.param)}</b><small>${v.length} lecturas · mín ${f(Math.min(...v))} · media ${f(mean(v))} · máx ${f(Math.max(...v))}</small></td>
+    <td><input type="text" inputmode="decimal" data-pk="${escHtml(s.key)}" data-pf="warn" value="${d.eff ? parNum(d.eff.warn) : ""}" placeholder="—"></td>
+    <td><input type="text" inputmode="decimal" data-pk="${escHtml(s.key)}" data-pf="bad" value="${d.eff ? parNum(d.eff.bad) : ""}" placeholder="—"></td>
+    <td>${escHtml(s.unit)}</td><td class="parChip">${d.chip}</td>
+    <td>${parNum(sg.warn)} / ${parNum(sg.bad)}<small>${escHtml(sg.why)}</small><button class="metric" data-psug="${escHtml(s.key)}">Usar sugerido</button></td>
+    <td class="parOrigin">${d.origin}<button class="metric parDel" data-pdel="${escHtml(s.key)}" style="${d.del?"":"display:none"}">Quitar propio</button></td></tr>`;
+}
+function renderParametros(){
+  const body = document.getElementById("parBody");
+  const eq = parEq(), m = META[eq] || {}, series = parSeries(eq);
+  document.getElementById("parEquipos").innerHTML = Object.keys(META).map(id=>{
+    const ss = parSeries(id), own = ss.filter(s=>CMD.par[s.key]).length;
+    return `<div class="comp${id===eq?" sel":""}" data-peq="${escHtml(id)}"><b>${escHtml(META[id].displayName||id)}</b><small>${ss.length ? `${ss.length} variable${ss.length>1?"s":""}${own ? ` · ${own} con límite propio` : ""}` : "sin mediciones"}</small></div>`;
+  }).join("");
+  if(body.contains(document.activeElement) && document.activeElement.tagName==="INPUT") return;
+  document.getElementById("parTitle").textContent = `Parámetros — ${m.displayName || eq}`;
+  document.getElementById("parSub").textContent = `${m.name || ""} · límites que definen cuándo una lectura es Atención o Crítica`;
+  const comps = [...new Set([...(m.components||[]), ...series.map(s=>s.comp)])];
+  body.innerHTML = comps.map(c=>{
+    const ss = series.filter(s=>s.comp===c);
+    return `<div class="parComp"><h3>${escHtml(c)}</h3>${ss.length
+      ? `<div class="parWrap"><table class="parTbl"><thead><tr><th>Variable</th><th>Atención desde</th><th>Crítico desde</th><th>Unidad</th><th>Última lectura</th><th>Sugerido (atención / crítico)</th><th>Origen</th></tr></thead><tbody>${ss.map(parRowHtml).join("")}</tbody></table></div>`
+      : `<div class="sub">Sin mediciones cargadas para este componente.</div>`}</div>`;
+  }).join("") || `<div class="sub">Este equipo no tiene componentes.</div>`;
+  renderCondLimits();
+}
+function parRefreshRow(tr){
+  const s = parSeries(parEq()).find(x=>x.key===tr.dataset.key); if(!s) return;
+  const d = parDyn(s);
+  tr.querySelector(".parChip").innerHTML = d.chip;
+  tr.querySelector(".parOrigin").firstElementChild.outerHTML = d.origin;
+  tr.querySelector(".parDel").style.display = d.del ? "" : "none";
+}
+document.getElementById("parBody").addEventListener("change", e=>{
+  const t = e.target, k = t.dataset.pk; if(!k) return;
+  const s = parSeries(parEq()).find(x=>x.key===k); if(!s) return;
+  const cur = parEff(s) || parSuggest(s), f = t.dataset.pf, v = cmdParse(t.value);
+  const w = f==="warn" ? v : cur.warn, b = f==="bad" ? v : cur.bad;
+  if(v===null || !(w>0) || !(b>w)){ toast("Los límites deben cumplir 0 < Atención < Crítico"); const e0 = parEff(s); t.value = e0 ? parNum(e0[f]) : ""; return; }
+  CMD.par[k] = {warn:w, bad:b};
+  const other = t.closest("tr").querySelector(`[data-pf="${f==="warn"?"bad":"warn"}"]`); if(other && other.value==="") other.value = parNum(f==="warn" ? b : w);
+  saveCmd(); parRefreshRow(t.closest("tr")); render();
+});
+document.getElementById("parBody").addEventListener("click", e=>{
+  const sg = e.target.closest("[data-psug]"), dl = e.target.closest("[data-pdel]");
+  if(!sg && !dl) return;
+  const k = (sg || dl).dataset[sg ? "psug" : "pdel"], s = parSeries(parEq()).find(x=>x.key===k); if(!s) return;
+  if(sg){ const g = parSuggest(s); CMD.par[k] = {warn:g.warn, bad:g.bad}; } else delete CMD.par[k];
+  saveCmd(); render();
+});
+document.getElementById("parEquipos").addEventListener("click", e=>{
+  const c = e.target.closest("[data-peq]"); if(!c) return;
+  PAR_UI.eq = c.dataset.peq; renderParametros();
+});
+function render(){ ensureSelection(); renderLegend(); renderPlant(); renderSide(); draw(); renderReliability(); renderAmfe(); renderPlanControl(); renderCriticidad(); renderComando(); renderParametros(); updateFilterBtn(); updatePlanFilterBtn(); renderEqSelect(); renderShareAlert(); document.getElementById("aiDiagResult").style.display="none"; renderHistory(); }
 function paretoData(){
   return Object.keys(META)
     .map(id => ({id, name: META[id].displayName || id, fallas: META[id].fallas || 0}))
